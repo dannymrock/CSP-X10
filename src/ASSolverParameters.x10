@@ -7,7 +7,7 @@ public class ASSolverParameters {
 	var freezeSwap : Int;			/* nb swaps to freeze 2 swapped vars */
 	var resetLimit : Int;			/* nb of frozen vars before reset */
 	var nbVarToReset : Int;		/* nb variables to reset */
-	var restartLimit : Int;			/* nb of iterations before restart */
+	var restartLimit : Int;			/* nb of iterations before restart */ 
 	var restartMax : Int;			/* max nb of times to restart (to retry) */
 	var reinitAfterIfSwap : Int;	/* true if Cost_Of_Solution must be called twice */
 	
