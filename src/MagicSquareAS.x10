@@ -1,5 +1,3 @@
-import x10.util.Random;
-  
 /** MagicSquareAS is the implementation of Magic Square problem for the Adaptive Search solver
  * 	in the x10 language.
  * 
@@ -8,6 +6,8 @@ import x10.util.Random;
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013
  */
+
+import x10.util.Random;
 public class MagicSquareAS extends ModelAS{
 	
 	var squareLength:Int; 
@@ -93,7 +93,7 @@ public class MagicSquareAS extends ModelAS{
 	 *  Compute the cost of the variables current assignation for the Magic Square problem.
 	 *  @return Integer with the value of the cost of the variables current assignation.
 	 */
-	public def costOfSolution() : Int {
+	public def costOfSolution(shouldBeRecorded : Int) : Int {
 		
 		var k:Int;
 		var r:Int;

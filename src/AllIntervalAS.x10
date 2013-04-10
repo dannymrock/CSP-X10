@@ -1,15 +1,30 @@
+/** AllIntervalAS is the implementation of All-Intervals problem for the Adaptive Search solver
+ * 	in the x10 language.
+ * 
+ *  This code is an adaptation in x10 of the C implementation of Adaptive Search algoritm 
+ * 	by Daniel Diaz
+ * 
+ * 	@author Danny Munera
+ *  @version 0.1 April 10, 2013 -> First Version
+ */
 public class AllIntervalAS extends ModelAS {
-	 
-	val nbOcc : Array[Int];		/* nb occurrences (to compute total cost) 0 is unused */
 	
+	/** nb occurrences (to compute total cost) 0 is unused */
+	val nbOcc : Array[Int];		
+	
+	/**
+	 * 	Constructor
+	 *  @param lengthProblem Number of variables of the problem
+	 * 	@param seed Desired seed for randomness of  the problem
+	 */
 	def this ( val lengthProblem : Int , seed : Long ){
 		super( lengthProblem, seed );
 		nbOcc = new Array[Int]( varRegion , 0 );
+		initParameters();
 	}
 	
 	
 	private def initParameters(){
-		
 		solverParams.probSelectLocMin = 66;
 		solverParams.freezeLocMin = 1;
 		solverParams.freezeSwap = 0;
@@ -22,7 +37,11 @@ public class AllIntervalAS extends ModelAS {
 		solverParams.firstBest = false;
 	} 
 	
-	
+	/**
+	 * 	Computes the cost of the solution
+	 * 	@param nbOcc vector of occurrences
+	 * 	@return cost
+	 */
 	public def cost(nbOcc : Array[Int]) : Int //int nb_occ[]
 	{
 		var r : Int = 0;
@@ -35,8 +54,13 @@ public class AllIntervalAS extends ModelAS {
 		return r;
 	}
 	
-	
-	public def costOfSolution ( ) : Int
+	/**
+	 * 	Returns the total cost of the current solution.
+	 * 	Also computes errors on constraints.
+	 * 	@param shouldBeRecorded 0 for no record 1 for record
+	 * 	@return cost of solution
+	 */
+	public def costOfSolution( shouldBeRecorded : Int ) : Int
 	{
 		var i : Int;
 
@@ -58,6 +82,15 @@ public class AllIntervalAS extends ModelAS {
 		return ( 	sol(0) == 0 || sol(0) == size - 1 || sol(size - 1) == 0 || sol(size - 1) == size - 1);
 	}
 	
+	/**
+	 *  costIfSwap(current_cost : Int, i1 : Int, i2 : Int) : Int
+	 *  This function computes the cost of the problem if there is a swap between variable
+	 *  i1 and i2.
+	 * 	@param current_cost The current cost of the problem
+	 *  @param i1 first variable to swap
+	 *  @param i2 second variable to swap
+	 *  @return cost of the problem if the swap is done
+	 */
 	public def costIfSwap(current_cost:Int, i1:Int, i2:Int):Int
 	{
 		var s1 : Int;
@@ -130,7 +163,13 @@ public class AllIntervalAS extends ModelAS {
 		return r;
 	}
 	
-	
+	/**
+	 *  executedSwap( i1 : Int, i2 : Int)
+	 *  This function updates the values of the object data structures for the problem due to the 
+	 *  completion of a swap between two variables
+	 *  @param i1 First variable already swapped
+	 *  @param i2 Second variable already swapped
+	 */
 	public def executedSwap( i1 : Int, i2 : Int) {
 		var s1 : Int;
 		var s2 : Int;
@@ -176,8 +215,13 @@ public class AllIntervalAS extends ModelAS {
 		}
 	}
 	
-	
-	public def reset( n : Int): Int // AdData *p_ad
+	/**
+	 * 	Reset function
+	 * 	@param n number of variables to reset
+	 * 	@param totalcost not used (for support more complex implementations)
+	 * 	@return -1 for recompute cost
+	 */
+	public def reset( n : Int, totalCost : Int ): Int // AdData *p_ad
 	{
 		var distMin : Int = length - 3;	// size - 1 also works pretty well 
 		var i : Int;
@@ -189,11 +233,8 @@ public class AllIntervalAS extends ModelAS {
 			{
 				j = r.randomInt(length);
 				this.swapVariables(i,j);
-				//j = Random(length);
-				//Ad_Swap(i, j);
 			}
 		}
 		return -1;
 	}
-	
 }

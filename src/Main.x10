@@ -23,11 +23,11 @@ public class Main {
 		if (cspProblem.equals("magic-square")) {
 			Console.OUT.println("Magic Square Problem");
 			param=1;
-		}else if(cspProblem.equals("queens")){
-			Console.OUT.println("N-Queens Problem");
+		}else if(cspProblem.equals("costas")){
+			Console.OUT.println("Costas Array Problem");
 			param=2;
 		}else{
-			Console.OUT.println("Error: Type a valid CSP example: magic-square or queens");
+			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas");
 			return;
 		}
 		 
@@ -46,6 +46,8 @@ public class Main {
 			sumTimes += (timeEnd-timeStart);
 		}
 		Console.OUT.println("Time AVG= "+(sumTimes/testNo)+" ms");
+		
+
 		
 		/**********************************/
 		
@@ -126,15 +128,18 @@ public class Main {
 		*/
 		
 		
-		/****** All Interval *****
+		/****** costas ******/
 		
-		val cspObject = new AllIntervalAS(10, 2);
-		val solver = new ASSolverPermut(cspObject.length, 2);
-		val cost = solver.solve(cspObject);
-		Console.OUT.println("cost= "+cost);
+		 // val cspObject = new AllIntervalAS(10, 2);
+		 // val solver = new ASSolverPermut(cspObject.length, 2, 100);
+		 // val cost = solver.solve(cspObject);
+		 // Console.OUT.println("cost= "+cost);
+		 // show("sol", cspObject.variables);
 		
-		show("sol", cspObject.variables);
-		*/
+		//cspObject.initialize(1);
+		//show("sol", cspObject.variables);
+		//val cost = cspObject.costOfSolution(1);
+		//Console.OUT.println("cost= "+cost);
 		
 		/******************/
 		

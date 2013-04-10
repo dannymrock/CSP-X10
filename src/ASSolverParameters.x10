@@ -1,41 +1,50 @@
+/** ASSolverParameters
+ * 	Encapsulate all the parameters for AS Solver
+ * 
+ *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
+ * 
+ * 	@author Danny Munera
+ *  @version 0.1 April 9, 2013 First Version
+ */
+
 public class ASSolverParameters {
-	 
-	var exhaustive : Boolean; 			/* perform an exhausitve search */
-	var firstBest : Boolean;				/* stop as soon as a better swap is found */
-	var probSelectLocMin : Int;	/* % to select local min instead of staying on a plateau (or >100 to not use)*/
-	var freezeLocMin : Int;			/* nb swaps to freeze a (local min) var */
-	var freezeSwap : Int;			/* nb swaps to freeze 2 swapped vars */
-	var resetLimit : Int;			/* nb of frozen vars before reset */
-	var nbVarToReset : Int;		/* nb variables to reset */
-	var restartLimit : Int;			/* nb of iterations before restart */ 
-	var restartMax : Int;			/* max nb of times to restart (to retry) */
-	var reinitAfterIfSwap : Int;	/* true if Cost_Of_Solution must be called twice */
-	
-	var resetPercent : Int;		/* percentage of variables to reset */
-	
+	/** perform an exhausitve search */ 
+	var exhaustive : Boolean;
+	/** stop as soon as a better swap is found */
+	var firstBest : Boolean;
+	/** % to select local min instead of staying on a plateau (or >100 to not use)*/
+	var probSelectLocMin : Int;	
+	/** nb swaps to freeze a (local min) var */
+	var freezeLocMin : Int;
+	/** nb swaps to freeze 2 swapped vars */
+	var freezeSwap : Int;
+	/** nb of frozen vars before reset */
+	var resetLimit : Int;
+	/** nb variables to reset */
+	var nbVarToReset : Int;
+	/** nb of iterations before restart */
+	var restartLimit : Int;	
+	/** max nb of times to restart (to retry) */
+	var restartMax : Int;
+	/** true if Cost_Of_Solution must be called twice */
+	var reinitAfterIfSwap : Int;	
+	/** percentage of variables to reset */
+	var resetPercent : Int;		
+
 	var baseValue : Int; 
 	
-	// prob_select_loc_min
-	// freeze_loc_min
-	// freeze_swap
-	//var reset_limit:Int; /* nb of frozen vars before reset */
-	// reset_percent
-	// restart_limit
-	// restart_max
-	
-	
-	
-	//val mark:Array[Int](1);		//Array for mark variables in taboo fashion
-	//val size:Int; 			//Size of the problemto solve
-	
+	/**
+	 * 	Constructor
+	 */
 	public def this(){
-		//size = sizeOfProblem;
-		//mark = new Array[Int](1..size,0);
 		firstBest = false; //revisar val por default
 	}
 	
+	/**
+	 *  set the values of the parameters to the solver
+	 * 	@param toSet parameters to set
+	 */
 	public def setValues(val toSet: ASSolverParameters){
-		
 		this.exhaustive = toSet.exhaustive;
 		this.firstBest = toSet.firstBest;
 		this.probSelectLocMin = toSet.probSelectLocMin;

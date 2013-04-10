@@ -88,7 +88,7 @@ public class ModelAS {
 		variables(j) = x;
 	}
 		
-	public def costOfSolution():Int {
+	public def costOfSolution(shouldBeRecorded : Int):Int {
 		return 0;
 	}
 		
@@ -119,9 +119,10 @@ public class ModelAS {
 	/**
 	 * 	Default Reset function
 	 * 	@param n number of variables to reset
+	 * 	@param totalcost not used (for support more complex implementations)
 	 * 	@return -1 for recompute cost
 	 */
-	public def reset ( var n : Int ) : Int {
+	public def reset ( var n : Int, totalCost : Int ) : Int {
 
 		var i:Int;
 		var j:Int;

@@ -11,7 +11,8 @@ import x10.compiler.Pragma;
  *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
  * 
  * 	@author Danny Munera
- *  @version 0.1 April 9, 2013
+ *  @version 0.1 April 9, 2013 Fist Version
+ * 	April 10, 2013 -> changes queens by costas problem
  */
 
 public class ASSolverPermutRW{
@@ -52,8 +53,8 @@ public class ASSolverPermutRW{
 				if (cspProblem == 1) {			// Magic-Square
 					nsize = size*size;
 					cspDist(here.id) = new MagicSquareAS(size, seed);
-				}else  							// Queens
-					cspDist(here.id) = new QueensAS(size, seed);
+				}else  							// Costas
+					cspDist(here.id) = new CostasAS(size, seed);
 				
 				solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
 				cost = solverDist(here.id).solve(cspDist(here.id));
