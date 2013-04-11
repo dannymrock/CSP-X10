@@ -18,8 +18,12 @@ import x10.compiler.Pragma;
 public class ASSolverPermutRW{
 	val solverDist : DistArray[ASSolverPermut];
 	val cspDist : DistArray[ModelAS];
+	val timeDist : DistArray[Long];
 	var winPlace : Place;
 	val updateI : Int;
+	var bcost : Int;
+	val stats : CSPStats;
+	val refStats : GlobalRef[CSPStats];
 	 
 	/**
 	 * 	Constructor of the class
@@ -27,8 +31,10 @@ public class ASSolverPermutRW{
 	def this( u : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
-		winPlace = new Place(here.id);
+		timeDist = DistArray.make[Long](Dist.makeUnique());
 		updateI = u;
+		stats = new CSPStats();
+		refStats = GlobalRef[CSPStats](stats);
 	}
 	
 	/** 
@@ -39,9 +45,9 @@ public class ASSolverPermutRW{
 	 * 	@param cspProblem code with the problem to be solved (1 for Magic Square Problems, other number for Queens Problem)
 	 * 	@return cost of the solution
 	 */
-	public def solve(size:Int,cspProblem:Int):Int{ 
-		val random = new Random();
+	public def solve( size : Int , cspProblem : Int ) : CSPStats{ 
 		
+		val random = new Random();
 		finish for(p in Place.places()){ 
 				
 			val seed = random.nextLong();
@@ -57,16 +63,39 @@ public class ASSolverPermutRW{
 					cspDist(here.id) = new CostasAS(size, seed);
 				
 				solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
+				
+				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
+				timeDist(here.id) += System.nanoTime();
+				
 				if (cost==0){
 					for (k in Place.places()) if (here.id != k.id) at(k) 
 					async 
 					{
 						solverDist(here.id).kill = true;
 					}
+					winPlace = here;
+					bcost = cost;
+					setStats();
 				}
 			}
 		}
-		return 0; //return cost (this is not good)
+		return stats; //return cost (this is not good)
 	}
+	
+	def setStats(  ){
+		val winPlace = here.id;
+		val time = (timeDist(winPlace))/1e9;
+		val iters = solverDist(winPlace).nbIterTot;
+		val locmin = solverDist(winPlace).nbLocalMinTot;
+		val swaps = solverDist(winPlace).nbSwapTot;
+		val reset = solverDist(winPlace).nbResetTot;
+		val same = solverDist(winPlace).nbSameVarTot;
+		val restart = solverDist(winPlace).nbRestart;
+		
+		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart);
+		//val winstats = new CSPStats
+	}
+	
+	
 }

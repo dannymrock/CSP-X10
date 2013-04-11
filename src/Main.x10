@@ -1,15 +1,19 @@
-import x10.util.Random;
+/** MAin
+ * 	Main class of the project. 
+ * 
+ * 	@author Danny Munera
+ *  @version 0.1 April 9, 2013 -> First Version
+ */
 
+import x10.util.Random;
 public class Main {
-	
 	public static def main(argv:Array[String]):void {
-		
 		/****************** RW *****************************/
 		
 		var size1:Int;
-		var size:Int;
-		val testNo:Int; 
-		val cspProblem:String;
+		var size : Int;
+		val testNo : Int; 
+		val cspProblem : String;
 		
 		val argc = argv.size; 
 		
@@ -35,19 +39,23 @@ public class Main {
 		var cost:Int;
 		var timeEnd :Long;
 		var sumTimes:Long = 0;
+		val accStats = new CSPStats();
 		
 		val solver = new ASSolverPermutRW(update);
 		
-		for (var j:Int = 0; j < testNo ; j++ ){
-			timeStart = x10.lang.System.currentTimeMillis();
-			cost = solver.solve(size,param);
-			timeEnd = x10.lang.System.currentTimeMillis();
-			Console.OUT.println("\tTime= "+(timeEnd-timeStart)+" ms"+" cost= "+cost);
-			sumTimes += (timeEnd-timeStart);
-		}
-		Console.OUT.println("Time AVG= "+(sumTimes/testNo)+" ms");
+		Console.OUT.println("| Count\t| Time(s)\t| Iters\t| Place\t|LocMin | Swaps\t| Resets|Same/It| Rest  |");
+		Console.OUT.println("|-------|---------------|-------|-------|-------|-------|-------|-------|-------|");
 		
-
+		for (var j : Int = 0; j < testNo ; j++ ){
+			
+			//Solve the problem
+			val stats = solver.solve(size,param);
+			accStats.accStats(stats);
+			stats.print(j);
+		}
+		Console.OUT.println("|-------|---------------|-------|-------|-------|-------|-------|-------|-------|");
+		accStats.printAVG(testNo);
+		
 		
 		/**********************************/
 		
@@ -142,13 +150,10 @@ public class Main {
 		//Console.OUT.println("cost= "+cost);
 		
 		/******************/
-		
-		
-		
-		
+
 		return;
 	}
-	
+
 	static def show(s:String, d: Array[Int]) {
 		x10.io.Console.OUT.print(s + " = ");
 		//finish for (p in d.dist.places()) at(p) async{

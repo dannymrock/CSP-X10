@@ -5,7 +5,7 @@
  * 	by Daniel Diaz
  * 
  * 	@author Danny Munera
- *  @version 0.1 April 10, 2013 -> First Version
+ *  @version 0.1 	12 April, 2013 -> First Version
  */
 public class AllIntervalAS extends ModelAS {
 	
@@ -34,7 +34,7 @@ public class AllIntervalAS extends ModelAS {
 		solverParams.restartMax = 0;
 		solverParams.baseValue = 0;
 		solverParams.exhaustive = false;
-		solverParams.firstBest = false;
+		solverParams.firstBest = true;
 	} 
 	
 	/**
@@ -42,16 +42,17 @@ public class AllIntervalAS extends ModelAS {
 	 * 	@param nbOcc vector of occurrences
 	 * 	@return cost
 	 */
-	public def cost(nbOcc : Array[Int]) : Int //int nb_occ[]
+	public def cost(nbOcc : Array[Int]) : Int 
 	{
 		var r : Int = 0;
-		var i : Int;
+		var i : Int = length;
 
-		for(i = 1; i < length; i++)
-			if (nbOcc(i) == 0)
-				r += i;
-		
-		return r;
+		nbOcc(0) = 0;                /* 0 is unused, use it as a sentinel */
+
+		while(nbOcc(--i) != 0 )
+			;
+
+		return i;
 	}
 	
 	/**

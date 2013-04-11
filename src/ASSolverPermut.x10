@@ -6,6 +6,7 @@
  * 
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013 -> first version
+ * 	
  */
 
 import x10.util.Random;
@@ -16,7 +17,6 @@ public class ASSolverPermut {
 	val solverP : ASSolverParameters; 
 	
 	var nb_var_to_reset : Int; 
-	var nb_reset : Int;
 	
 	var max_i : Int;		//static int max_i ALIGN;		/* swap var 1: max projected cost (err_var[])*/
 	var min_j : Int;
@@ -24,26 +24,32 @@ public class ASSolverPermut {
 	var best_cost : Int;
 	var new_cost : Int;
 	var total_cost : Int;
+	val random : RandomTools;
+	var kill : Boolean;
 	
 	var list_i_nb : Int;
 	var list_j_nb : Int;
 	var list_i : Array[Int](1); 
-	
-	//Counters
-	var nb_restart : Int;
-	var nb_iter : Int;
 	var nb_var_marked : Int;
-	var nb_swap : Int;
-	 
-	val random : RandomTools;
-	 
-	var kill : Boolean;
-	
+	val varRegion : Region(1);
 	/** Number of iterations to update kill status */
 	val updateP : Int;
 	
-	val varRegion : Region(1);
-	 
+	/**	Statistics	*/
+	var nbRestart : Int;
+	var nbIter : Int;
+	var nbReset : Int;	
+	var nbSwap : Int;
+	var nbSameVar : Int;
+	var nbLocalMin : Int;
+	
+	/** Total Statistics */
+	var nbIterTot : Int;
+	var nbResetTot : Int;	
+	var nbSwapTot : Int;
+	var nbSameVarTot : Int;
+	var nbLocalMinTot : Int; 
+
 	/**
 	 *  Constructor of the class
 	 * 	@param sizeOfProblem size of the problem to solve
@@ -58,7 +64,7 @@ public class ASSolverPermut {
 		solverP = new ASSolverParameters();
 		random = new RandomTools(seed);
 		nb_var_marked = 0;
-		nb_restart = 0;
+		nbRestart = 0;
 		updateP = updateI; //Default value 
 		kill = false;
 	}
@@ -82,10 +88,21 @@ public class ASSolverPermut {
 		mark.clear();
 		list_i.clear();
 		
-		nb_restart = 0;
-		nb_swap = 0;
-		nb_iter = 0;
-	 	nb_in_plateau = 0;
+		nbRestart = 0;
+		nbSwap = 0;
+		nbIter = 0;
+		nbSameVar = 0;
+		nbLocalMin = 0;
+		nbReset = 0;
+		
+		nb_in_plateau = 0;
+		
+		nbIterTot = 0;
+		nbResetTot = 0;	
+		nbSwapTot = 0;
+		nbSameVarTot = 0;
+		nbLocalMinTot = 0; 
+		
 		
 		total_cost = csp.costOfSolution(1);
 		best_cost = total_cost;
@@ -95,15 +112,27 @@ public class ASSolverPermut {
 			if (best_cost < best_of_best)
 				best_of_best = best_cost;
 	
-			nb_iter++;
+			nbIter++;
 	  
-			if (nb_iter >= solverP.restartLimit){
-				if(nb_restart < solverP.restartMax){
+			if (nbIter >= solverP.restartLimit){
+				if(nbRestart < solverP.restartMax){
 					csp.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
 					mark.clear();
-					nb_restart++;
-					nb_iter = 0;
+					nbRestart++;
+					//Update Total statistics
+					nbIterTot += nbIter;
+					nbResetTot += nbReset;	
+					nbSwapTot += nbSwap;
+					nbSameVarTot += nbSameVar;
+					nbLocalMinTot += nbLocalMin; 
+					//Restart local var
+					nbSwap = 0;
+					nbIter = 0;
+					nbSameVar = 0;
+					nbLocalMin = 0;
+					nbReset = 0;
 					nb_in_plateau = 0;
+					
 					best_cost = total_cost = csp.costOfSolution(1);
 					best_of_best = x10.lang.Int.MAX_VALUE ;
 					continue;
@@ -136,8 +165,9 @@ public class ASSolverPermut {
 				continue;
 			
 	 		if (max_i == min_j)
-			{
-				mark(max_i) = nb_swap + solverP.freezeLocMin; //Mark(max_i, freeze_loc_min);
+			{	
+	 			nbLocalMin++;
+				mark(max_i) = nbSwap + solverP.freezeLocMin; //Mark(max_i, freeze_loc_min);
 	 			if (nb_var_marked > solverP.resetLimit)
 	 			{
 	 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
@@ -147,15 +177,16 @@ public class ASSolverPermut {
 			}
 			else
 			{
-				mark(max_i) = nb_swap + solverP.freezeSwap; //Mark(max_i, ad.freeze_swap);
-				mark(min_j) = nb_swap + solverP.freezeSwap; //Mark(min_j, ad.freeze_swap);
+				mark(max_i) = nbSwap + solverP.freezeSwap; //Mark(max_i, ad.freeze_swap);
+				mark(min_j) = nbSwap + solverP.freezeSwap; //Mark(min_j, ad.freeze_swap);
 			
 				csp.swapVariables(max_i, min_j);//adSwap(max_i, min_j,csp);
+				nbSwap++;
 				csp.executedSwap(max_i, min_j);
 				total_cost = new_cost;
 			}
 	 		
-	 		if( nb_iter % updateP == 0 ){
+	 		if( nbIter % updateP == 0 ){
 	 			Runtime.probe();
 	 			if(kill)
 	 				break;
@@ -164,6 +195,11 @@ public class ASSolverPermut {
 		
 		//if(!kill)
 			//Console.OUT.print("Iter no: "+nb_iter+"\tcost: "+total_cost+"\t\tnb marked: "+nb_var_marked+"\t"+here);
+		nbIterTot += nbIter;
+		nbResetTot += nbReset;	
+		nbSwapTot += nbSwap;
+		nbSameVarTot += nbSameVar;
+		nbLocalMinTot += nbLocalMin; 
 		
 		return total_cost;
 	}
@@ -188,7 +224,7 @@ public class ASSolverPermut {
 		//Console.OUT.println("Aqui");
 		while(++i < size) 
 		{
-			if (nb_swap < mark(i))
+			if (nbSwap < mark(i))
 			{
 				nb_var_marked++;
 				continue;
@@ -208,6 +244,7 @@ public class ASSolverPermut {
 		x = random.randomInt(list_i_nb);
 		//Console.OUT.println("list_i_nb "+list_i_nb+ " x "+x+" list_i(x) "+list_i(x));
 		max_i = list_i(x); //This max_i must be local or only returns the value
+		nbSameVar += list_i_nb;
 		return max_i;
 	}
 	
@@ -269,7 +306,7 @@ public class ASSolverPermut {
 		 			//Console.OUT.println("list_i_nb= "+list_i_nb);
 		 			//for(h in list_i)
 		 				//Console.OUT.print(" "+list_i(h));
-		 			nb_iter++;
+		 			nbIter++;
 		 			x = random.randomInt(list_i_nb);
 		 			max_i = list_i(x);
 		 			//max_i = list_i(1);
@@ -293,7 +330,7 @@ public class ASSolverPermut {
 		
 		cost = csp.reset( n, total_cost );
 		
-		nb_swap += n ; //I don't know what happened here with costas reset
+		nbSwap += n ; //I don't know what happened here with costas reset
 		
 		mark.clear();
 		//nbreset++;
