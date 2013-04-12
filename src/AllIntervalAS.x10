@@ -33,7 +33,7 @@ public class AllIntervalAS extends ModelAS {
 		solverParams.restartLimit = 10000000;
 		solverParams.restartMax = 0;
 		solverParams.baseValue = 0;
-		solverParams.exhaustive = false;
+		solverParams.exhaustive = true;
 		solverParams.firstBest = true;
 	} 
 	

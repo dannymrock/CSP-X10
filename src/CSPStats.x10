@@ -77,17 +77,23 @@ public class CSPStats {
 	 * 	@param count Number of this iteration
 	 */
 	def print(count:Int){
-		Console.OUT.println("| "+count+"\t| "+this.time+"\t| "+this.iters+"\t| "+this.place+"\t| "+this.locmin+"\t| "+this.swaps+"\t| "
+		
+		Console.OUT.print("| "+count+"\t| ");
+		Console.OUT.printf("%.5g",time);
+		Console.OUT.println("\t| "+this.iters+"\t| "+this.place+"\t| "+this.locmin+"\t| "+this.swaps+"\t| "
 				+this.reset+"\t| "+(this.same/this.iters)+"\t| "+restart+"\t|");
 		
 	}
-	
+
 	/**
 	 * 	Print the stat averages
 	 * 	@param no total number of iterations
 	 */
 	def printAVG(no:Int){
-		Console.OUT.println("| "+no+"\t| "+this.time/no+"\t| "+this.iters/no+"\t|  N/A  | "+this.locmin/no+"\t| "+this.swaps/no+"\t| "
+		
+		Console.OUT.print("| "+no+"\t| ");
+		Console.OUT.printf("%.5g",time/no);
+		Console.OUT.println("\t| "+this.iters/no+"\t|  N/A  | "+this.locmin/no+"\t| "+this.swaps/no+"\t| "
 				+this.reset/no+"\t| "+(this.same/this.iters)+"\t| "+restart/no+"\t|");
 		
 	}

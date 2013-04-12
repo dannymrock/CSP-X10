@@ -1,11 +1,12 @@
 /** ASSolverPermut is the implementation of Adaptive Search solver
  * 	in the x10 lenguage.
- *  Implementation specialized in Permuts Problems and no exhaustive search.
+ *  Implementation specialized in Permuts Problems.
  * 
  *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
  * 
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013 -> first version
+ * 				 April 12, 2013 -> Exahustive search implemented
  * 	
  */
 
@@ -30,6 +31,7 @@ public class ASSolverPermut {
 	var list_i_nb : Int;
 	var list_j_nb : Int;
 	var list_i : Array[Int](1); 
+	val list_ij : Array[Pair](1);
 	var nb_var_marked : Int;
 	val varRegion : Region(1);
 	/** Number of iterations to update kill status */
@@ -49,6 +51,10 @@ public class ASSolverPermut {
 	var nbSwapTot : Int;
 	var nbSameVarTot : Int;
 	var nbLocalMinTot : Int; 
+	
+	/** For Exhaustive search */
+	var nbListIJ : Int;
+	
 
 	/**
 	 *  Constructor of the class
@@ -61,6 +67,7 @@ public class ASSolverPermut {
 		varRegion = 0..(size - 1);
 		mark = new Array[Int](varRegion,0);
 		list_i = new Array[Int](varRegion,0); //Why not distributed?
+		list_ij = new Array[Pair](varRegion);
 		solverP = new ASSolverParameters();
 		random = new RandomTools(seed);
 		nb_var_marked = 0;
@@ -139,12 +146,16 @@ public class ASSolverPermut {
 				}
 				break; 
 			}
-		
-			max_i = selectVarHighCost(csp);
-			//Console.OUT.print("max_i= "+max_i);
-			min_j = selectVarMinConflict(csp);
-			//Console.OUT.println("  min_j= "+min_j);
 			
+			if( !solverP.exhaustive ){
+				max_i = selectVarHighCost( csp );
+				//Console.OUT.print("max_i= "+max_i);
+				min_j = selectVarMinConflict( csp );
+				//Console.OUT.println("  min_j= "+min_j);
+			} else {
+				selectVarsToSwap( csp );
+				//Console.OUT.println("max_i= "+max_i+"  min_j= "+min_j);
+			}
 			
 			//Console.OUT.println("----- iter no: "+nb_iter+", cost: "+total_cost+", nb marked: "+nb_var_marked+" ---, nb_swap= "+nb_swap);
 			
@@ -193,8 +204,6 @@ public class ASSolverPermut {
 	 		}
 		}
 		
-		//if(!kill)
-			//Console.OUT.print("Iter no: "+nb_iter+"\tcost: "+total_cost+"\t\tnb marked: "+nb_var_marked+"\t"+here);
 		nbIterTot += nbIter;
 		nbResetTot += nbReset;	
 		nbSwapTot += nbSwap;
@@ -304,14 +313,10 @@ public class ASSolverPermut {
 		 		if (list_j_nb == 0)
 		 		{
 		 			//Console.OUT.println("list_i_nb= "+list_i_nb);
-		 			//for(h in list_i)
-		 				//Console.OUT.print(" "+list_i(h));
 		 			nbIter++;
 		 			x = random.randomInt(list_i_nb);
 		 			max_i = list_i(x);
-		 			//max_i = list_i(1);
 		 			flagOut = true;
-		 			//break loop;
 		 		}
 		 	}
 		}while(flagOut);
@@ -333,7 +338,7 @@ public class ASSolverPermut {
 		nbSwap += n ; //I don't know what happened here with costas reset
 		
 		mark.clear();
-		//nbreset++;
+		nbReset++;
 		total_cost = (cost < 0) ? csp.costOfSolution(1) : cost; //Arg costofsol(1)
 	}
 	
@@ -343,6 +348,82 @@ public class ASSolverPermut {
 	public def clear(){
 	}
 	
+	/**
+	 *  Computes max_i and min_j, the 2 variables to swap.
+	 *  All possible pairs are tested exhaustively.
+	 */
+	public def selectVarsToSwap(csp : ModelAS)
+	{
+		var i : Int;
+		var j : Int;
+		var x : Int;
+		
+		nbListIJ = 0;
+		new_cost = x10.lang.Int.MAX_VALUE ;
+		nb_var_marked = 0;
+		
+		//Console.OUT.println("TC =>"+total_cost);
+ 
+ 		i = -1;
+ 		while(++i < size) // false if i < 0
+ 		{
+			if ( nbSwap < mark(i) )
+ 			{
+ 				nb_var_marked++;
+ 			}
+ 			j = i; //j = -1;
+ 			while(++j < size) //while((unsigned) (j = Next_J(i, j, i + 1)) < (unsigned) ad.size) // false if j < 0
+ 			{
+ 				//Console.OUT.println("SWAP "+i+" <-> "+j);
+ 				x = csp.costIfSwap(total_cost, i, j);
+ 				//Console.OUT.println("cost = "+x);
+ 
+ 				if (x <= new_cost)
+ 				{
+ 					if (x < new_cost)
+ 					{
+ 						new_cost = x;
+ 						nbListIJ = 0;
+ 						if (solverP.firstBest == true && x < total_cost)
+ 						{
+ 							max_i = i;
+ 							min_j = j;
+ 							return; 
+ 						}
+ 					}
+ 					list_ij(nbListIJ) = new Pair();
+ 					list_ij(nbListIJ).i = i;
+ 					list_ij(nbListIJ).j = j;
+ 					nbListIJ = (nbListIJ + 1) % size;
+ 				}
+ 			}
+ 		}
+ 
+ 		nbSameVar += nbListIJ;
+ 
+ 		if (new_cost >= total_cost)
+ 		{
+ 			if (nbListIJ == 0 || 
+ 					(( solverP.probSelectLocMin <= 100) && random.randomInt(100) < solverP.probSelectLocMin))
+ 			{
+ 				for(i = 0; nbSwap < mark(i); i++)
+ 				{}
+ 				max_i = min_j = i;
+ 				return;//goto end;
+ 			}
+ 
+ 			if (!(solverP.probSelectLocMin <= 100) && (x = random.randomInt(nbListIJ + size)) < size)
+ 			{
+ 				max_i = min_j = x;
+ 				return;//goto end;
+ 			}
+ 		}
+ 
+ 		x = random.randomInt(nbListIJ);
+ 		max_i = list_ij(x).i;
+ 		min_j = list_ij(x).j;
+ 		return;
+	}
 	
 	public def testSelectVarHighCost(csp: ModelAS){ 
 		var test:Int;
@@ -361,5 +442,11 @@ public class ASSolverPermut {
 		return timeEnd-timeStart;
 	}
 }//End ASSolverPermut Class
+
+class Pair{
+	var i : Int;
+	var j : int;
+}
+
 	
 

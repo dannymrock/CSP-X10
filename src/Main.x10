@@ -21,15 +21,19 @@ public class Main {
 		size = Int.parse(argv(1));
 		
 		testNo = Int.parse(argv(2));
-		val update = Int.parse(argv(3));
+		val threadE = Int.parse(argv(3));
+		
 		var param:Int = 0;
 				
 		if (cspProblem.equals("magic-square")) {
 			Console.OUT.println("Magic Square Problem");
-			param=1;
+			param = 1;
 		}else if(cspProblem.equals("costas")){
 			Console.OUT.println("Costas Array Problem");
-			param=2;
+			param = 2;
+		}else if(cspProblem.equals("all-interval")){
+			Console.OUT.println("All-Interval Array Problem");
+			param = 3;
 		}else{
 			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas");
 			return;
@@ -41,7 +45,7 @@ public class Main {
 		var sumTimes:Long = 0;
 		val accStats = new CSPStats();
 		
-		val solver = new ASSolverPermutRW(update);
+		val solver = new ASSolverPermutRW(threadE);
 		
 		Console.OUT.println("| Count\t| Time(s)\t| Iters\t| Place\t|LocMin | Swaps\t| Resets|Same/It| Rest  |");
 		Console.OUT.println("|-------|---------------|-------|-------|-------|-------|-------|-------|-------|");
@@ -55,7 +59,6 @@ public class Main {
 		}
 		Console.OUT.println("|-------|---------------|-------|-------|-------|-------|-------|-------|-------|");
 		accStats.printAVG(testNo);
-		
 		
 		/**********************************/
 		
@@ -138,11 +141,11 @@ public class Main {
 		
 		/****** costas ******/
 		
-		 // val cspObject = new AllIntervalAS(10, 2);
-		 // val solver = new ASSolverPermut(cspObject.length, 2, 100);
-		 // val cost = solver.solve(cspObject);
-		 // Console.OUT.println("cost= "+cost);
-		 // show("sol", cspObject.variables);
+		// val cspObject = new MagicSquareAS(10, 2);
+		// val solver = new ASSolverPermutTLB(cspObject.length, 2, 1, 2);
+		// val cost = solver.solve(cspObject);
+		// Console.OUT.println("cost= "+cost);
+		// show("sol", cspObject.variables);
 		
 		//cspObject.initialize(1);
 		//show("sol", cspObject.variables);

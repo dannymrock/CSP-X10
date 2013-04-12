@@ -24,17 +24,20 @@ public class ASSolverPermutRW{
 	var bcost : Int;
 	val stats : CSPStats;
 	val refStats : GlobalRef[CSPStats];
+	/** Solver with TLP */
+	val threadEnable : Int;
 	 
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( u : Int ){
+	def this( threadE : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
-		updateI = u;
+		updateI = 10; //Can be a parameter
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
+		threadEnable = threadE;
 	}
 	
 	/** 
@@ -59,10 +62,15 @@ public class ASSolverPermutRW{
 				if (cspProblem == 1) {			// Magic-Square
 					nsize = size*size;
 					cspDist(here.id) = new MagicSquareAS(size, seed);
-				}else  							// Costas
+				}else if(cspProblem == 2)  		// Costas
 					cspDist(here.id) = new CostasAS(size, seed);
+				else  							// All-Intervals
+					cspDist(here.id) = new AllIntervalAS(size, seed);
 				
-				solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
+				if (threadEnable == 0)
+					solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
+				else
+					solverDist(here.id) = new ASSolverPermutTLB(nsize, seed, updateI, 2);
 				
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
