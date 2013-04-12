@@ -5,7 +5,8 @@
  *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
  * 
  * 	@author Danny Munera
- *  @version 0.1 April 9, 2013 -> first version
+ *  @version 0.1 	9 April, 2013 -> first version
+ * 				 	12 April, 2013 -> Fix some bugs with TLP implementation
  * 	
  */
 
@@ -22,16 +23,16 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 	 *  @seed seed for the randomness in the object.
 	 * 
 	 */
-	public def this( sizeOfProblem : Int , seed : Long, updateI : Int, instNumber : Int) {
+	public def this( sizeOfProblem : Int , seed : Long, updateI : Int) {
 		super(sizeOfProblem, seed, updateI);
 		
-		computeInst = new Array[ComputePlace](0..(instNumber-1));
-		nbThread = instNumber;
-		
-		startBarrier = new ThreadBarrier(nbThread+1);
+		//Maximum number of threads supported = 2
+		nbThread = 2;
+		computeInst = new Array[ComputePlace](0..(nbThread-1));		
+		startBarrier = new ThreadBarrier(nbThread+1); //nbthread workers threads + 1 master thread
 		doneBarrier = new ThreadBarrier(nbThread+1);
 	}
-	
+
 	/**
 	 *  solve( csp : ModelAS ) : Int
 	 *  Solve a csp Problem through the Adaptive Search algoritm
@@ -58,36 +59,39 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 	
 	
 	public def selectVarHighCost(csp : ModelAS) : Int {
+				
 		for(id in computeInst) computeInst(id).activity = 0;
-		//Console.OUT.println("M: Sending start signal");
 		startBarrier.wait(); // send start signal
-		//Console.OUT.println("M: waiting for data");
 		doneBarrier.wait(); // work ready
-		val maxI = terminateSelVarHighCost();
-		return maxI;
-	}
-	
-	public def terminateSelVarHighCost() : Int{
-		var index : Int = computeInst(0).max_i_th;
-		var maximum : Int = computeInst(0).maxCost;
+		
+		
+		//val maxI = terminateSelVarHighCost();
+		//nb_var_marked = 0;
+		nb_var_marked = computeInst(0).localnbVarMarked + computeInst(1).localnbVarMarked;
 		thIndex = 0;
 		
-		nb_var_marked = computeInst(0).localnbVarMarked;
-		
-		for(threadId in 1..(nbThread-1)){
-			//Console.OUT.println("l="+l);
-			nb_var_marked += computeInst(threadId).localnbVarMarked;
-			if (computeInst(threadId).maxCost > maximum) {
-				maximum = computeInst(threadId).maxCost;  
-				index = computeInst(threadId).max_i_th;
-				thIndex =  threadId;
-			}
+		if (computeInst(1).maxCost  >  computeInst(0).maxCost) {
+			thIndex =  1;
+		} else if (computeInst(1).maxCost < computeInst(0).maxCost){
+			thIndex =  0;
+		} else if (computeInst(1).maxCost == computeInst(0).maxCost){
+			list_i_nb = computeInst(0).list_i_index + computeInst(1).list_i_index;
+			Array.copy(computeInst(0).threadList_i , 0 , list_i , 0 , computeInst(0).list_i_index);
+			Array.copy(computeInst(1).threadList_i , 0 , list_i , computeInst(0).list_i_index , computeInst(1).list_i_index);
+			nbSameVar += list_i_nb;
+			//return computeInst(0).max_i_th;
+			val x = random.randomInt(list_i_nb);
+			//Console.OUT.println("list_i_nb "+list_i_nb+ " x "+x+" list_i(x) "+list_i(x));
+			return list_i(x);
 		}
-		//Console.OUT.println("index= "+index);
 		list_i_nb = computeInst(thIndex).list_i_index;
-		list_i = computeInst(thIndex).threadList_i;
+		Array.copy(computeInst(thIndex).threadList_i , 0 , list_i, 0 , computeInst(thIndex).list_i_index);
 		nbSameVar += list_i_nb;
-		return index;
+		val x = random.randomInt(list_i_nb);
+		//Console.OUT.println("list_i_nb "+list_i_nb+ " x "+x+" list_i(x) "+list_i(x));
+		return list_i(x);
+		
+		//return computeInst(thIndex).max_i_th;
 	}
 	
 	class ComputePlace{
@@ -99,7 +103,7 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 		val partition:Int;
 		val csp:ModelAS;
 		val threadList_i : Array[Int];
-		var max_i_th:Int;
+		//var max_i_th:Int;
 		var maxCost: Int;
 		val r = new Random();
 		var localnbVarMarked:Int;
@@ -144,9 +148,10 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 			var x: Int;
 			
 			
-			max_i_th = -1;
+			//max_i_th = -1;
 			list_i_index = 0;
 			maxCost = -1;
+			localnbVarMarked = 0;
 			
 			for (i = idI * partition ; i < (idI+1) * partition ; i++)		//while(i++ < size) 
 			{	
@@ -167,9 +172,6 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 					threadList_i(list_i_index++) = i; 
 				}
 			}
-			x = r.nextInt(list_i_index);
-			//Console.OUT.println("list_i_nb "+list_i_nb+ " x "+x+" list_i(x) "+list_i(x));
-			max_i_th = threadList_i(x); //This max_i must be local or only returns the value
 			//nbSameVar += list_i_nb;
 		}//end selecVarHighCost
 	}//end ComputePlace inner class

@@ -1,6 +1,3 @@
-import x10.util.Random;
-import x10.compiler.Pragma;
-
 /** ASSolverPermutRW is the parallel implementation of Adaptive Search solver
  * 	in the x10 language. This implementation use distributed isolated intances
  * 	of the solver, each one with a diferent seeds in order to have differents 
@@ -11,9 +8,12 @@ import x10.compiler.Pragma;
  *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
  * 
  * 	@author Danny Munera
- *  @version 0.1 April 9, 2013 Fist Version
- * 	April 10, 2013 -> changes queens by costas problem
+ *  @version 0.1 	9 April, 2013  -> Fist Version
+ * 					10 April, 2013 -> Changes queens by costas problem
+ * 					12 April, 2013 -> TLP support
  */
+import x10.util.Random;
+//import x10.compiler.Pragma;
 
 public class ASSolverPermutRW{
 	val solverDist : DistArray[ASSolverPermut];
@@ -70,7 +70,7 @@ public class ASSolverPermutRW{
 				if (threadEnable == 0)
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
 				else
-					solverDist(here.id) = new ASSolverPermutTLB(nsize, seed, updateI, 2);
+					solverDist(here.id) = new ASSolverPermutTLB(nsize, seed, updateI);
 				
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));

@@ -1,8 +1,9 @@
-/** MAin
+/** Main
  * 	Main class of the project. 
  * 
  * 	@author Danny Munera
- *  @version 0.1 April 9, 2013 -> First Version
+ *  @version 0.1 	9 April, 2013 	-> First Version
+ * 					12 April, 2013	-> TLP support
  */
 
 import x10.util.Random;
