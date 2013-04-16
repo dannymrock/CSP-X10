@@ -11,7 +11,7 @@
  */
 
 import x10.util.Random;
-public class ASSolverPermutTLB extends ASSolverPermut {
+public class ASSolverPermutTLB extends ASSolverPermut { 
 	val computeInst : Array[ComputePlace];
 	var startBarrier : ThreadBarrier;
 	var doneBarrier : ThreadBarrier;

@@ -142,17 +142,33 @@ public class Main {
 		
 		/****** costas ******/
 		
-		// val cspObject = new MagicSquareAS(10, 2);
-		// val solver = new ASSolverPermutTLB(cspObject.length, 2, 1, 2);
-		// val cost = solver.solve(cspObject);
-		// Console.OUT.println("cost= "+cost);
+		/*val csp = new AllIntervalAS(10, 2);
+		csp.initialize(0);
+		show("sol", csp.variables);
+		val solver = new ASSolverPermut(csp.length, 2, 1);
+		var cost :Int = csp.costOfSolution(1); 
+		Console.OUT.println("cost= "+cost);
+		var max_i :Int = 6;
+		Console.OUT.println("max ="+max_i);
+		for (i in 0..9){
+			var cost1 :Int = csp.costIfSwap(cost,i,max_i);
+			Console.OUT.println("swap "+i+"/"+max_i+" = "+cost1);
+		}
+		csp.swapVariables(3,6);
+		show("sol swap", csp.variables);
+		csp.executedSwap(3,6);
+		cost = csp.cost();
+		Console.OUT.println("new cost= "+cost);
+		max_i = solver.selectVarHighCost(csp);
+		Console.OUT.println("new max ="+max_i);
+		//val min = solver.selectVarMinConflict(csp);
 		// show("sol", cspObject.variables);
 		
 		//cspObject.initialize(1);
 		//show("sol", cspObject.variables);
 		//val cost = cspObject.costOfSolution(1);
 		//Console.OUT.println("cost= "+cost);
-		
+		*/
 		/******************/
 
 		return;

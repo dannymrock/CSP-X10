@@ -1,7 +1,7 @@
 /** CostasAS is the implementation of Costas Array problem for the Adaptive Search solver
  * 	in the x10 language.
  * 
- *  This code is an adaptation in x10 of the C implementation of Adaptive Search algoritm 
+ *  This x10 code is an adaptation of the Adaptive Search Algoritm C implementation
  * 	by Daniel Diaz
  * 
  * 	@author Danny Munera

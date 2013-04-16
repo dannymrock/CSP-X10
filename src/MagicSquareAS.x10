@@ -1,7 +1,7 @@
 /** MagicSquareAS is the implementation of Magic Square problem for the Adaptive Search solver
  * 	in the x10 language.
  * 
- *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
+ *  This x10 code is an adaptation of the Adaptive Search Algoritm C implementation by Daniel Diaz
  * 
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013

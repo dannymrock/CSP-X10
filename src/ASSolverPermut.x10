@@ -2,7 +2,7 @@
  * 	in the x10 lenguage.
  *  Implementation specialized in Permuts Problems.
  * 
- *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
+ *  This x10 code is an adaptation of the Adaptive Search Algoritm C implementation by Daniel Diaz
  * 
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013 -> first version
@@ -157,7 +157,7 @@ public class ASSolverPermut {
 				//Console.OUT.println("max_i= "+max_i+"  min_j= "+min_j);
 			}
 			
-			//Console.OUT.println("----- iter no: "+nb_iter+", cost: "+total_cost+", nb marked: "+nb_var_marked+" ---, nb_swap= "+nb_swap);
+			//Console.OUT.println("----- iter no: "+nbIter+", cost: "+total_cost+", nb marked: "+nb_var_marked+" ---, nb_swap= "+nbSwap);
 			
 			if (total_cost != new_cost)
 			{
@@ -202,6 +202,7 @@ public class ASSolverPermut {
 	 			if(kill)
 	 				break;
 	 		}
+	 		//Main.show("nuevo vector ",csp.variables);
 		}
 		
 		nbIterTot += nbIter;
@@ -209,6 +210,9 @@ public class ASSolverPermut {
 		nbSwapTot += nbSwap;
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
+		
+		//Main.show("final= ",csp.variables);
+		//Console.OUT.println("Cost = "+total_cost);
 		
 		return total_cost;
 	}
@@ -240,7 +244,7 @@ public class ASSolverPermut {
 			}
 			//Console.OUT.println("Aqui");
 			x = csp.costOnVariable(i);
-			//Console.OUT.println("Aqui");
+			//Console.OUT.println("var: "+i+" cost= "+x);
 			if (x >= max){
 				if (x > max){
 					max = x;

@@ -65,7 +65,7 @@ public class ASSolverPermutRW{
 				}else if(cspProblem == 2)  		// Costas
 					cspDist(here.id) = new CostasAS(size, seed);
 				else  							// All-Intervals
-					cspDist(here.id) = new AllIntervalAS(size, seed);
+					cspDist(here.id) = new AllIntervalAS(size, seed, true);
 				
 				if (threadEnable == 0)
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);

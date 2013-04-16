@@ -29,7 +29,9 @@ public class ThreadBarrier {
 			monitor.await();
 			monitor.unlock();
 		}
+		monitor.lock();
 		left++;
+		monitor.unlock();
 	}	
 	
 }
