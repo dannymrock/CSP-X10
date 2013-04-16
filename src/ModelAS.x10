@@ -65,7 +65,7 @@ public class ModelAS {
 	 * 	Cost on variable function (may be virtual)
 	 */
 	public def costOnVariable(var i:Int):Int{
-		Console.OUT.println("Error");
+		Console.OUT.println("Error bad costOnVariable");
 		return 0;
 	}
 	
@@ -73,7 +73,7 @@ public class ModelAS {
 	 * 	Cost if swap function
 	 */
 	public def costIfSwap(current_cost:Int, i1:Int, i2:Int):Int{
-		Console.OUT.println("Error");
+		Console.OUT.println("Error costIfSwap");
 		return 0;
 	}
 	
@@ -81,7 +81,7 @@ public class ModelAS {
 	 * 	executed swap
 	 */
 	public def executedSwap(var i1:Int, var i2:Int):void{
-		Console.OUT.println("Error");
+		Console.OUT.println("Error executedSwap");
 	}
 	
 	
@@ -92,7 +92,7 @@ public class ModelAS {
 	}
 		
 	public def costOfSolution(shouldBeRecorded : Int):Int {
-		Console.OUT.println("Error");
+		Console.OUT.println("Error costOfSolution");
 		return 0;
 	}
 		

@@ -132,7 +132,7 @@ public class CostasAS extends ModelAS{
 	 * 	@param i variable
 	 * 	@return cost of variable i
 	 */
-	public def CostOnVariable( i : Int ) : Int
+	public def costOnVariable( var i : Int ) : Int
 	{
 		return err(i);
 	}
