@@ -22,7 +22,7 @@ public class Main {
 		size = Int.parse(argv(1));
 		
 		testNo = Int.parse(argv(2));
-		val threadE = Int.parse(argv(3));
+		val updateI = Int.parse(argv(3));
 		
 		var param:Int = 0;
 				
@@ -46,21 +46,38 @@ public class Main {
 		var sumTimes:Long = 0;
 		val accStats = new CSPStats();
 		
-		val solver = new ASSolverPermutRW(threadE);
+		val solverP = new ASSolverPermutRW(updateI); //this line -----***-----
+		val solverT = new ASSolverPermutRWActivities(updateI,updateI);
 		
-		Console.OUT.println("| Count\t| Time(s)\t| Iters\t| Place\t|LocMin | Swaps\t| Resets|Same/It| Rest  |");
-		Console.OUT.println("|-------|---------------|-------|-------|-------|-------|-------|-------|-------|");
 		
-		for (var j : Int = 0; j < testNo ; j++ ){
+		if (updateI == 0){
+			Console.OUT.println("Using "+Place.MAX_PLACES+" Places");
+		} else{
+			Console.OUT.println("Using "+updateI+" Activities");
+		}
+		
+		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  |Sa/It|ReSta|");
+		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-----|-----|");
+		
+		for (var j : Int = 1; j <= testNo ; j++ ){
 			
 			//Solve the problem
-			val stats = solver.solve(size,param);
+			val stats:CSPStats;
+			if (updateI == 0){ 
+				stats = solverP.solve(size,param);
+			}else{
+				stats = solverT.solve(size,param);
+			}
 			accStats.accStats(stats);
+			Console.OUT.printf("\r");
 			stats.print(j);
+			accStats.printAVG(j);
+			Console.OUT.flush();
 		}
-		Console.OUT.println("|-------|---------------|-------|-------|-------|-------|-------|-------|-------|");
+		Console.OUT.printf("\r");
+		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-----|-----|");
 		accStats.printAVG(testNo);
-		
+		Console.OUT.printf("\n");
 		/**********************************/
 		
 		/*val cspProblem:String;

@@ -77,11 +77,9 @@ public class CSPStats {
 	 * 	@param count Number of this iteration
 	 */
 	def print(count:Int){
-		
-		Console.OUT.print("| "+count+"\t| ");
-		Console.OUT.printf("%.5g",time);
-		Console.OUT.println("\t| "+this.iters+"\t| "+this.place+"\t| "+this.locmin+"\t| "+this.swaps+"\t| "
-				+this.reset+"\t| "+(this.same/this.iters)+"\t| "+restart+"\t|");
+		val sameIter : Float = (same as Float)/(iters as Float);
+		Console.OUT.printf("| %3d | %8.4f | %8d | %3d | %8d |",count, time, iters, place, locmin);
+		Console.OUT.printf(" %8d | %8d | %3.1f | %3d |\n",swaps,reset,sameIter,restart);
 		
 	}
 
@@ -90,11 +88,9 @@ public class CSPStats {
 	 * 	@param no total number of iterations
 	 */
 	def printAVG(no:Int){
-		
-		Console.OUT.print("| "+no+"\t| ");
-		Console.OUT.printf("%.5g",time/no);
-		Console.OUT.println("\t| "+this.iters/no+"\t|  N/A  | "+this.locmin/no+"\t| "+this.swaps/no+"\t| "
-				+this.reset/no+"\t| "+(this.same/this.iters)+"\t| "+restart/no+"\t|");
+		val sameIter : Float = (same as Float)/(iters as Float);
+		Console.OUT.printf("| avg | %8.4f | %8d | N/A | %8d |",time/no, iters/no, locmin/no);
+		Console.OUT.printf(" %8d | %8d | %3.1f | %3d |",swaps/no,reset/no,sameIter,restart/no);
 		
 	}
 }

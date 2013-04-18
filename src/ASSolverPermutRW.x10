@@ -3,9 +3,7 @@
  * 	of the solver, each one with a diferent seeds in order to have differents 
  * 	scanning walks in the search space.
  * 
- *  The AS solver Implementation is specialized in Permuts Problems and no exhaustive search.
- * 
- *  Based on the C implementation of Adaptive Search algoritm by Daniel Diaz
+ *  This implementation distribute the solver instances in Places
  * 
  * 	@author Danny Munera
  *  @version 0.1 	9 April, 2013  -> Fist Version
@@ -26,18 +24,33 @@ public class ASSolverPermutRW{
 	val refStats : GlobalRef[CSPStats];
 	/** Solver with TLP */
 	val threadEnable : Int;
-	 
+	
+	/** Comunication Variables*/
+	val currentCosts : DistArray[Int];
+	val commData : CommData;
+	val refComm : GlobalRef[CommData];
+	
+	//val solverRef : GlobalRef[ASSolverPermutRW];
+	
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( threadE : Int ){
+	def this( upI : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
-		updateI = 10; //Can be a parameter
+		
+		currentCosts = DistArray.make[Int](Dist.makeUnique(), -1);
+		commData = new CommData(x10.lang.Int.MAX_VALUE, -1); 
+		
+		updateI = upI; //Can be a parameter
+		
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
-		threadEnable = threadE;
+		refComm = GlobalRef[CommData](commData);
+		threadEnable = 0; //TLP or sequential
+		
+		
 	}
 	
 	/** 
@@ -49,6 +62,7 @@ public class ASSolverPermutRW{
 	 * 	@return cost of the solution
 	 */
 	public def solve( size : Int , cspProblem : Int ) : CSPStats{ 
+		
 		
 		val random = new Random();
 		finish for(p in Place.places()){ 
@@ -88,7 +102,7 @@ public class ASSolverPermutRW{
 				}
 			}
 		}
-		return stats; //return cost (this is not good)
+		return stats; 
 	}
 	
 	def setStats(  ){
@@ -104,6 +118,5 @@ public class ASSolverPermutRW{
 		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart);
 		//val winstats = new CSPStats
 	}
-	
-	
 }
+

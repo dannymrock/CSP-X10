@@ -39,7 +39,7 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 	 * 	@param csp The model of the problem to solve
 	 *  @return the final total cost after solving process (If success returns 0)
 	 */ 
-	public def solve( csp : ModelAS ) : Int {
+	public def solve( csp : ModelAS) : Int {
 		
 		for(var p : Int = 0 ; p < nbThread; p++){
 			computeInst(p) = new ComputePlace(p , csp);

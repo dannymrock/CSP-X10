@@ -82,7 +82,7 @@ public class ASSolverPermut {
 	 * 	@param csp The model of the problem to solve
 	 *  @return the final total cost after solving process (If success returns 0)
 	 */ 
-	public def solve( csp : ModelAS ) : Int {
+	public def solve( csp : ModelAS ) : Int { //refComm : GlobalRef[CommData]
 		
 		var nb_in_plateau:Int; 
 		
@@ -179,7 +179,8 @@ public class ASSolverPermut {
 			{	
 	 			nbLocalMin++;
 				mark(max_i) = nbSwap + solverP.freezeLocMin; //Mark(max_i, freeze_loc_min);
-	 			if (nb_var_marked > solverP.resetLimit)
+				//Console.OUT.println("nb_var_marked "+nb_var_marked+"solverP.resetLimit= "+solverP.resetLimit);
+	 			if (nb_var_marked + 1 >= solverP.resetLimit)
 	 			{
 	 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
 	 				doReset(nb_var_to_reset,csp);//doReset(nb_var_to_reset,csp);
@@ -197,11 +198,13 @@ public class ASSolverPermut {
 				total_cost = new_cost;
 			}
 	 		
-	 		if( nbIter % updateP == 0 ){
-	 			Runtime.probe();
-	 			if(kill)
-	 				break;
-	 		}
+	 		Runtime.probe();
+	 		if(kill)
+	 			break;
+	 		
+	 		//if( nbIter % updateP == 0 ){
+	 			//CommFunction	 			
+	 		//}
 	 		//Main.show("nuevo vector ",csp.variables);
 		}
 		
@@ -211,7 +214,9 @@ public class ASSolverPermut {
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
 		
-		//Main.show("final= ",csp.variables);
+		//if(!kill)
+			//Main.show("final= ",csp.variables);
+
 		//Console.OUT.println("Cost = "+total_cost);
 		
 		return total_cost;
@@ -271,7 +276,7 @@ public class ASSolverPermut {
 		var j: Int;
 		var x: Int;
 		var flagOut:Boolean = false; 
-		var lmin_j:Int=min_j;
+		var lmin_j : Int = -1;
 		
 		//loop: 
 		do{
@@ -452,5 +457,25 @@ class Pair{
 	var j : int;
 }
 
-	
-
+/*
+//Update shared Data
+val valtotal = total_cost;
+val placeid = here.id;
+at(refComm) async{
+	atomic{
+		refComm().costArray(placeid) = valtotal;
+		if(valtotal < refComm().bestCost){
+			refComm().bestPlaceId = placeid;
+			refComm().bestCost = valtotal;
+		}
+	}
+}
+// Debug
+if(here.id == 0){
+	Console.OUT.print("BP= "+refComm().bestPlaceId);
+	finish for(p in Place.places()){
+		Console.OUT.print("\t- TC P"+p.id+"= "+refComm().costArray(p.id));
+	}
+	Console.OUT.println(" ");
+}
+*/

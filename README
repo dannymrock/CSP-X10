@@ -4,7 +4,7 @@ April 12
 1 Make some test and graphs   						OK
 2 Implements AllInterval CostOnVariable				fine tunning parameters
 3 Some simple communication test
-4 QAP - Paper and AS implementation
+4 QAP - AS implementation
 5 Implements AS TLP with asyncs (probe clocks and others)
 5 !Get speed-ups with TLP! if It is possible
 6 Implements Partit example
