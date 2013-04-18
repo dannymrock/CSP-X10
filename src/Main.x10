@@ -56,8 +56,8 @@ public class Main {
 			Console.OUT.println("Using "+updateI+" Activities");
 		}
 		
-		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  |Sa/It|ReSta|");
-		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-----|-----|");
+		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta|");
+		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|");
 		
 		for (var j : Int = 1; j <= testNo ; j++ ){
 			
@@ -75,7 +75,7 @@ public class Main {
 			Console.OUT.flush();
 		}
 		Console.OUT.printf("\r");
-		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-----|-----|");
+		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|");
 		accStats.printAVG(testNo);
 		Console.OUT.printf("\n");
 		/**********************************/

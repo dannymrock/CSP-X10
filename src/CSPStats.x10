@@ -79,7 +79,7 @@ public class CSPStats {
 	def print(count:Int){
 		val sameIter : Float = (same as Float)/(iters as Float);
 		Console.OUT.printf("| %3d | %8.4f | %8d | %3d | %8d |",count, time, iters, place, locmin);
-		Console.OUT.printf(" %8d | %8d | %3.1f | %3d |\n",swaps,reset,sameIter,restart);
+		Console.OUT.printf(" %8d | %8d | %5.2f | %3d |\n",swaps,reset,sameIter,restart);
 		
 	}
 
@@ -90,7 +90,7 @@ public class CSPStats {
 	def printAVG(no:Int){
 		val sameIter : Float = (same as Float)/(iters as Float);
 		Console.OUT.printf("| avg | %8.4f | %8d | N/A | %8d |",time/no, iters/no, locmin/no);
-		Console.OUT.printf(" %8d | %8d | %3.1f | %3d |",swaps/no,reset/no,sameIter,restart/no);
+		Console.OUT.printf(" %8d | %8d | %5.2f | %3d |",swaps/no,reset/no,sameIter,restart/no);
 		
 	}
 }

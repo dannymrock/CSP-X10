@@ -157,10 +157,12 @@ public class MagicSquareAS extends ModelAS{
 		var xr:Xref = xref(i);
 		var r:Int;
 
-		r = err_l(xr.getL()) + err_c(xr.getC()) + 
-			(xr.d1 ? err_d1 : 0) + (xr.d2 ? err_d2 : 0);
+		r = err_l_abs(xr.getL()) + err_c_abs(xr.getC()) + 
+			(xr.d1 ? err_d1_abs : 0) + (xr.d2 ? err_d2_abs : 0);
+		//r = err_l(xr.getL()) + err_c(xr.getC()) + 
+		//	(xr.d1 ? err_d1 : 0) + (xr.d2 ? err_d2 : 0);
 
-		r = Math.abs(r); 
+		//r = Math.abs(r); 
 		
 		return r;
 	}
