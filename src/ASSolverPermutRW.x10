@@ -78,9 +78,12 @@ public class ASSolverPermutRW{
 					cspDist(here.id) = new MagicSquareAS(size, seed);
 				}else if(cspProblem == 2)  		// Costas
 					cspDist(here.id) = new CostasAS(size, seed);
-				else  							// All-Intervals
+				else if (cspProblem == 3) 		// All-Intervals
 					cspDist(here.id) = new AllIntervalAS(size, seed, true);
-				
+				else if (cspProblem == 4){
+					nsize = size*2;
+					cspDist(here.id) = new LangfordAS(size, seed);
+				}
 				if (threadEnable == 0)
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
 				else

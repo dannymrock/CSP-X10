@@ -17,7 +17,7 @@ public class ASSolverPermut {
 	val size : Int;  
 	val solverP : ASSolverParameters; 
 	
-	var nb_var_to_reset : Int; 
+	//var nb_var_to_reset : Int; 
 	
 	var max_i : Int;		//static int max_i ALIGN;		/* swap var 1: max projected cost (err_var[])*/
 	var min_j : Int;
@@ -88,7 +88,16 @@ public class ASSolverPermut {
 		
 		csp.setParameters(solverP);
 		
-		nb_var_to_reset = (((size * solverP.resetPercent) + (100) - 1) / (100));
+		//nb_var_to_reset = (((size * solverP.resetPercent) + (100) - 1) / (100));
+		if (solverP.nbVarToReset == -1){
+			solverP.nbVarToReset = (((size * solverP.resetPercent) + (100) - 1) / (100));
+			if (solverP.nbVarToReset < 2)
+			{
+				solverP.nbVarToReset = 2;
+				Console.OUT.printf("increasing nb var to reset since too small, now = %d\n", solverP.nbVarToReset);
+			}
+		}
+		
 		csp.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
 		//Main.show("initial= ",csp.variables);
 		
@@ -183,7 +192,7 @@ public class ASSolverPermut {
 	 			if (nb_var_marked + 1 >= solverP.resetLimit)
 	 			{
 	 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
-	 				doReset(nb_var_to_reset,csp);//doReset(nb_var_to_reset,csp);
+	 				doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
 	 				//Main.show("after reset= ",csp.variables);
 	 			}
 			}
@@ -215,7 +224,7 @@ public class ASSolverPermut {
 		nbLocalMinTot += nbLocalMin; 
 		
 		//if(!kill)
-			//Main.show("final= ",csp.variables);
+			//csp.displaySolution();//Main.show("final= ",csp.variables);
 
 		//Console.OUT.println("Cost = "+total_cost);
 		

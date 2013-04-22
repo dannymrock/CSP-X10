@@ -26,7 +26,7 @@ public class ModelAS {
 		length = lengthProblem;
 		variables = new Array[Int]( varRegion, ([i]:Point) => i);
 		r = new RandomTools(seed);
-		initParameters();
+		this.initParameters();
 	}
 	
 	/**
@@ -51,6 +51,7 @@ public class ModelAS {
 		solverParams.restartMax = 0;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
+		solverParams.nbVarToReset = -1;
 	}
 	
 	/**
@@ -65,7 +66,7 @@ public class ModelAS {
 	 * 	Cost on variable function (may be virtual)
 	 */
 	public def costOnVariable(var i:Int):Int{
-		Console.OUT.println("Error bad costOnVariable");
+		//Console.OUT.println("Error bad costOnVariable");
 		return 0;
 	}
 	
@@ -73,7 +74,7 @@ public class ModelAS {
 	 * 	Cost if swap function
 	 */
 	public def costIfSwap(current_cost:Int, i1:Int, i2:Int):Int{
-		Console.OUT.println("Error costIfSwap");
+		//Console.OUT.println("Error costIfSwap");
 		return 0;
 	}
 	
@@ -81,7 +82,7 @@ public class ModelAS {
 	 * 	executed swap
 	 */
 	public def executedSwap(var i1:Int, var i2:Int):void{
-		Console.OUT.println("Error executedSwap");
+		//Console.OUT.println("Error executedSwap");
 	}
 	
 	
@@ -92,7 +93,7 @@ public class ModelAS {
 	}
 		
 	public def costOfSolution(shouldBeRecorded : Int):Int {
-		Console.OUT.println("Error costOfSolution");
+		//Console.OUT.println("Error costOfSolution");
 		return 0;
 	}
 		
@@ -139,4 +140,10 @@ public class ModelAS {
 		}
 		return -1;
 	}
+	
+	public def displaySolution()
+	{
+		Main.show("final",variables);
+	}
+	
 }

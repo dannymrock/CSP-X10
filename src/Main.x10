@@ -35,6 +35,9 @@ public class Main {
 		}else if(cspProblem.equals("all-interval")){
 			Console.OUT.println("All-Interval Array Problem");
 			param = 3;
+		}else if(cspProblem.equals("langford")){
+			Console.OUT.println("Langford Pairing Problem");
+			param = 4;
 		}else{
 			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas");
 			return;

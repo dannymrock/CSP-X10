@@ -38,6 +38,7 @@ public class ASSolverParameters {
 	 */
 	public def this(){
 		firstBest = false; //revisar val por default
+		nbVarToReset = -1;
 	}
 	
 	/**
