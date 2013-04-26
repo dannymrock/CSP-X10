@@ -353,15 +353,20 @@ public class ASSolverPermut {
 	 */
 	public def doReset( var n : Int, csp : ModelAS ) {
 		
-		var cost:Int = -1;		//reset(n, csp);
+		var cost : Int = -1;		//reset(n, csp);
+		var ipVector : Int = -1;
+		if (random.randomInt(100) < 50){ //50 % times do interplace reset
+			// Try interplace reset
+			//Console.OUT.println("new reset");
+			ipVector = solverC.getIPVector(csp);
+			//csp.setVariables(solverC.getRandomVector());
+			nbSwap += size;
+		}
 		
-		if (random.randomInt(100) < 50){
+		if (ipVector != 1){
 			cost = csp.reset( n, total_cost );
 			nbSwap += n ; //I don't know what happened here with costas reset
-		}else{
-			//Console.OUT.println("new reset");
-			csp.setVariables(solverC.getRandomVector()); 
-			nbSwap += size;
+			
 		}
 		mark.clear();
 		nbReset++;

@@ -18,14 +18,17 @@ public class ASSolverPermutRW{
 	val cspDist : DistArray[ModelAS];
 	val timeDist : DistArray[Long];
 	var winPlace : Place;
+	
 	val updateI : Int;
+	val commEnable : Int;
+	
 	var bcost : Int;
 	val stats : CSPStats;
 	val refStats : GlobalRef[CSPStats];
 	
 	/** Comunication Variables*/
 	val currentCosts : DistArray[Int];
-	val commData : CommData;
+	var commData : CommData;
 	val refComm : GlobalRef[CommData];
 	//val fileQAP : String;
 	//val solverRef : GlobalRef[ASSolverPermutRW];
@@ -33,7 +36,7 @@ public class ASSolverPermutRW{
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int ){
+	def this( upI : Int, commE : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -41,7 +44,8 @@ public class ASSolverPermutRW{
 		currentCosts = DistArray.make[Int](Dist.makeUnique(), -1);
 		commData = new CommData(); 
 		
-		updateI = upI; //Can be a parameter
+		updateI = upI; 
+		commEnable = commE;
 		
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
@@ -90,7 +94,7 @@ public class ASSolverPermutRW{
 				// }
 				
 				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI ));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable ));
 	
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
@@ -108,6 +112,7 @@ public class ASSolverPermutRW{
 				}
 			}
 		}
+		this.clear();
 		return stats; 
 	}
 	
@@ -123,5 +128,15 @@ public class ASSolverPermutRW{
 		
 		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart);
 		//val winstats = new CSPStats
+	}
+	
+	
+	// public def setParameters(){
+	// 	
+	// }
+	
+	
+	public def clear(){
+		commData.clear();
 	}
 }

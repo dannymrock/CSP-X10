@@ -75,7 +75,7 @@ public class ASSolverPermutRWActivities {
 				}
 				
 				solverArray(aID) = new ASSolverPermut(nsize, seed, 
-						new ASSolverConf(ASSolverConf.USE_ACTIVITIES, refComm, updateI ));
+						new ASSolverConf(ASSolverConf.USE_ACTIVITIES, refComm, updateI, 0 ));
 				
 				timeArray(aID) = -System.nanoTime();
 				cost = solverArray(aID).solve(cspArray(aID));

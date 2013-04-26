@@ -1,16 +1,16 @@
 public class CommData {
 	var nbEntries : Int;
-	var bestCost : Int;
-	var bestPlaceId : Int;
-	val costArray : Array[Int];
+	//var bestCost : Int;
+	//var bestPlaceId : Int;
+	//val costArray : Array[Int];
 	val bestPartialSolutions : Array[CSPSharedUnit](1); 
 	 
 	def this( ){
 		nbEntries = 0;
 		bestPartialSolutions = new Array[CSPSharedUnit](0..9);
-		bestCost = x10.lang.Int.MAX_VALUE;
-		bestPlaceId = -1;
-		costArray = new Array[Int](0..(Place.MAX_PLACES),-1);
+		//bestCost = x10.lang.Int.MAX_VALUE;
+		//bestPlaceId = -1;
+		//costArray = new Array[Int](0..(Place.MAX_PLACES),-1);
 	}
 	
 	public def isGoodCost(cost : Int) : Boolean {
@@ -59,6 +59,10 @@ public class CommData {
 		val random = new RandomTools( 123 );
 		val i = random.randomInt(nbEntries);
 		return bestPartialSolutions(i).vector;
+	}
+	
+	public def clear(){
+		nbEntries = 0;
 	}
 	
 }
