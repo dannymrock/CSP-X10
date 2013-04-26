@@ -7,7 +7,7 @@
  *  @version 0.1 April 9, 2013 First Version
  */
 
-public class ASSolverParameters {
+public class ASSolverParameters { 
 	/** perform an exhausitve search */ 
 	var exhaustive : Boolean;
 	/** stop as soon as a better swap is found */

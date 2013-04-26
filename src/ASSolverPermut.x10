@@ -10,7 +10,7 @@
  * 	
  */
 
-import x10.util.Random;
+import x10.util.Random; 
 public class ASSolverPermut {
 
 	val mark : Array[Int](1); 

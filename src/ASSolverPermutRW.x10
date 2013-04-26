@@ -17,7 +17,7 @@ public class ASSolverPermutRW{
 	val solverDist : DistArray[ASSolverPermut];
 	val cspDist : DistArray[ModelAS];
 	val timeDist : DistArray[Long];
-	var winPlace : Place;
+	var winPlace : Place; 
 	val updateI : Int;
 	var bcost : Int;
 	val stats : CSPStats;

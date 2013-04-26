@@ -15,7 +15,7 @@ public class ASSolverPermutRWActivities {
 	val solverArray : Array[ASSolverPermut];
 	val cspArray : Array[ModelAS];
 	val timeArray : Array[Long];
-	val nbAct :Int;
+	val nbAct :Int; 
 	val region : Region(1);
 	
 	val stats : CSPStats;

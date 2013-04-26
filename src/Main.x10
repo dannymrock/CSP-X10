@@ -8,7 +8,7 @@
 
 import x10.util.Random;
 public class Main {
-	public static def main(argv:Array[String]):void {
+	public static def main(argv:Array[String]):void { 
 		/****************** RW *****************************/
 		
 		var size1:Int;

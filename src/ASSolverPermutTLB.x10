@@ -16,7 +16,7 @@ public class ASSolverPermutTLB extends ASSolverPermut {
 	var startBarrier : ThreadBarrier;
 	var doneBarrier : ThreadBarrier;
 	val nbThread : Int;
-	var thIndex : Int;
+	var thIndex : Int; 
 	/**
 	 *  Constructor of the class
 	 * 	@param sizeOfProblem size of the problem to solve
