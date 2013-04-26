@@ -56,13 +56,17 @@ public class ASSolverPermutRWActivities {
 				var cost:Int = x10.lang.Int.MAX_VALUE; 
 				var nsize:Int = size;
 				
-				if (cspProblem == 1) {			// Magic-Square
+				if (cspProblem == 1) {		// Magic-Square
 					nsize = size*size;
 					cspArray(aID) = new MagicSquareAS(size, seed);
-				}else if(cspProblem == 2)  		// Costas
-					cspArray(aID) = new CostasAS(size, seed);
-				else  							// All-Intervals
+				}else if(cspProblem == 2){    // Costas
+					cspArray(aID) = new CostasAS(size, seed);	
+				}else if (cspProblem == 3){   // All-Intervals
 					cspArray(aID) = new AllIntervalAS(size, seed, true);
+				}else if (cspProblem == 4){   // Langford
+					nsize = size*2;
+					cspArray(aID) = new LangfordAS(size, seed);
+				}
 				
 				solverArray(aID) = new ASSolverPermut(nsize, seed, updateI);
 				

@@ -94,7 +94,7 @@ public class ASSolverPermut {
 			if (solverP.nbVarToReset < 2)
 			{
 				solverP.nbVarToReset = 2;
-				Console.OUT.printf("increasing nb var to reset since too small, now = %d\n", solverP.nbVarToReset);
+				//Console.OUT.printf("increasing nb var to reset since too small, now = %d\n", solverP.nbVarToReset);
 			}
 		}
 		
