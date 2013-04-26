@@ -4,7 +4,7 @@
  * 	@author Danny Munera
  *  @version 0.1 April 10, 2013  First Version
  */
-import x10.util.Random;
+import x10.util.Random; 
 
 public class RandomTools { 
 	var seed: Long; 

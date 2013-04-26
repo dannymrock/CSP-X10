@@ -13,7 +13,7 @@
 import x10.util.Random;
 //import x10.compiler.Pragma;
 
-public class ASSolverPermutRW{
+public class ASSolverPermutRW{ 
 	val solverDist : DistArray[ASSolverPermut];
 	val cspDist : DistArray[ModelAS];
 	val timeDist : DistArray[Long];
@@ -22,14 +22,12 @@ public class ASSolverPermutRW{
 	var bcost : Int;
 	val stats : CSPStats;
 	val refStats : GlobalRef[CSPStats];
-	/** Solver with TLP */
-	val threadEnable : Int;
 	
 	/** Comunication Variables*/
 	val currentCosts : DistArray[Int];
 	val commData : CommData;
 	val refComm : GlobalRef[CommData];
-	
+	//val fileQAP : String;
 	//val solverRef : GlobalRef[ASSolverPermutRW];
 	
 	/**
@@ -41,15 +39,15 @@ public class ASSolverPermutRW{
 		timeDist = DistArray.make[Long](Dist.makeUnique());
 		
 		currentCosts = DistArray.make[Int](Dist.makeUnique(), -1);
-		commData = new CommData(x10.lang.Int.MAX_VALUE, -1); 
+		commData = new CommData(); 
 		
 		updateI = upI; //Can be a parameter
 		
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
 		refComm = GlobalRef[CommData](commData);
-		threadEnable = 0; //TLP or sequential
 		
+		//fileQAP = file;
 		
 	}
 	
@@ -78,14 +76,22 @@ public class ASSolverPermutRW{
 					cspDist(here.id) = new MagicSquareAS(size, seed);
 				}else if(cspProblem == 2)  		// Costas
 					cspDist(here.id) = new CostasAS(size, seed);
-				else  							// All-Intervals
+				else if (cspProblem == 3) 		// All-Intervals
 					cspDist(here.id) = new AllIntervalAS(size, seed, true);
+				else if (cspProblem == 4){		// Langford
+					nsize = size*2;
+					cspDist(here.id) = new LangfordAS(size, seed);
+				}
+				// else if (cspProblem == 5){ 	//QAP
+				// 	val qapT = new QAPTools(fileQAP);
+				// 	val sizeQAP = qapT.getSize();
+				// 	nsize = sizeQAP;
+				// 	cspDist(here.id) = new QAPAS(sizeQAP, seed, fileQAP);
+				// }
 				
-				if (threadEnable == 0)
-					solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
-				else
-					solverDist(here.id) = new ASSolverPermutTLB(nsize, seed, updateI);
-				
+				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI ));
+	
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
 				timeDist(here.id) += System.nanoTime();
@@ -119,4 +125,3 @@ public class ASSolverPermutRW{
 		//val winstats = new CSPStats
 	}
 }
-

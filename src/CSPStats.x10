@@ -87,7 +87,7 @@ public class CSPStats {
 	 * 	Print the stat averages
 	 * 	@param no total number of iterations
 	 */
-	def printAVG(no:Int){
+	def printAVG(no:Int){ 
 		val sameIter : Float = (same as Float)/(iters as Float);
 		Console.OUT.printf("| avg | %8.4f | %8d | N/A | %8d |",time/no, iters/no, locmin/no);
 		Console.OUT.printf(" %8d | %8d | %5.2f | %3d |",swaps/no,reset/no,sameIter,restart/no);

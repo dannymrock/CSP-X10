@@ -16,8 +16,9 @@ public class ASSolverPermut {
 	val mark : Array[Int](1); 
 	val size : Int;  
 	val solverP : ASSolverParameters; 
+	val solverC : ASSolverConf;
 	
-	var nb_var_to_reset : Int; 
+	//var nb_var_to_reset : Int; 
 	
 	var max_i : Int;		//static int max_i ALIGN;		/* swap var 1: max projected cost (err_var[])*/
 	var min_j : Int;
@@ -35,7 +36,7 @@ public class ASSolverPermut {
 	var nb_var_marked : Int;
 	val varRegion : Region(1);
 	/** Number of iterations to update kill status */
-	val updateP : Int;
+	//val updateP : Int;
 	
 	/**	Statistics	*/
 	var nbRestart : Int;
@@ -62,7 +63,7 @@ public class ASSolverPermut {
 	 *  @seed seed for the randomness in the object.
 	 * 
 	 */
-	public def this( sizeOfProblem : Int , seed : Long, updateI:Int) {
+	public def this( sizeOfProblem : Int , seed : Long, conf : ASSolverConf) {
 		size = sizeOfProblem;
 		varRegion = 0..(size - 1);
 		mark = new Array[Int](varRegion,0);
@@ -72,8 +73,9 @@ public class ASSolverPermut {
 		random = new RandomTools(seed);
 		nb_var_marked = 0;
 		nbRestart = 0;
-		updateP = updateI; //Default value 
+		//updateP = updateI; //Default value 
 		kill = false;
+		solverC = conf;    //set??
 	}
 	
 	/**
@@ -82,13 +84,22 @@ public class ASSolverPermut {
 	 * 	@param csp The model of the problem to solve
 	 *  @return the final total cost after solving process (If success returns 0)
 	 */ 
-	public def solve( csp : ModelAS ) : Int { //refComm : GlobalRef[CommData]
+	public def solve( csp : ModelAS ) : Int { //
 		
 		var nb_in_plateau:Int; 
 		
 		csp.setParameters(solverP);
 		
-		nb_var_to_reset = (((size * solverP.resetPercent) + (100) - 1) / (100));
+		//nb_var_to_reset = (((size * solverP.resetPercent) + (100) - 1) / (100));
+		if (solverP.nbVarToReset == -1){
+			solverP.nbVarToReset = (((size * solverP.resetPercent) + (100) - 1) / (100));
+			if (solverP.nbVarToReset < 2)
+			{
+				solverP.nbVarToReset = 2;
+				//Console.OUT.printf("increasing nb var to reset since too small, now = %d\n", solverP.nbVarToReset);
+			}
+		}
+		
 		csp.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
 		//Main.show("initial= ",csp.variables);
 		
@@ -183,7 +194,7 @@ public class ASSolverPermut {
 	 			if (nb_var_marked + 1 >= solverP.resetLimit)
 	 			{
 	 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
-	 				doReset(nb_var_to_reset,csp);//doReset(nb_var_to_reset,csp);
+	 				doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
 	 				//Main.show("after reset= ",csp.variables);
 	 			}
 			}
@@ -198,14 +209,15 @@ public class ASSolverPermut {
 				total_cost = new_cost;
 			}
 	 		
-	 		Runtime.probe();
-	 		if(kill)
+	 		Runtime.probe();		// Give a chance to the other activities
+	 		if(kill)				// If other place or activity are already finished
 	 			break;
 	 		
-	 		//if( nbIter % updateP == 0 ){
-	 			//CommFunction	 			
-	 		//}
-	 		//Main.show("nuevo vector ",csp.variables);
+	 		if( nbIter % solverC.commI == 0 ){
+	 			solverC.communicate(total_cost, csp);	 			
+	 		}
+	 		
+	 		//Main.show("new vector ",csp.variables);
 		}
 		
 		nbIterTot += nbIter;
@@ -215,7 +227,7 @@ public class ASSolverPermut {
 		nbLocalMinTot += nbLocalMin; 
 		
 		//if(!kill)
-			//Main.show("final= ",csp.variables);
+			//csp.displaySolution();//Main.show("final= ",csp.variables);
 
 		//Console.OUT.println("Cost = "+total_cost);
 		
@@ -340,12 +352,17 @@ public class ASSolverPermut {
 	 * 	@param csp Model to reset
 	 */
 	public def doReset( var n : Int, csp : ModelAS ) {
-		var cost:Int = -1;//reset(n, csp);
 		
-		cost = csp.reset( n, total_cost );
+		var cost:Int = -1;		//reset(n, csp);
 		
-		nbSwap += n ; //I don't know what happened here with costas reset
-		
+		if (random.randomInt(100) < 50){
+			cost = csp.reset( n, total_cost );
+			nbSwap += n ; //I don't know what happened here with costas reset
+		}else{
+			//Console.OUT.println("new reset");
+			csp.setVariables(solverC.getRandomVector()); 
+			nbSwap += size;
+		}
 		mark.clear();
 		nbReset++;
 		total_cost = (cost < 0) ? csp.costOfSolution(1) : cost; //Arg costofsol(1)
@@ -456,26 +473,3 @@ class Pair{
 	var i : Int;
 	var j : int;
 }
-
-/*
-//Update shared Data
-val valtotal = total_cost;
-val placeid = here.id;
-at(refComm) async{
-	atomic{
-		refComm().costArray(placeid) = valtotal;
-		if(valtotal < refComm().bestCost){
-			refComm().bestPlaceId = placeid;
-			refComm().bestCost = valtotal;
-		}
-	}
-}
-// Debug
-if(here.id == 0){
-	Console.OUT.print("BP= "+refComm().bestPlaceId);
-	finish for(p in Place.places()){
-		Console.OUT.print("\t- TC P"+p.id+"= "+refComm().costArray(p.id));
-	}
-	Console.OUT.println(" ");
-}
-*/

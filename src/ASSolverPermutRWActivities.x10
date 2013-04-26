@@ -22,6 +22,9 @@ public class ASSolverPermutRWActivities {
 	
 	val updateI : Int;
 	
+	val commData : CommData;
+	val refComm : GlobalRef[CommData];
+	
 	/**
 	 * 	Constructor of the class
 	 * 	@param upI Update interval (for communication)
@@ -36,6 +39,9 @@ public class ASSolverPermutRWActivities {
 		updateI = upI;
 		
 		stats = new CSPStats();
+		
+		commData = new CommData(); 
+		refComm = GlobalRef[CommData](commData);
 	}
 	
 	/** 
@@ -46,7 +52,7 @@ public class ASSolverPermutRWActivities {
 	 * 	@param cspProblem code with the problem to be solved (1 for Magic Square Problems, other number for Queens Problem)
 	 * 	@return cost of the solution
 	 */
-	public def solve( size : Int , cspProblem : Int ) : CSPStats{ 
+	public def solve( size : Int , cspProblem : Int ) : CSPStats { 
 		val random = new Random();
 		
 		finish for(aID in region){ 
@@ -56,15 +62,20 @@ public class ASSolverPermutRWActivities {
 				var cost:Int = x10.lang.Int.MAX_VALUE; 
 				var nsize:Int = size;
 				
-				if (cspProblem == 1) {			// Magic-Square
+				if (cspProblem == 1) {				// Magic-Square
 					nsize = size*size;
 					cspArray(aID) = new MagicSquareAS(size, seed);
-				}else if(cspProblem == 2)  		// Costas
+				}else if(cspProblem == 2){  		// Costas
 					cspArray(aID) = new CostasAS(size, seed);
-				else  							// All-Intervals
+				}else if (cspProblem == 3){ 		// All-Intervals
 					cspArray(aID) = new AllIntervalAS(size, seed, true);
+				}else if (cspProblem == 4){			// Langford
+					nsize = size*2;
+					cspArray(aID) = new LangfordAS(size, seed); 
+				}
 				
-				solverArray(aID) = new ASSolverPermut(nsize, seed, updateI);
+				solverArray(aID) = new ASSolverPermut(nsize, seed, 
+						new ASSolverConf(ASSolverConf.USE_ACTIVITIES, refComm, updateI ));
 				
 				timeArray(aID) = -System.nanoTime();
 				cost = solverArray(aID).solve(cspArray(aID));
@@ -77,7 +88,7 @@ public class ASSolverPermutRWActivities {
 					setStats(aID(0));
 				}
 			}
-		}
+		} 
 		return stats;
 	}
 	
@@ -94,8 +105,5 @@ public class ASSolverPermutRWActivities {
 		stats.setStats(winPlace, time, iters, locmin, swaps, reset, same, restart);
 		//val winstats = new CSPStats
 	}
-	
-
 }
-
 

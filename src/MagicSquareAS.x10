@@ -285,7 +285,7 @@ public class MagicSquareAS extends ModelAS{
  *  Xref Class
  *  Data structure that helps to make the Magic Square funtions easier
  */
-class Xref {	
+class Xref {
 	var d1:Boolean;
 	var d2:Boolean;
 	var l:Int;

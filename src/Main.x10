@@ -7,24 +7,37 @@
  */
 
 import x10.util.Random;
+import x10.io.File;
+import x10.io.FileWriter;
 public class Main {
 	public static def main(argv:Array[String]):void {
+		
+		
+		/*val com  = new CommData();
+		val array = new Array[Int](0..12, 1);
+		
+		
+		if (com.isGoodCost(5)){
+			Console.OUT.println("GoodCost");
+			com.insertVector(8,array);
+		}
+		
+		com.printVectors();
+		
+		*/
+		
 		/****************** RW *****************************/
 		
-		var size1:Int;
 		var size : Int;
 		val testNo : Int; 
 		val cspProblem : String;
-		
 		val argc = argv.size; 
-		
 		cspProblem = argv(0);
 		size = Int.parse(argv(1));
-		
 		testNo = Int.parse(argv(2));
-		val updateI = Int.parse(argv(3));
-		
+		val solverMode = Int.parse(argv(3));
 		var param:Int = 0;
+		//var file : String = "";
 				
 		if (cspProblem.equals("magic-square")) {
 			Console.OUT.println("Magic Square Problem");
@@ -35,25 +48,35 @@ public class Main {
 		}else if(cspProblem.equals("all-interval")){
 			Console.OUT.println("All-Interval Array Problem");
 			param = 3;
-		}else{
-			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas");
+		}else if(cspProblem.equals("langford")){
+			Console.OUT.println("Langford Pairing Problem");
+			param = 4;
+		}
+		// else if(cspProblem.equals("QAP")){
+		// 	Console.OUT.println("Quadratic assignment Problem");
+		// 	param = 5;
+		// 	file = argv(4);
+		// }
+		else{
+			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas"); 
 			return;
 		}
-		 
+		
 		var timeStart:Long;
 		var cost:Int;
 		var timeEnd :Long;
 		var sumTimes:Long = 0;
 		val accStats = new CSPStats();
 		
-		val solverP = new ASSolverPermutRW(updateI); //this line -----***-----
-		val solverT = new ASSolverPermutRWActivities(updateI,updateI);
+		// communication ingterval = 10
+		val solverP = new ASSolverPermutRW(10); //this line -----***-----
+		val solverT = new ASSolverPermutRWActivities(10,solverMode);
 		
 		
-		if (updateI == 0){
+		if (solverMode == 0){
 			Console.OUT.println("Using "+Place.MAX_PLACES+" Places");
 		} else{
-			Console.OUT.println("Using "+updateI+" Activities");
+			Console.OUT.println("Using "+solverMode+" Activities");
 		}
 		
 		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta|");
@@ -63,7 +86,7 @@ public class Main {
 			
 			//Solve the problem
 			val stats:CSPStats;
-			if (updateI == 0){ 
+			if (solverMode == 0){ 
 				stats = solverP.solve(size,param);
 			}else{
 				stats = solverT.solve(size,param);
@@ -78,6 +101,9 @@ public class Main {
 		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|");
 		accStats.printAVG(testNo);
 		Console.OUT.printf("\n");
+		
+		
+		
 		/**********************************/
 		
 		/*val cspProblem:String;
