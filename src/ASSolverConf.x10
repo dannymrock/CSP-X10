@@ -58,7 +58,7 @@ public class ASSolverConf {
 	}
 	
 	
-	public def getRandomVector( ){ 
+	public def getRandomVector( ) : Array[Int]{ 
 		val vectorOut = (at(commRef)commRef().getVector());
 		return vectorOut;
 	}
@@ -79,8 +79,3 @@ public class ASSolverConf {
 		return ret;
 	}
 }
-
-// public def communicate(refComm : GlobalRef[CommData]){
-// 	//Update shared Data
-
-// }
