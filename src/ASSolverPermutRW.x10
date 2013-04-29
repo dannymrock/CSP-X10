@@ -84,10 +84,8 @@ public class ASSolverPermutRW{
 					nsize = size*2;
 					cspDist(here.id) = new LangfordAS(size, seed);
 				}
-				if (threadEnable == 0)
-					solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
-				else
-					solverDist(here.id) = new ASSolverPermutTLB(nsize, seed, updateI);
+
+				solverDist(here.id) = new ASSolverPermut(nsize, seed, updateI);
 				
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
