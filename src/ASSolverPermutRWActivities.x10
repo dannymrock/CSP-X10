@@ -72,6 +72,8 @@ public class ASSolverPermutRWActivities {
 				}else if (cspProblem == 4){			// Langford
 					nsize = size*2;
 					cspArray(aID) = new LangfordAS(size, seed); 
+				}else if (cspProblem == 5){ 		// All-Intervals
+					cspArray(aID) = new PartitAS(size, seed);
 				}
 				
 				solverArray(aID) = new ASSolverPermut(nsize, seed, 
