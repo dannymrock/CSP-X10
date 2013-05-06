@@ -53,10 +53,13 @@ public class Main {
 		}else if(cspProblem.equals("langford")){
 			Console.OUT.println("Langford Pairing Problem");
 			param = 4;
+		}else if(cspProblem.equals("partit")){
+			Console.OUT.println("Number Partition Problem");
+			param = 5;
 		}
 		// else if(cspProblem.equals("QAP")){
 		// 	Console.OUT.println("Quadratic assignment Problem");
-		// 	param = 5;
+		// 	param = 99;
 		// 	file = argv(4);
 		// }
 		else{

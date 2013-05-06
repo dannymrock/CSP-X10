@@ -85,8 +85,10 @@ public class ASSolverPermutRW{
 				else if (cspProblem == 4){		// Langford
 					nsize = size*2;
 					cspDist(here.id) = new LangfordAS(size, seed);
+				}else if (cspProblem == 5){ 		// All-Intervals
+					cspDist(here.id) = new PartitAS(size, seed);
 				}
-				// else if (cspProblem == 5){ 	//QAP
+				// else if (cspProblem == 99){ 	//QAP
 				// 	val qapT = new QAPTools(fileQAP);
 				// 	val sizeQAP = qapT.getSize();
 				// 	nsize = sizeQAP;

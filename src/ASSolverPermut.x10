@@ -226,8 +226,8 @@ public class ASSolverPermut {
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
 		
-		//if(!kill)
-			//csp.displaySolution();//Main.show("final= ",csp.variables);
+		if(!kill)
+			csp.displaySolution();//Main.show("final= ",csp.variables);
 
 		//Console.OUT.println("Cost = "+total_cost);
 		
