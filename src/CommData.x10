@@ -1,10 +1,12 @@
 public class CommData {
 	var nbEntries : Int;
-	val bestPartialSolutions : Array[CSPSharedUnit](1); 
+	val bestPartialSolutions : Array[CSPSharedUnit](1);
+	val poolSize : Int;
 	 
 	def this( ){
 		nbEntries = 0;
 		bestPartialSolutions = new Array[CSPSharedUnit](0..9);
+		poolSize = 5;    
 	}
 	
 	public def isGoodCost(cost : Int) : Boolean {
@@ -20,7 +22,7 @@ public class CommData {
 	public def insertVector( cost : Int , variables : Array[Int], place:Int ) {
 		var i : Int;
 		//Console.OUT.println("in");
-		if( nbEntries <= 9 ){
+		if( nbEntries <= poolSize ){
 			//insert in the last place
 			//Console.OUT.println("insert cost "+cost);
 			//Main.show("insert vector", variables);

@@ -63,6 +63,10 @@ public class ASSolverConf {
 		return vectorOut;
 	}
 	
+	/**
+	 *  get Inter Place Vector
+	 * 
+	 */
 	public def getIPVector(csp : ModelAS) : Int{
 		var ret : Int = -1;
 		if(commEn != 0){

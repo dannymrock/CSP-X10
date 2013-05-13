@@ -32,7 +32,7 @@ public class Main {
 		val testNo = opts("-b", 10);
 		val solverMode = opts("-m", 0);
 		val comm = opts("-c", 0);
-		val inter = opts("-i", 10);
+		val inter = opts("-i", 10000000);
 		
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
