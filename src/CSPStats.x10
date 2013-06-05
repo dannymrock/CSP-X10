@@ -5,7 +5,7 @@
  *  @version 0.1 April 12, 2013 -> First Version
  */
 
-public class CSPStats {
+public class CSPStats{
 	/** Place odf the solution */
 	var place : Int;
 	/** time to reach the solution */
@@ -22,6 +22,8 @@ public class CSPStats {
 	var same : Int;
 	/** number of restarts */  
 	var restart : Int;
+	/** Number time to change vector due to communication */ 
+	var change : Int;
 	 
 	/**
 	 *  Constructor
@@ -35,6 +37,7 @@ public class CSPStats {
 		reset = 0;
 		same = 0;
 		restart = 0;
+		change = 0; 
 	}
 	
 	/**
@@ -48,7 +51,7 @@ public class CSPStats {
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	def setStats(p : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int){
+	def setStats(p : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int){
 		this.place = p;
 		this.time = t;
 		this.iters = it;
@@ -57,6 +60,7 @@ public class CSPStats {
 		this.reset = re;
 		this.same = sa;
 		this.restart = rs;
+		this.change = ch;
 	}
 	/**
 	 *  Accumulate statistics in this object, Is used for average calculation
@@ -70,6 +74,7 @@ public class CSPStats {
 		this.reset += stats.reset;
 		this.same += stats.same;
 		this.restart += stats.restart;
+		this.change += stats.change;
 	}
 	
 	/**
@@ -79,7 +84,7 @@ public class CSPStats {
 	def print(count:Int){
 		val sameIter : Float = (same as Float)/(iters as Float);
 		Console.OUT.printf("| %3d | %8.4f | %8d | %3d | %8d |",count, time, iters, place, locmin);
-		Console.OUT.printf(" %8d | %8d | %5.2f | %3d |\n",swaps,reset,sameIter,restart);
+		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %3d |\n",swaps,reset,sameIter,restart, change);
 		
 	}
 
@@ -90,7 +95,7 @@ public class CSPStats {
 	def printAVG(no:Int){ 
 		val sameIter : Float = (same as Float)/(iters as Float);
 		Console.OUT.printf("| avg | %8.4f | %8d | N/A | %8d |",time/no, iters/no, locmin/no);
-		Console.OUT.printf(" %8d | %8d | %5.2f | %3d |",swaps/no,reset/no,sameIter,restart/no);
+		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %3d |",swaps/no,reset/no,sameIter,restart/no, change/no);
 		
 	}
 }

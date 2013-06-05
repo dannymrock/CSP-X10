@@ -8,7 +8,7 @@ import x10.util.Random;
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013
  */
-public class ModelAS {
+public class ModelAS{
 	var variables : Array[Int](1);
 	val length : Int;
 	val r : RandomTools;

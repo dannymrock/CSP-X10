@@ -8,7 +8,7 @@
  *  @version 0.1 April 10, 2013 First Version
  */
 
-public class CostasAS extends ModelAS{
+public class CostasAS extends ModelAS{  
 	
 	var size2:Int;
 	var sizeSq:Int;

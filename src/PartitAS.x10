@@ -1,4 +1,4 @@
-public class PartitAS extends ModelAS {
+public class PartitAS extends ModelAS{
 	
 	val size2 : Int;
 	

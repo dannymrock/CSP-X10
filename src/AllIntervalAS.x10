@@ -8,7 +8,7 @@
  *  @version 0.1 	12 April, 2013 -> First Version
  */
 public class AllIntervalAS extends ModelAS {
-	
+	 
 	/** nb occurrences (to compute total cost) 0 is unused */
 	val nbOcc : Array[Int];	
 	val exh : Boolean;

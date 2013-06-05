@@ -8,7 +8,7 @@
  */
 
 import x10.util.Random;
-public class MagicSquareAS extends ModelAS{
+public class MagicSquareAS extends ModelAS{   
 	
 	var squareLength:Int; 
 	

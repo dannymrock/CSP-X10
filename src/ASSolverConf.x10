@@ -4,7 +4,7 @@
  * 	@autor Danny Munera
  * 	
  */
-public class ASSolverConf {
+public class ASSolverConf{
 	
 	public static USE_ACTIVITIES : Int = 0; 
 	public static USE_PLACES : Int = 1;
@@ -17,12 +17,15 @@ public class ASSolverConf {
 	var commI : Int;
 	/** inter-places reset enable */
 	var commEn : Int;
+	/** probability of change vector if bad cost */
+	val pChange : Int;
 	
 	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , commE : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
 		commEn = commE;
+		pChange = 10;
 	}
 	
 	public def setValues(val toSet: ASSolverConf){
@@ -30,19 +33,30 @@ public class ASSolverConf {
 		this.commRef = toSet.commRef;
 		this.commI = toSet.commI;
 	}
-	
-	public def communicate( totalCost : Int, csp : ModelAS ){
+	/**
+	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
+	 *  @return 0 if good cost, -1 if bad cost
+	 */
+	public def communicate( totalCost : Int, csp : ModelAS ):Int{
 		if(commEn != 0){
 			if(solverMode == USE_PLACES){
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
 				val placeid = here.id;
-				at(commRef) async{
-					if(commRef().isGoodCost( totalCost )){
-						commRef().insertVector( totalCost , csp.variables, placeid);
-					}
+				if (totalCost <= getWorstCostInPool()){
+					at(commRef) async{ commRef().tryInsertVector( totalCost , csp.variables, placeid); }
+					return 0;
+				}else{
+					// try to change vector
+					//Console.OUT.println("IN Conf");
+					return -1;
 				}
 				
+				
+				// at(commRef) async{
+				// 	val res = commRef().tryInsertVector( totalCost , csp.variables, placeid);
+				// }
+				// 
 				//Debug
 				// if(here.id == 0){
 				// 	Console.OUT.println("Print Vectors");
@@ -55,6 +69,7 @@ public class ASSolverConf {
 				Console.OUT.println("ERROR: Unknown solver mode");
 			}
 		}
+		return 0;
 	}
 	
 	
@@ -81,5 +96,11 @@ public class ASSolverConf {
 			}
 		}
 		return ret;
+	}
+	
+	
+	public def getWorstCostInPool():Int{
+		val wCost = (at(commRef)commRef().worstCost);
+		return wCost;
 	}
 }

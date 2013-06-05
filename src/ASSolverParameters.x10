@@ -7,7 +7,7 @@
  *  @version 0.1 April 9, 2013 First Version
  */
 
-public class ASSolverParameters {
+public class ASSolverParameters{
 	/** perform an exhausitve search */ 
 	var exhaustive : Boolean;
 	/** stop as soon as a better swap is found */
@@ -31,7 +31,9 @@ public class ASSolverParameters {
 	/** percentage of variables to reset */
 	var resetPercent : Int;		
 
-	var baseValue : Int; 
+	var baseValue : Int;
+	/** Probability to change bad vector for a vector in the pool (Comm Enable) */
+	var probChangeVector : Int;
 	
 	/**
 	 * 	Constructor
@@ -39,6 +41,7 @@ public class ASSolverParameters {
 	public def this(){
 		firstBest = false; //revisar val por default
 		nbVarToReset = -1;
+		probChangeVector = 100;
 	}
 	
 	/**

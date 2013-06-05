@@ -1,12 +1,16 @@
-public class CommData {
+public class CommData{
 	var nbEntries : Int;
 	val bestPartialSolutions : Array[CSPSharedUnit](1);
 	val poolSize : Int;
+	var bestCost : Int;
+	var worstCost : Int;
 	 
 	def this( ){
 		nbEntries = 0;
 		bestPartialSolutions = new Array[CSPSharedUnit](0..9);
-		poolSize = 5;    
+		poolSize = 9;   
+		bestCost = Int.MAX_VALUE;
+		worstCost = Int.MAX_VALUE;
 	}
 	
 	public def isGoodCost(cost : Int) : Boolean {
@@ -19,19 +23,27 @@ public class CommData {
 		return false;
 	}
 	
-	public def insertVector( cost : Int , variables : Array[Int], place:Int ) {
+	public def tryInsertVector( cost : Int , variables : Array[Int], place:Int ) {	
 		var i : Int;
 		//Console.OUT.println("in");
 		if( nbEntries <= poolSize ){
+			
 			//insert in the last place
 			//Console.OUT.println("insert cost "+cost);
 			//Main.show("insert vector", variables);
-			bestPartialSolutions(nbEntries++) = new CSPSharedUnit( cost, variables.size , variables, place );
-			//Console.OUT.println("push vector");
+			
+			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size , variables, place );
+			if (cost < bestCost){ 
+				bestCost = cost;
+				//Console.OUT.println("New Best Cost = "+bestCost);
+			}	
+			updateWorstCost();
 		}else{
+			// No place available select a victim
+			
 			var equal : Boolean = false;
 			var victim : Int = 0;
-			// No place available select a victim
+			
 			for (i = 0; i < nbEntries; i++){
 				if ( cost == bestPartialSolutions(i).cost ) equal = true;
 				else if(cost < bestPartialSolutions(i).cost) victim =  i;
@@ -39,8 +51,22 @@ public class CommData {
 			
 			if(!equal){
 				bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size , variables, place);
+				if (cost < bestCost){ 
+					bestCost = cost;
+					//Console.OUT.println("New Best Cost = "+bestCost);
+				}	
+				updateWorstCost();
 			}			
 		}	
+	}
+	
+	public def updateWorstCost(){
+		var i : Int;
+		var wc : Int = 0;
+		for(i = 0; i < nbEntries; i++){
+			if (bestPartialSolutions(i).cost > wc) wc = bestPartialSolutions(i).cost; 
+		}
+		worstCost = wc;	
 	}
 	
 	public def printVectors(){
@@ -52,13 +78,20 @@ public class CommData {
 	}
 	
 	public def getVector():Array[Int]{
-		val random = new RandomTools( 123 );
-		val i = random.randomInt(nbEntries);
-		return bestPartialSolutions(i).vector;
+		//val random = new RandomTools( 123 );
+		//val i = random.randomInt(nbEntries);
+		var i : Int;
+		var best : Int = 0;
+		for(i = 0; i < nbEntries; i++){
+			if (bestPartialSolutions(i).cost == bestCost) best = i; 
+		}
+		return bestPartialSolutions(best).vector;
 	}
 	
 	public def clear(){
 		nbEntries = 0;
+		bestCost = Int.MAX_VALUE;
+		worstCost = Int.MAX_VALUE;
 	}
 	
 }

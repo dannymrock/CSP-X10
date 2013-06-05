@@ -11,7 +11,7 @@
  * 					12 April, 2013 -> TLP support
  */
 import x10.util.Random;
-public class ASSolverPermutRWActivities {
+public class ASSolverPermutRWActivities{
 	val solverArray : Array[ASSolverPermut];
 	val cspArray : Array[ModelAS];
 	val timeArray : Array[Long];
@@ -103,8 +103,9 @@ public class ASSolverPermutRWActivities {
 		val reset = solverArray(winPlace).nbResetTot;
 		val same = solverArray(winPlace).nbSameVarTot;
 		val restart = solverArray(winPlace).nbRestart;
+		val change = solverArray(winPlace).nbChangeV;
 		
-		stats.setStats(winPlace, time, iters, locmin, swaps, reset, same, restart);
+		stats.setStats(winPlace, time, iters, locmin, swaps, reset, same, restart,change);
 		//val winstats = new CSPStats
 	}
 }

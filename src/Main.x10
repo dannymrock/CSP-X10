@@ -13,7 +13,7 @@ import x10.util.Option;
 import x10.util.Random;
 
 public class Main {
-	public static def main(args:Array[String](1)):void {
+	public static def main(args:Array[String](1)):void{
 		
 		/*
 		 *  Parsing Options
@@ -23,6 +23,7 @@ public class Main {
 		                                          Option("s", "", "Size of the problem"),
 		                                          Option("b", "", "Number of benchmark tests"),
 		                                          Option("m", "", "Solver mode distribution 0 for Places \"n\" for Activities (n number of activities). Default 1."),
+		                                          Option("t", "", "Using threads."),
 		                                          Option("c", "", "Communication option."),
 		                                          Option("i", "", "Communication Interval (iterations) . Default 10.")
 		                                          ]);
@@ -31,12 +32,14 @@ public class Main {
 		val size = opts("-s", 10);
 		val testNo = opts("-b", 10);
 		val solverMode = opts("-m", 0);
+		val threads = opts("-t", 0);
 		val comm = opts("-c", 0);
 		val inter = opts("-i", 10000000);
 		
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
-				" SolverMode: "+solverMode+" Communication enable: "+comm+" Communication update inteval: "+inter);
+				" SolverMode: "+solverMode+" Communication enable: "+comm+" Communication update inteval: "+inter+
+				"\nThreads:"+threads);
 		
 		var param:Int = 0;
 		//var file : String = "";
@@ -77,8 +80,8 @@ public class Main {
 		var sumTimes:Long = 0;
 		val accStats = new CSPStats();
 		
-		// communication ingterval = 10
-		val solverP = new ASSolverPermutRW(inter, comm); //this line -----***-----
+		// communication interval = 10
+		val solverP = new ASSolverPermutRW(inter, comm, threads); //this line -----***-----
 		val solverT = new ASSolverPermutRWActivities(inter,solverMode);
 
 		if (solverMode == 0){

@@ -8,7 +8,7 @@
  *  @version 0.1 April 22, 2013 First Version
  */
 
-public class LangfordAS extends ModelAS { 
+public class LangfordAS extends ModelAS{ 
 	
 	val order : Int;
 	

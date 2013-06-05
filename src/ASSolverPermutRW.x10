@@ -13,7 +13,7 @@
 import x10.util.Random;
 //import x10.compiler.Pragma;
 
-public class ASSolverPermutRW{ 
+public class ASSolverPermutRW{  
 	val solverDist : DistArray[ASSolverPermut];
 	val cspDist : DistArray[ModelAS];
 	val timeDist : DistArray[Long];
@@ -33,10 +33,12 @@ public class ASSolverPermutRW{
 	//val fileQAP : String;
 	//val solverRef : GlobalRef[ASSolverPermutRW];
 	
+	val thEnable : Int; 
+	
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commE : Int ){
+	def this( upI : Int, commE : Int , thread : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -51,6 +53,7 @@ public class ASSolverPermutRW{
 		refStats = GlobalRef[CSPStats](stats);
 		refComm = GlobalRef[CommData](commData);
 		
+		thEnable = thread;
 		//fileQAP = file;
 		
 	}
@@ -95,9 +98,17 @@ public class ASSolverPermutRW{
 				// 	cspDist(here.id) = new QAPAS(sizeQAP, seed, fileQAP);
 				// }
 				
-				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
+				if (thEnable == 0){
+					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
 							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable ));
-	
+				}else if (thEnable < 100){
+					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable ), thEnable);	
+				}else if (thEnable > 100){ 
+					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable), (thEnable-100));
+				}
+					
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
 				timeDist(here.id) += System.nanoTime();
@@ -127,8 +138,9 @@ public class ASSolverPermutRW{
 		val reset = solverDist(winPlace).nbResetTot;
 		val same = solverDist(winPlace).nbSameVarTot;
 		val restart = solverDist(winPlace).nbRestart;
+		val change = solverDist(winPlace).nbChangeV;
 		
-		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart);
+		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart, change);
 		//val winstats = new CSPStats
 	}
 	

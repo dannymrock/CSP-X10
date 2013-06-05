@@ -11,7 +11,7 @@
  */
 
 import x10.util.Random;
-public class ASSolverPermut {
+public class ASSolverPermut{
 
 	val mark : Array[Int](1); 
 	val size : Int;  
@@ -45,6 +45,8 @@ public class ASSolverPermut {
 	var nbSwap : Int;
 	var nbSameVar : Int;
 	var nbLocalMin : Int;
+	/** Number time to change vector due to communication */ 
+	var nbChangeV : Int;
 	
 	/** Total Statistics */
 	var nbIterTot : Int;
@@ -76,6 +78,7 @@ public class ASSolverPermut {
 		//updateP = updateI; //Default value 
 		kill = false;
 		solverC = conf;    //set??
+		nbChangeV = 0;
 	}
 	
 	/**
@@ -112,6 +115,7 @@ public class ASSolverPermut {
 		nbSameVar = 0;
 		nbLocalMin = 0;
 		nbReset = 0;
+		nbChangeV = 0;
 		
 		nb_in_plateau = 0;
 		
@@ -214,8 +218,14 @@ public class ASSolverPermut {
 	 			break;
 	 		
 	 		if( nbIter % solverC.commI == 0 ){
-	 			solverC.communicate(total_cost, csp);
-	 			changeVector(csp);
+	 			val res = solverC.communicate(total_cost, csp);
+	 			if (res != 0 ){ //currently I have a bad cost
+	 				//Console.OUT.println("In ");
+	 				if (random.randomInt(100) < solverP.probChangeVector){
+	 					changeVector(csp);
+	 					//Console.OUT.println("Changing vector in "+ here);
+	 				}
+	 			}
 	 		}
 	 		
 	 		//Main.show("new vector ",csp.variables);
@@ -227,8 +237,8 @@ public class ASSolverPermut {
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
 		
-		if(!kill)
-			csp.displaySolution();//Main.show("final= ",csp.variables);
+		//if(!kill)
+			//csp.displaySolution();//Main.show("final= ",csp.variables);
 
 		//Console.OUT.println("Cost = "+total_cost);
 		
@@ -355,21 +365,10 @@ public class ASSolverPermut {
 	public def doReset( var n : Int, csp : ModelAS ) {
 		
 		var cost : Int = -1;		//reset(n, csp);
-		var ipVector : Int = -1;
-		// if (random.randomInt(100) < 5){ //5 % times does interplace reset
-		// 	// Try interplace reset
-		// 	//Console.OUT.println("new reset");
-		// 	ipVector = solverC.getIPVector(csp);
-		// 	//csp.setVariables(solverC.getRandomVector());
-		// }
+				
+		cost = csp.reset( n, total_cost );
+		nbSwap += n ; //I don't know what happened here with costas reset
 		
-		if (ipVector != 1){
-			cost = csp.reset( n, total_cost );
-			nbSwap += n ; //I don't know what happened here with costas reset
-		} else {
-			nbSwap += size;
-			//Console.OUT.println("do Inter Place reset");
-		}
 		mark.clear();
 		nbReset++;
 		total_cost = (cost < 0) ? csp.costOfSolution(1) : cost; //Arg costofsol(1)
@@ -377,16 +376,15 @@ public class ASSolverPermut {
 	
 	public def changeVector(csp : ModelAS){
 		var ipVector : Int = -1;
-		if (random.randomInt(100) < 5){ //5 % times does interplace reset
-			// Try interplace reset
-			//Console.OUT.println("new reset");
-			ipVector = solverC.getIPVector(csp);
-			//csp.setVariables(solverC.getRandomVector());
-		}
+		
+		//Main.show("antes= ",csp.variables);
+		ipVector = solverC.getIPVector(csp);
+		//Main.show("despues= ",csp.variables);
+		
 		if (ipVector == 1){
-			
+			nbChangeV++;
 			nbSwap += size;
-			Console.OUT.println("do change vector");
+			//Console.OUT.println("do change vector");
 			mark.clear();
 			total_cost = csp.costOfSolution(1); //Arg costofsol(1)
 		}
