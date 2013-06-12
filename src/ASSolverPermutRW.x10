@@ -73,8 +73,9 @@ public class ASSolverPermutRW{
 		finish for(p in Place.places()){ 
 				
 			val seed = random.nextLong();
+			//val seed = 1234L;
 			
-			at(p) async {
+			async at(p) async {
 				var cost:Int = x10.lang.Int.MAX_VALUE; 
 				var nsize:Int = size;
 				

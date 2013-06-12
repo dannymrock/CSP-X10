@@ -12,7 +12,7 @@ public class ASSolverPermutTLP extends ASSolverPermut{
 	//val listIndexNb : Array[Int];
 	//val listCost : Array[Int];
 	//val varMarked : Array[Int];
-	val distData : Array[ThreadData];
+	val distData : Rail[ThreadData];
 
 	
 	public def this( sizeOfProblem : Int , seed : Long, conf : ASSolverConf, nbAct : Int) {
@@ -23,7 +23,7 @@ public class ASSolverPermutTLP extends ASSolverPermut{
 		// listIndexJNb =  new Array[Int](1..THNUM, 0);
 		// listNewCost = new Array[Int](1..THNUM, total_cost);
 		// minth = new Array[Int](1..THNUM, 0);
-		distData = new Array[ThreadData](0..(THNUM-1));
+		distData = new Rail[ThreadData](0..(THNUM-1));
 		
 		//listIth1 = new Array[Int](0..partition,0);
 		//listIth2 = new Array[Int](0..partition,0);
@@ -102,7 +102,7 @@ public class ASSolverPermutTLP extends ASSolverPermut{
 		
 		
 		var nbeqth : Int = 0;
-		val eqIndex = new Array[Int](0..(THNUM-1),0);
+		val eqIndex = new Rail[Int](0..(THNUM-1),0);
 		var maxCost : Int = -1;
 		
 		
@@ -229,13 +229,13 @@ public class ASSolverPermutTLP extends ASSolverPermut{
 }
 
 class ThreadData{
-	val listIth : Array[Int]; 
+	val listIth : Rail[Int]; 
 	var nbIndex : Int;
 	var cost : Int;
 	var varMarked : Int;
 	
 	def this( part : Int ){
-		listIth = new Array[Int](0..part,0); 
+		listIth = new Rail[Int](0..part,0); 
 		nbIndex = 0;
 		cost = 0;
 		varMarked = 0;

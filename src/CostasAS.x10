@@ -13,22 +13,22 @@ public class CostasAS extends ModelAS{
 	var size2:Int;
 	var sizeSq:Int;
 	/** nb occurrences of each diff (translated) */
-	val nbOcc : Array[Int];		/* diff are in -(size-1)..-1 1..size-1 */
+	val nbOcc : Rail[Int];		/* diff are in -(size-1)..-1 1..size-1 */
 								/* translated are in 0..2*size-1 [0] and [N] being unused */						
 	/** records the indice of a first occurence of a (translated) difference */
-	val first : Array[Int];
+	val first : Rail[Int];
 	/** errors on variables */
-	val err : Array[Int];
+	val err : Rail[Int];
 	
 	/* for reset: */
 	/** save the sol[] vector */
-	val saveSol : Array[Int];
+	val saveSol : Rail[Int];
 	/** save the best sol[] found in a reset phase */
-	val bestSol : Array[Int];
+	val bestSol : Rail[Int];
 	/** indices of erroneous vars */
-	var iErr : Array[Int];			
+	var iErr : Rail[Int];			
 	
-	val toAdd : Array[Int];
+	val toAdd : Rail[Int];
 	
 	val length2reg : Region(1);
 	
@@ -43,14 +43,14 @@ public class CostasAS extends ModelAS{
 		sizeSq = length * length;
 		length2reg = 0..((length * 2)-1);
 		
-		nbOcc = new Array[Int]( length2reg , 0);
-		first =  new Array[Int]( length2reg , 0);
-		err =  new Array[Int]( varRegion , 0);
-		saveSol = new Array[Int]( varRegion , 0);
-		bestSol = new Array[Int]( varRegion , 0);
-		iErr = new Array[Int]( varRegion , 0);
+		nbOcc = new Rail[Int]( length2reg , 0);
+		first =  new Rail[Int]( length2reg , 0);
+		err =  new Rail[Int]( varRegion , 0);
+		saveSol = new Rail[Int]( varRegion , 0);
+		bestSol = new Rail[Int]( varRegion , 0);
+		iErr = new Rail[Int]( varRegion , 0);
 		
-		toAdd = new Array[Int]( 0..9 );
+		toAdd = new Rail[Int]( 0..9 );
 		initParameters();
 	}
 
@@ -79,7 +79,7 @@ public class CostasAS extends ModelAS{
 	 * 	@param err vector of error on variables (if null don't update object err vector)
 	 * 	@return cost
 	 */
-	def cost( err : Array[Int] ) : Int {		//int *err)	 //Inline
+	def cost( err : Rail[Int] ) : Int {		//int *err)	 //Inline
 		var dist : Int = 1;
 		var i : Int;
 		var firstI : Int;
@@ -327,7 +327,7 @@ public class CostasAS extends ModelAS{
  			for(i = 0; i < length; i++)
  				if (err(i) > 0 && err(i) < max)
  					iErr(nbErr++) = i;
- 			var auxArray : Array[Int] = new Array[Int](0..(nbErr - nbMax));
+ 			var auxArray : Rail[Int] = new Rail[Int](0..(nbErr - nbMax));
  			Array.copy(iErr, nbMax, auxArray, 0 , nbErr - nbMax );
  			auxArray = r.randomArrayPermut(auxArray);
  			Array.copy(auxArray, 0, iErr, nbMax, nbErr - nbMax );

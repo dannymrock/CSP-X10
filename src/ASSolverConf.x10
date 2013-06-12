@@ -73,7 +73,7 @@ public class ASSolverConf{
 	}
 	
 	
-	public def getRandomVector( ) : Array[Int]{ 
+	public def getRandomVector( ) : Rail[Int]{ 
 		val vectorOut = (at(commRef)commRef().getVector());
 		return vectorOut;
 	}

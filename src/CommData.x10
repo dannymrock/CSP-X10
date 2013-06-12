@@ -1,13 +1,13 @@
 public class CommData{
 	var nbEntries : Int;
-	val bestPartialSolutions : Array[CSPSharedUnit](1);
+	val bestPartialSolutions : Rail[CSPSharedUnit];
 	val poolSize : Int;
 	var bestCost : Int;
 	var worstCost : Int;
 	 
 	def this( ){
 		nbEntries = 0;
-		bestPartialSolutions = new Array[CSPSharedUnit](0..9);
+		bestPartialSolutions = new Rail[CSPSharedUnit](0..9);
 		poolSize = 9;   
 		bestCost = Int.MAX_VALUE;
 		worstCost = Int.MAX_VALUE;
@@ -23,7 +23,7 @@ public class CommData{
 		return false;
 	}
 	
-	public def tryInsertVector( cost : Int , variables : Array[Int], place:Int ) {	
+	public def tryInsertVector( cost : Int , variables : Rail[Int], place:Int ) {	
 		var i : Int;
 		//Console.OUT.println("in");
 		if( nbEntries <= poolSize ){
@@ -77,7 +77,7 @@ public class CommData{
 		}
 	}
 	
-	public def getVector():Array[Int]{
+	public def getVector():Rail[Int]{
 		//val random = new RandomTools( 123 );
 		//val i = random.randomInt(nbEntries);
 		var i : Int;
@@ -98,11 +98,11 @@ public class CommData{
 
 struct CSPSharedUnit {
 	val cost : Int;
-	val vector : Array[Int];
+	val vector : Rail[Int];
 	val place : Int;
-	def this( costI : Int, sizeI : Int, vectorI : Array[Int], placeI : Int){
+	def this( costI : Int, sizeI : Int, vectorI : Rail[Int], placeI : Int){
 		cost = costI;
-		vector = new Array[Int](0..(sizeI-1));
+		vector = new Rail[Int](0..(sizeI-1));
 		Array.copy(vectorI, vector);
 		place = placeI;
 	}

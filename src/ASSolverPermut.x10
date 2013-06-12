@@ -13,7 +13,7 @@
 import x10.util.Random;
 public class ASSolverPermut{
 
-	val mark : Array[Int](1); 
+	val mark : Rail[Int]; 
 	val size : Int;  
 	val solverP : ASSolverParameters; 
 	val solverC : ASSolverConf;
@@ -31,8 +31,8 @@ public class ASSolverPermut{
 	
 	var list_i_nb : Int;
 	var list_j_nb : Int;
-	var list_i : Array[Int](1); 
-	val list_ij : Array[Pair](1);
+	var list_i : Rail[Int]; 
+	val list_ij : Rail[Pair];
 	var nb_var_marked : Int;
 	val varRegion : Region(1);
 	/** Number of iterations to update kill status */
@@ -68,9 +68,9 @@ public class ASSolverPermut{
 	public def this( sizeOfProblem : Int , seed : Long, conf : ASSolverConf) {
 		size = sizeOfProblem;
 		varRegion = 0..(size - 1);
-		mark = new Array[Int](varRegion,0);
-		list_i = new Array[Int](varRegion,0); //Why not distributed?
-		list_ij = new Array[Pair](varRegion);
+		mark = new Rail[Int](varRegion,0);
+		list_i = new Rail[Int](varRegion,0);
+		list_ij = new Rail[Pair](varRegion);
 		solverP = new ASSolverParameters();
 		random = new RandomTools(seed);
 		nb_var_marked = 0;

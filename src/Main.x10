@@ -122,7 +122,7 @@ public class Main {
 		return;
 	}
 
-	static def show(s:String, d: Array[Int]) {
+	static def show(s:String, d: Rail[Int]) {
 		Console.OUT.print(s + " = ");
 		for(k in d) 
 			Console.OUT.print(" " + d(k));		

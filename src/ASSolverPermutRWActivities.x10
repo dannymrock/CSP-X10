@@ -12,9 +12,9 @@
  */
 import x10.util.Random;
 public class ASSolverPermutRWActivities{
-	val solverArray : Array[ASSolverPermut];
-	val cspArray : Array[ModelAS];
-	val timeArray : Array[Long];
+	val solverArray : Rail[ASSolverPermut];
+	val cspArray : Rail[ModelAS];
+	val timeArray : Rail[Long];
 	val nbAct :Int;
 	val region : Region(1);
 	
@@ -33,9 +33,9 @@ public class ASSolverPermutRWActivities{
 	def this( upI : Int, nbActivities : Int){
 		nbAct = nbActivities;
 		region = 0..(nbAct-1);
-		solverArray = new Array[ASSolverPermut](region);
-		cspArray = new Array[ModelAS](region);
-		timeArray = new Array[Long](region, 0);
+		solverArray = new Rail[ASSolverPermut](region);
+		cspArray = new Rail[ModelAS](region);
+		timeArray = new Rail[Long](region, 0);
 		updateI = upI;
 		
 		stats = new CSPStats();

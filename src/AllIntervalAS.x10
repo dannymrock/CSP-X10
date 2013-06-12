@@ -10,7 +10,7 @@
 public class AllIntervalAS extends ModelAS {
 	 
 	/** nb occurrences (to compute total cost) 0 is unused */
-	val nbOcc : Array[Int];	
+	val nbOcc : Rail[Int];	
 	val exh : Boolean;
 	
 	/**
@@ -20,7 +20,7 @@ public class AllIntervalAS extends ModelAS {
 	 */
 	def this ( val lengthProblem : Int , seed : Long, exahustive:Boolean ){
 		super( lengthProblem, seed );
-		nbOcc = new Array[Int]( varRegion , 0 );
+		nbOcc = new Rail[Int]( varRegion , 0 );
 		exh = exahustive;
 		initParameters();
 		

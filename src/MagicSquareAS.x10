@@ -16,16 +16,16 @@ public class MagicSquareAS extends ModelAS{
 	var square_length_p1:Int;    	/* square_length + 1 */
 	var avg:Int;					/* sum to reach for each l/c/d */
 	
-	val err_l :Array[Int]; 
-	val err_l_abs: Array[Int];  /* errors on lines (relative + absolute) */
-	val err_c : Array[Int];
-	val err_c_abs: Array[Int];	/* errors on columns */
+	val err_l :Rail[Int]; 
+	val err_l_abs: Rail[Int];  /* errors on lines (relative + absolute) */
+	val err_c : Rail[Int];
+	val err_c_abs: Rail[Int];	/* errors on columns */
 	
 	var err_d1:Int;
 	var err_d1_abs:Int; 	/* error on d1 (\) */
 	var err_d2:Int;
 	var err_d2_abs:Int;	/* error on d2 (/) */
-	val xref:Array[Xref];
+	val xref:Rail[Xref];
 	
 	val regionSquare : Region(1);
 	
@@ -39,11 +39,11 @@ public class MagicSquareAS extends ModelAS{
 		super(lengthProblem*lengthProblem, seed);
 		squareLength = lengthProblem;
 		regionSquare = 0..( squareLength - 1 );
-		err_l = new Array[Int]( regionSquare, 0 );		
-		err_c = new Array[Int]( regionSquare, 0 );		
-		err_l_abs = new Array[Int]( regionSquare, 0 );	
-		err_c_abs = new Array[Int]( regionSquare, 0 );	
-		xref = new Array[Xref]( varRegion );
+		err_l = new Rail[Int]( regionSquare, 0 );		
+		err_c = new Rail[Int]( regionSquare, 0 );		
+		err_l_abs = new Rail[Int]( regionSquare, 0 );	
+		err_c_abs = new Rail[Int]( regionSquare, 0 );	
+		xref = new Rail[Xref]( varRegion );
 		initParameters();
 	}
 	

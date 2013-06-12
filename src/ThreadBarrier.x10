@@ -17,7 +17,7 @@ public class ThreadBarrier{
 		left = nthreads;
 	}
 
-	public def wait()
+	public def bwait()
 	{
 		monitor.lock();
 		if (--left == 0) {

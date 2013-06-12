@@ -9,7 +9,7 @@ import x10.util.Random;
  *  @version 0.1 April 9, 2013
  */
 public class ModelAS{
-	var variables : Array[Int](1);
+	var variables : Rail[Int];
 	val length : Int;
 	val r : RandomTools;
 	
@@ -24,7 +24,7 @@ public class ModelAS{
 		varRegion = 0..(lengthProblem-1);
 		solverParams = new ASSolverParameters();
 		length = lengthProblem;
-		variables = new Array[Int]( varRegion, ([i]:Point) => i);
+		variables = new Rail[Int]( varRegion, ([i]:Point) => i);
 		r = new RandomTools(seed);
 		this.initParameters();
 	}
@@ -97,7 +97,7 @@ public class ModelAS{
 		return 0;
 	}
 		
-	static def show(s:String, d: Array[Int]) {
+	static def show(s:String, d: Rail[Int]) {
 		x10.io.Console.OUT.print(s + " = ");
 		for(p in d) 
 			x10.io.Console.OUT.print(" " + d(p));
@@ -141,7 +141,7 @@ public class ModelAS{
 		return -1;
 	}
 	
-	public def setVariables(array : Array[Int]){
+	public def setVariables(array : Rail[Int]){
 		Array.copy(array,this.variables);
 	}
 	

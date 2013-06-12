@@ -52,8 +52,8 @@ public class ASSolverPermutFP2 extends ASSolverPermut{
 			computeInst(id).activity = 1;
 
 		//startSignal.advance(); // send start signal
-		startBarrier.wait();
-		doneBarrier.wait();
+		startBarrier.bwait();
+		doneBarrier.bwait();
 		return cost;
 	}
 
@@ -61,8 +61,8 @@ public class ASSolverPermutFP2 extends ASSolverPermut{
 	public def selectVarHighCost(csp : ModelAS) : Int {
 
 		for(id in computeInst) computeInst(id).activity = 0;
-		startBarrier.wait(); // send start signal
-		doneBarrier.wait(); // work ready
+		startBarrier.bwait(); // send start signal
+		doneBarrier.bwait(); // work ready
 
 
 		//val maxI = terminateSelVarHighCost();
@@ -124,7 +124,7 @@ public class ASSolverPermutFP2 extends ASSolverPermut{
 
 			while(!terminate){
 
-				startBarrier.wait();
+				startBarrier.bwait();
 
 				switch(activity){ 
 				case 0:
@@ -136,7 +136,7 @@ public class ASSolverPermutFP2 extends ASSolverPermut{
 
 				}
 				//Console.OUT.println("Master is processing: "+idI+" Ready...");
-				doneBarrier.wait();
+				doneBarrier.bwait();
 			}
 
 			return;

@@ -21,12 +21,12 @@ public class RandomTools {
 		seed=s;
 	}
 	
-	public def randomPermut( size : Int , baseValue : Int ) : Array[Int](1)
+	public def randomPermut( size : Int , baseValue : Int ) : Rail[Int]
 	{
 		var i:Int; 
 		var j:Int;
 		var z:Int;
-		val vec : Array[Int](1) = new Array[Int](0..(size - 1), ([k]:Point) => (baseValue + k));
+		val vec : Rail[Int] = new Rail[Int](0..(size - 1), ([k]:Point) => (baseValue + k));
 				
 		for(i = size - 1; i > 0 ; i--)
 		{
@@ -45,7 +45,7 @@ public class RandomTools {
 	 * 	@param size 
 	 * 	@return
 	 */
-	public def randomArrayPermut( vec : Array[Int] ) : Array[Int]{
+	public def randomArrayPermut( vec : Rail[Int] ) : Rail[Int]{
 		var i:Int; 
 		var j:Int;
 		var z:Int;
