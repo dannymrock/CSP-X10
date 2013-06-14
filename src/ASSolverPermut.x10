@@ -214,18 +214,18 @@ public class ASSolverPermut{
 			}
 	 		
 	 		Runtime.probe();		// Give a chance to the other activities
-	 		if(kill)				// If other place or activity are already finished
+	 		if(kill)				// Check if other place or activity have finished
 	 			break;
 	 		
 	 		if( nbIter % solverC.commI == 0 ){
 	 			val res = solverC.communicate(total_cost, csp);
-	 			if (res != 0 ){ //currently I have a bad cost
+	 			/*if (res != 0 ){ //currently I have a bad cost
 	 				//Console.OUT.println("In ");
 	 				if (random.randomInt(100) < solverP.probChangeVector){
 	 					changeVector(csp);
 	 					//Console.OUT.println("Changing vector in "+ here);
 	 				}
-	 			}
+	 			}*/
 	 		}
 	 		
 	 		//Main.show("new vector ",csp.variables);

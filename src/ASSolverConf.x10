@@ -43,14 +43,15 @@ public class ASSolverConf{
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
 				val placeid = here.id;
-				if (totalCost <= getWorstCostInPool()){
-					at(commRef) async{ commRef().tryInsertVector( totalCost , csp.variables, placeid); }
-					return 0;
-				}else{
+				val variables = csp.variables;
+				//if (totalCost <= getWorstCostInPool()){
+					at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
+					//return 0;
+				//}else{
 					// try to change vector
 					//Console.OUT.println("IN Conf");
-					return -1;
-				}
+					//return -1;
+				//}
 				
 				
 				// at(commRef) async{
@@ -58,10 +59,10 @@ public class ASSolverConf{
 				// }
 				// 
 				//Debug
-				// if(here.id == 0){
-				// 	Console.OUT.println("Print Vectors");
-				// 	commRef().printVectors();
-				// }
+				 // if(here.id == 0){
+				 // 	Console.OUT.println("Print Vectors");
+				 // 	commRef().printVectors();
+				 // }
 				/*********************************************************/
 			}else if (solverMode == USE_ACTIVITIES){
 				//Console.OUT.println("Solver Mode USE_ACTIVITIES, communication interval= "+commI);

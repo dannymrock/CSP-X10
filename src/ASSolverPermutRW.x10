@@ -72,15 +72,17 @@ public class ASSolverPermutRW{
 		val random = new Random();
 		finish for(p in Place.places()){ 
 				
-			val seed = random.nextLong();
-			//val seed = 1234L;
+			//val seed = random.nextLong();
+			val seed1 = 1234L;
 			
 			async at(p) async {
+				
 				var cost:Int = x10.lang.Int.MAX_VALUE; 
 				var nsize:Int = size;
-				
+				val fakeSeed = seed1;
+				val seed = here.id as Long;
 				if (cspProblem == 1) {			// Magic-Square
-					nsize = size*size;
+					nsize = size*size; 
 					cspDist(here.id) = new MagicSquareAS(size, seed);
 				}else if(cspProblem == 2)  		// Costas
 					cspDist(here.id) = new CostasAS(size, seed);
