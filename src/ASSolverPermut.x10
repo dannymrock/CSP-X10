@@ -206,6 +206,10 @@ public class ASSolverPermut{
 			
 	 		if (max_i == min_j)
 			{	
+	 			
+	 			val res = solverC.communicate(total_cost, csp,commRefs);
+	 			
+	 			
 	 			nbLocalMin++;
 				mark(max_i) = nbSwap + solverP.freezeLocMin; //Mark(max_i, freeze_loc_min);
 				//Console.OUT.println("nb_var_marked "+nb_var_marked+"solverP.resetLimit= "+solverP.resetLimit);
@@ -231,8 +235,8 @@ public class ASSolverPermut{
 	 		if(kill)				// Check if other place or activity have finished
 	 			break;
 	 		
-	 		if( nbIter % solverC.commI == 0 ){
-	 			val res = solverC.communicate(total_cost, csp,commRefs);
+	 		//if( nbIter % solverC.commI == 0 ){
+	 			//val res = solverC.communicate(total_cost, csp,commRefs);
 	 			/*if (res != 0 ){ //currently I have a bad cost
 	 				//Console.OUT.println("In ");
 	 				if (random.randomInt(100) < solverP.probChangeVector){
@@ -244,7 +248,7 @@ public class ASSolverPermut{
 	 			//Console.OUT.println("Print Vectors("+here.id+") :");
 	 			//myComm.printVectors();
 	 			
-	 		}
+	 		//}
 	 		
 	 		//Main.show("new vector ",csp.variables);
 		}
