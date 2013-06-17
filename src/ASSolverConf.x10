@@ -52,7 +52,7 @@ public class ASSolverConf{
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
 				val placeid = here.id;
-				val variables = csp.variables;
+				val variables = csp.variables; 
 				
 				
 				//at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
