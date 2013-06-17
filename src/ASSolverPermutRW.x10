@@ -20,7 +20,7 @@ public class ASSolverPermutRW{
 	var winPlace : Place;
 	
 	val updateI : Int;
-	val commEnable : Int;
+	val commOption : Int;
 	
 	var bcost : Int;
 	val stats : CSPStats;
@@ -44,7 +44,7 @@ public class ASSolverPermutRW{
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commE : Int , thread : Int ){
+	def this( upI : Int, commOpt : Int , thread : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -53,7 +53,7 @@ public class ASSolverPermutRW{
 		commData = new CommData(); 
 		
 		updateI = upI; 
-		commEnable = commE;
+		commOption = commOpt;
 		
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
@@ -77,7 +77,7 @@ public class ASSolverPermutRW{
 	 */
 	public def solve( size : Int , cspProblem : Int ) : CSPStats{ 
 		
-		
+		var extTime : Long = -System.nanoTime();
 		val random = new Random();
 		finish for(p in Place.places()){ 
 				
@@ -110,13 +110,13 @@ public class ASSolverPermutRW{
 				
 				if (thEnable == 0){
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable ));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption ));
 				}else if (thEnable < 100){
 					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable ), thEnable);	
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption ), thEnable);	
 				}else if (thEnable > 100){ 
 					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable), (thEnable-100));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption), (thEnable-100));
 				}
 					
 				/***/
@@ -135,9 +135,9 @@ public class ASSolverPermutRW{
 				
 				/***/
 				
-				timeDist(here.id) = -System.nanoTime();
+				//timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
-				timeDist(here.id) += System.nanoTime();
+			//	timeDist(here.id) += System.nanoTime();
 				
 				if (cost==0){
 					for (k in Place.places()) if (here.id != k.id) at(k) 
@@ -150,7 +150,8 @@ public class ASSolverPermutRW{
 					setStats();
 				}
 			}
-		
+		extTime += System.nanoTime();
+		stats.time = extTime/1e9;
 		this.clear();
 		return stats; 
 	}

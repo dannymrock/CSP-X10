@@ -16,7 +16,7 @@ public class ASSolverConf{
 	/** Number of itararion between each communication activity */
 	var commI : Int;
 	/** inter-places reset enable */
-	var commEn : Int;
+	var commOption : Int;
 	/** probability of change vector if bad cost */
 	val pChange : Int;
 	
@@ -26,15 +26,14 @@ public class ASSolverConf{
 	val myComm : CommData;
 	
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , commE : Int ){
+	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int ){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
-		commEn = commE;
+		commOption = cOption;
 		pChange = 10;
 		//refCommDist = commD ;
 		myComm = new CommData(); 
-		
 	}
 	
 	public def setValues(val toSet: ASSolverConf){
@@ -47,39 +46,38 @@ public class ASSolverConf{
 	 *  @return 0 if good cost, -1 if bad cost
 	 */
 	public def communicate( totalCost : Int, csp : ModelAS, arrayRefs : Rail[GlobalRef[CommData]] ):Int{
-		if(commEn != 0){
+		if(commOption != 0){
 			if(solverMode == USE_PLACES){
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
 				val placeid = here.id;
 				val variables = csp.variables; 
 				
+				// All-to-one place 0
+				if (commOption==1){
+					//Console.OUT.println("All-to-one");
+					at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
+				}else if(commOption==2){
+					// All-to-All	
+					//Console.OUT.println("All-to-all");
+					for (k in Place.places()) if (here.id != k.id) at(arrayRefs(k.id)) 
+					async {
+						arrayRefs(k.id)().tryInsertVector( totalCost , variables, placeid);
+					}	
+				}else{ //commOption==3
+					//Neighbors
+					//Console.OUT.println("Neighbors");
+					val placeup = here.id + 1;
+					val placedown = here.id - 1;
+					if (placeup < Place.MAX_PLACES){
+						at(arrayRefs(placeup)) async arrayRefs(placeup)().tryInsertVector( totalCost , variables, placeid);
+					}
+					if (placedown >= 0){
+						at(arrayRefs(placedown)) async arrayRefs(placedown)().tryInsertVector( totalCost , variables, placeid);
+					}
+				}
 				
-				//at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
-				// All-to-All	
 				
-				for (k in Place.places()) if (here.id != k.id) at(arrayRefs(k.id)) 
-				async 
-				{
-					arrayRefs(k.id)().tryInsertVector( totalCost , variables, placeid);
-				}	
-					
-				//Neighbors
-				
-				// val placeup = here.id + 1;
-				// val placedown = here.id - 1;
-				// if (placeup < Place.MAX_PLACES){
-				// 	at(arrayRefs(placeup)) async arrayRefs(placeup)().tryInsertVector( totalCost , variables, placeid);
-				// }
-				// if (placedown >= 0){
-				// 	at(arrayRefs(placedown)) async arrayRefs(placedown)().tryInsertVector( totalCost , variables, placeid);
-				// }
-				
-				
-				
-				// at(commRef) async{
-				// 	val res = commRef().tryInsertVector( totalCost , csp.variables, placeid);
-				// }
 				// 
 				//Debug
 				// if(here.id == 0){
@@ -108,7 +106,7 @@ public class ASSolverConf{
 	 */
 	public def getIPVector(csp : ModelAS) : Int{
 		var ret : Int = -1;
-		if(commEn != 0){
+		if(commOption != 0){
 			//ask for vectors in other places
 			val entries = (at(commRef)commRef().nbEntries);
 			if (entries < 1){
