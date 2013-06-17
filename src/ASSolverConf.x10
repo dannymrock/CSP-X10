@@ -20,12 +20,21 @@ public class ASSolverConf{
 	/** probability of change vector if bad cost */
 	val pChange : Int;
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , commE : Int){
+	/*** All-to-All***/
+	//val refCommDist : GlobalRef[DistArray[CommData]]; 
+	
+	val myComm : CommData;
+	
+	
+	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , commE : Int ){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
 		commEn = commE;
 		pChange = 10;
+		//refCommDist = commD ;
+		myComm = new CommData(); 
+		
 	}
 	
 	public def setValues(val toSet: ASSolverConf){
@@ -37,21 +46,35 @@ public class ASSolverConf{
 	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
 	 *  @return 0 if good cost, -1 if bad cost
 	 */
-	public def communicate( totalCost : Int, csp : ModelAS ):Int{
+	public def communicate( totalCost : Int, csp : ModelAS, arrayRefs : Rail[GlobalRef[CommData]] ):Int{
 		if(commEn != 0){
 			if(solverMode == USE_PLACES){
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
 				val placeid = here.id;
 				val variables = csp.variables;
-				//if (totalCost <= getWorstCostInPool()){
-					at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
-					//return 0;
-				//}else{
-					// try to change vector
-					//Console.OUT.println("IN Conf");
-					//return -1;
-				//}
+				
+				
+				//at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
+				// All-to-All	
+				
+				for (k in Place.places()) if (here.id != k.id) at(arrayRefs(k.id)) 
+				async 
+				{
+					arrayRefs(k.id)().tryInsertVector( totalCost , variables, placeid);
+				}	
+					
+				//Neighbors
+				
+				// val placeup = here.id + 1;
+				// val placedown = here.id - 1;
+				// if (placeup < Place.MAX_PLACES){
+				// 	at(arrayRefs(placeup)) async arrayRefs(placeup)().tryInsertVector( totalCost , variables, placeid);
+				// }
+				// if (placedown >= 0){
+				// 	at(arrayRefs(placedown)) async arrayRefs(placedown)().tryInsertVector( totalCost , variables, placeid);
+				// }
+				
 				
 				
 				// at(commRef) async{
@@ -59,10 +82,10 @@ public class ASSolverConf{
 				// }
 				// 
 				//Debug
-				 // if(here.id == 0){
-				 // 	Console.OUT.println("Print Vectors");
-				 // 	commRef().printVectors();
-				 // }
+				// if(here.id == 0){
+				//  	Console.OUT.println("Print Vectors");
+				//  	commRef().printVectors();
+				// }
 				/*********************************************************/
 			}else if (solverMode == USE_ACTIVITIES){
 				//Console.OUT.println("Solver Mode USE_ACTIVITIES, communication interval= "+commI);
@@ -103,5 +126,11 @@ public class ASSolverConf{
 	public def getWorstCostInPool():Int{
 		val wCost = (at(commRef)commRef().worstCost);
 		return wCost;
+	}
+	
+	
+	public def updateVector(variables:Rail[Int], totalcost:Int){
+		
+		
 	}
 }

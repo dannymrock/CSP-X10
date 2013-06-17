@@ -33,6 +33,12 @@ public class ASSolverPermutRW{
 	//val fileQAP : String;
 	//val solverRef : GlobalRef[ASSolverPermutRW];
 	
+	//All to all comm
+	//val commDist : DistArray[CommData];
+	//val refCommDist : GlobalRef[DistArray[CommData]];
+	
+	
+	
 	val thEnable : Int; 
 	
 	/**
@@ -56,6 +62,9 @@ public class ASSolverPermutRW{
 		thEnable = thread;
 		//fileQAP = file;
 		
+		
+		//commDist = DistArray.make[CommData](Dist.makeUnique());
+		//refCommDist = GlobalRef[DistArray[CommData]] (commDist);
 	}
 	
 	/** 
@@ -75,9 +84,7 @@ public class ASSolverPermutRW{
 			//val seed = random.nextLong();
 			val seed1 = 1234L;
 			
-			async at(p) async {
-				
-				var cost:Int = x10.lang.Int.MAX_VALUE; 
+			async at(p) async { 
 				var nsize:Int = size;
 				val fakeSeed = seed1;
 				val seed = here.id as Long;
@@ -112,6 +119,22 @@ public class ASSolverPermutRW{
 							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commEnable), (thEnable-100));
 				}
 					
+				/***/
+			}
+		}
+		val array = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
+		for(p in Place.places()){
+			array(p.id) = at(p){solverDist(here.id).myCommRef};	
+		}
+		
+		
+			finish for(p in Place.places())async at(p) async { 
+				var cost:Int = x10.lang.Int.MAX_VALUE;
+				
+				Array.copy(array,solverDist(here.id).commRefs);
+				
+				/***/
+				
 				timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
 				timeDist(here.id) += System.nanoTime();
@@ -127,7 +150,7 @@ public class ASSolverPermutRW{
 					setStats();
 				}
 			}
-		}
+		
 		this.clear();
 		return stats; 
 	}

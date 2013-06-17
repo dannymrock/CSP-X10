@@ -58,7 +58,15 @@ public class ASSolverPermut{
 	/** For Exhaustive search */
 	var nbListIJ : Int;
 	
-
+	
+	/** all-to-all comm **/
+	
+	val myComm : CommData;
+	
+	val myCommRef : GlobalRef[CommData];
+	
+	var commRefs : Rail[GlobalRef[CommData]];
+	
 	/**
 	 *  Constructor of the class
 	 * 	@param sizeOfProblem size of the problem to solve
@@ -79,6 +87,12 @@ public class ASSolverPermut{
 		kill = false;
 		solverC = conf;    //set??
 		nbChangeV = 0;
+		
+		// all-to-all
+		myComm = new CommData();
+		myCommRef = GlobalRef[CommData](myComm);		
+		commRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
+		
 	}
 	
 	/**
@@ -218,7 +232,7 @@ public class ASSolverPermut{
 	 			break;
 	 		
 	 		if( nbIter % solverC.commI == 0 ){
-	 			val res = solverC.communicate(total_cost, csp);
+	 			val res = solverC.communicate(total_cost, csp,commRefs);
 	 			/*if (res != 0 ){ //currently I have a bad cost
 	 				//Console.OUT.println("In ");
 	 				if (random.randomInt(100) < solverP.probChangeVector){
@@ -226,6 +240,10 @@ public class ASSolverPermut{
 	 					//Console.OUT.println("Changing vector in "+ here);
 	 				}
 	 			}*/
+	 			
+	 			//Console.OUT.println("Print Vectors("+here.id+") :");
+	 			//myComm.printVectors();
+	 			
 	 		}
 	 		
 	 		//Main.show("new vector ",csp.variables);
