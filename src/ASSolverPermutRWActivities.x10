@@ -40,7 +40,7 @@ public class ASSolverPermutRWActivities{
 		
 		stats = new CSPStats();
 		
-		commData = new CommData(); 
+		commData = new CommData(4); 
 		refComm = GlobalRef[CommData](commData);
 	}
 	
@@ -77,7 +77,7 @@ public class ASSolverPermutRWActivities{
 				}
 				
 				solverArray(aID) = new ASSolverPermut(nsize, seed, 
-						new ASSolverConf( ASSolverConf.USE_ACTIVITIES, refComm, updateI, 0 ));
+						new ASSolverConf( ASSolverConf.USE_ACTIVITIES, refComm, updateI, 0, 0 ));
 				
 				timeArray(aID) = -System.nanoTime();
 				cost = solverArray(aID).solve(cspArray(aID));

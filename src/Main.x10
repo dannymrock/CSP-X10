@@ -25,7 +25,8 @@ public class Main {
 		                                          Option("m", "", "Solver mode distribution 0 for Places \"n\" for Activities (n number of activities). Default 1."),
 		                                          Option("t", "", "Using threads."),
 		                                          Option("c", "", "Communication option: 0 no comm 1 for \"place 0\", 2 for all-to-all and 3 for neighbors"),
-		                                          Option("i", "", "Communication Interval (iterations) . Default 10.")
+		                                          Option("i", "", "Communication Interval (iterations) . Default 10."),
+		                                          Option("k", "", "poolsize.")
 		                                          ]);
 		
 		val cspProblem = opts("-p", "magic-square");
@@ -34,13 +35,13 @@ public class Main {
 		val solverMode = opts("-m", 0);
 		val threads = opts("-t", 0);
 		val comm = opts("-c", 0);
-		val commImpl = opts("-w", 0);
 		val inter = opts("-i", 10000000);
+		val poolSize = opts("-k", 4);
 		
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
-				" SolverMode: "+solverMode+" Communication enable: "+comm+" Communication update inteval: "+inter+
-				"\nThreads:"+threads+" Comm strategy: "+commImpl);
+				" SolverMode: "+solverMode+" Communication strategy: "+comm+" Communication update inteval: "+inter+
+				"\nThreads:"+threads+" Pool Size: "+poolSize);
 		
 		var param:Int = 0;
 		//var file : String = "";
@@ -82,7 +83,7 @@ public class Main {
 		val accStats = new CSPStats();
 		
 		// communication interval = 10
-		val solverP = new ASSolverPermutRW(inter, comm, threads); //this line -----***-----
+		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize); //this line -----***-----
 		val solverT = new ASSolverPermutRWActivities(inter,solverMode);
 
 		if (solverMode == 0){

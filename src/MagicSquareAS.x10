@@ -67,6 +67,7 @@ public class MagicSquareAS extends ModelAS{
 		solverParams.baseValue = 1;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
+		solverParams.probChangeVector = 100;
 		
 		square_length_m1 = squareLength - 1;
 		square_length_p1 = squareLength + 1;

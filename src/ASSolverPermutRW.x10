@@ -37,6 +37,7 @@ public class ASSolverPermutRW{
 	//val commDist : DistArray[CommData];
 	//val refCommDist : GlobalRef[DistArray[CommData]];
 	
+	val poolSize : Int;
 	
 	
 	val thEnable : Int; 
@@ -44,13 +45,14 @@ public class ASSolverPermutRW{
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commOpt : Int , thread : Int ){
+	def this( upI : Int, commOpt : Int , thread : Int , ps : Int){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
 		
 		currentCosts = DistArray.make[Int](Dist.makeUnique(), -1);
-		commData = new CommData(); 
+		poolSize = ps;
+		commData = new CommData( poolSize ); 
 		
 		updateI = upI; 
 		commOption = commOpt;
@@ -81,24 +83,24 @@ public class ASSolverPermutRW{
 		val random = new Random();
 		finish for(p in Place.places()){ 
 				
-			//val seed = random.nextLong();
-			val seed1 = 1234L;
+			val seed = random.nextLong();
+			//val seed1 = 1234L;
 			
-			async at(p) async { 
+			async at(p) async {
 				var nsize:Int = size;
-				val fakeSeed = seed1;
-				val seed = here.id as Long;
-				if (cspProblem == 1) {			// Magic-Square
+				//val fakeSeed = seed1;
+				//val seed = here.id as Long;
+				if (cspProblem == 1) {			//Magic-Square
 					nsize = size*size; 
 					cspDist(here.id) = new MagicSquareAS(size, seed);
-				}else if(cspProblem == 2)  		// Costas
+				}else if(cspProblem == 2)  		//Costas
 					cspDist(here.id) = new CostasAS(size, seed);
-				else if (cspProblem == 3) 		// All-Intervals
+				else if (cspProblem == 3) 		//All-Intervals
 					cspDist(here.id) = new AllIntervalAS(size, seed, true);
-				else if (cspProblem == 4){		// Langford
+				else if (cspProblem == 4){		//Langford
 					nsize = size*2;
 					cspDist(here.id) = new LangfordAS(size, seed);
-				}else if (cspProblem == 5){ 		// All-Intervals
+				}else if (cspProblem == 5){ 		//All-Intervals
 					cspDist(here.id) = new PartitAS(size, seed);
 				}
 				// else if (cspProblem == 99){ 	//QAP
@@ -110,34 +112,34 @@ public class ASSolverPermutRW{
 				
 				if (thEnable == 0){
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption ));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize ));
 				}else if (thEnable < 100){
 					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption ), thEnable);	
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption , poolSize), thEnable);	
 				}else if (thEnable > 100){ 
 					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption), (thEnable-100));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize), (thEnable-100));
 				}
 					
 				/***/
 			}
 		}
-		val array = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
+		val arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
 		for(p in Place.places()){
-			array(p.id) = at(p){solverDist(here.id).myCommRef};	
+			arrayRefs(p.id) = at(p){solverDist(here.id).myCommRef};	
 		}
 		
 		
 			finish for(p in Place.places())async at(p) async { 
 				var cost:Int = x10.lang.Int.MAX_VALUE;
 				
-				Array.copy(array,solverDist(here.id).commRefs);
+				Array.copy(arrayRefs, solverDist(here.id).commRefs);
 				
 				/***/
 				
 				//timeDist(here.id) = -System.nanoTime();
 				cost = solverDist(here.id).solve(cspDist(here.id));
-			//	timeDist(here.id) += System.nanoTime();
+				//	timeDist(here.id) += System.nanoTime();
 				
 				if (cost==0){
 					for (k in Place.places()) if (here.id != k.id) at(k) 

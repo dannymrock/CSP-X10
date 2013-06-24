@@ -32,7 +32,7 @@ public class ASSolverParameters{
 	var resetPercent : Int;		
 
 	var baseValue : Int;
-	/** Probability to change bad vector for a vector in the pool (Comm Enable) */
+	/** Probability to change variables vector for a vector in the pool (Comm Enable) */
 	var probChangeVector : Int;
 	
 	/**
@@ -61,5 +61,6 @@ public class ASSolverParameters{
 		this.reinitAfterIfSwap = toSet.reinitAfterIfSwap;	
 		this.resetPercent = toSet.resetPercent;
 		this.baseValue = toSet.baseValue;
+		this.probChangeVector = toSet.probChangeVector;
 	}	
 }

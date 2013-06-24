@@ -67,6 +67,9 @@ public class ASSolverPermut{
 	
 	var commRefs : Rail[GlobalRef[CommData]];
 	
+	/** Diversification approach **/
+	var alMaxI : Int;
+	var alMinJ : Int;
 	/**
 	 *  Constructor of the class
 	 * 	@param sizeOfProblem size of the problem to solve
@@ -89,7 +92,7 @@ public class ASSolverPermut{
 		nbChangeV = 0;
 		
 		// all-to-all
-		myComm = new CommData();
+		myComm = new CommData(solverC.poolSize);
 		myCommRef = GlobalRef[CommData](myComm);		
 		commRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
 		
@@ -207,17 +210,34 @@ public class ASSolverPermut{
 	 		if (max_i == min_j)
 			{	
 	 			
-	 			val res = solverC.communicate(total_cost, csp,commRefs);
-	 			
+	 			//val res = solverC.communicate(total_cost, csp,commRefs);
+	 			//if (min_j != alMinJ)
+	 				//Console.OUT.println("lmin_j = "+ min_j+ " alMinJ = "+alMinJ);
 	 			
 	 			nbLocalMin++;
 				mark(max_i) = nbSwap + solverP.freezeLocMin; //Mark(max_i, freeze_loc_min);
 				//Console.OUT.println("nb_var_marked "+nb_var_marked+"solverP.resetLimit= "+solverP.resetLimit);
 	 			if (nb_var_marked + 1 >= solverP.resetLimit)
 	 			{
-	 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
-	 				doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
-	 				//Main.show("after reset= ",csp.variables);
+	 				// do reset or get some vector from the comm pool
+	 				if (random.randomInt(100) < solverP.probChangeVector){
+	 					val result = solverC.getIPVector(csp, total_cost, commRefs );
+	 					if (result == -1)
+	 						doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
+	 					else{
+	 						nbChangeV++;
+	 						nbSwap += size ; //I don't know what happened here with costas reset
+	 						mark.clear();
+	 						total_cost = csp.costOfSolution(1);
+	 					}
+	 				}else{
+	 				
+		 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
+		 				doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
+		 				//Main.show("after reset= ",csp.variables);
+	 				}
+	 				
+	 				
 	 			}
 			}
 			else
@@ -278,7 +298,7 @@ public class ASSolverPermut{
 		
 		var i: Int;
 		var x: Int;
-		var max: Int; 
+		var max: Int;
 	
 		list_i_nb = 0; //Number of elements
 		max = 0;
@@ -308,6 +328,11 @@ public class ASSolverPermut{
 		//Console.OUT.println("list_i_nb "+list_i_nb+ " x "+x+" list_i(x) "+list_i(x));
 		max_i = list_i(x); //This max_i must be local or only returns the value
 		nbSameVar += list_i_nb;
+		
+		// get alternative maxI for communication pourposses
+		x = random.randomInt(list_i_nb);
+		alMaxI = list_i(x); // I hope list_i_nb are > 1 
+		
 		return max_i;
 	}
 	
@@ -345,13 +370,22 @@ public class ASSolverPermut{
 		 			list_j_nb = 1;
 		 			new_cost = x;
 		 			lmin_j = j;
+		 			
+		 			//For alternative move 
+		 			alMinJ = j;
+		 			
 		 			if (solverP.firstBest)
 		 			{
 		 				return lmin_j;         
 		 			}
 		 		} else if (x == new_cost){
 		 			if (random.randomInt(++list_j_nb) == 0)
-		 				lmin_j = j; 
+		 				lmin_j = j;
+		 			
+		 			//Select alternative move
+		 			if (random.randomInt(list_j_nb) == 0)
+		 				alMinJ = j;
+		 			
 		 		}
 		 	}
 	 	
@@ -374,7 +408,20 @@ public class ASSolverPermut{
 		 		}
 		 	}
 		}while(flagOut);
-	 	
+	 	//Console.OUT.println("list_J = "+ list_j_nb);
+		
+		//Here communicate alternative vector with some probability
+		if (lmin_j != alMinJ && solverC.commOption != 0){
+			//Console.OUT.println("lmin_j = "+ lmin_j+ " alMinJ = "+alMinJ);
+			var altConf : Rail[Int] = new Rail[Int](0..(size-1));
+			Array.copy(csp.variables, altConf);
+			// swap var
+			val aux = altConf(alMinJ);
+			altConf(alMinJ) = altConf(max_i);
+			altConf(max_i) = aux;
+			
+			val res = solverC.communicate( new_cost, altConf, commRefs);
+		}
 		return lmin_j;
 	}
 	
@@ -396,22 +443,22 @@ public class ASSolverPermut{
 		total_cost = (cost < 0) ? csp.costOfSolution(1) : cost; //Arg costofsol(1)
 	}
 	
-	public def changeVector(csp : ModelAS){
-		var ipVector : Int = -1;
-		
-		//Main.show("antes= ",csp.variables);
-		ipVector = solverC.getIPVector(csp);
-		//Main.show("despues= ",csp.variables);
-		
-		if (ipVector == 1){
-			nbChangeV++;
-			nbSwap += size;
-			//Console.OUT.println("do change vector");
-			mark.clear();
-			total_cost = csp.costOfSolution(1); //Arg costofsol(1)
-		}
-
-	}
+// 	public def changeVector(csp : ModelAS){
+// 		var ipVector : Int = -1;
+// 		
+// 		//Main.show("antes= ",csp.variables);
+// 		ipVector = solverC.getIPVector(csp, total_cost, commRefs);
+// 		//Main.show("despues= ",csp.variables);
+// 		
+// 		if (ipVector == 1){
+// 			nbChangeV++;
+// 			nbSwap += size;
+// 			//Console.OUT.println("do change vector");
+// 			mark.clear();
+// 			total_cost = csp.costOfSolution(1); //Arg costofsol(1)
+// 		}
+// 
+// 	}
 	
 	
 	/**

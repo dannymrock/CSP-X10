@@ -25,15 +25,18 @@ public class ASSolverConf{
 	
 	val myComm : CommData;
 	
+	val poolSize : Int;
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int ){
+	
+	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
 		commOption = cOption;
 		pChange = 10;
 		//refCommDist = commD ;
-		myComm = new CommData(); 
+		poolSize = ps;
+		myComm = new CommData(poolSize); 
 	}
 	
 	public def setValues(val toSet: ASSolverConf){
@@ -45,16 +48,16 @@ public class ASSolverConf{
 	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
 	 *  @return 0 if good cost, -1 if bad cost
 	 */
-	public def communicate( totalCost : Int, csp : ModelAS, arrayRefs : Rail[GlobalRef[CommData]] ):Int{
+	public def communicate( totalCost : Int, variables : Rail[Int], arrayRefs : Rail[GlobalRef[CommData]] ):Int{
 		if(commOption != 0){
 			if(solverMode == USE_PLACES){
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
 				val placeid = here.id;
-				val variables = csp.variables; 
+				//val variables = csp.variables; 
 				
 				// All-to-one place 0
-				if (commOption==1){
+				if (commOption == 1){
 					//Console.OUT.println("All-to-one");
 					at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
 				}else if(commOption==2){
@@ -64,7 +67,7 @@ public class ASSolverConf{
 					async {
 						arrayRefs(k.id)().tryInsertVector( totalCost , variables, placeid);
 					}	
-				}else{ //commOption==3
+				}else if (commOption == 3){ 
 					//Neighbors
 					//Console.OUT.println("Neighbors");
 					val placeup = here.id + 1;
@@ -80,10 +83,10 @@ public class ASSolverConf{
 				
 				// 
 				//Debug
-				// if(here.id == 0){
-				//  	Console.OUT.println("Print Vectors");
-				//  	commRef().printVectors();
-				// }
+				 // if(here.id == 0){
+				 //  	Console.OUT.println("Print Vectors");
+				 //  	commRef().printVectors();
+				 // }
 				/*********************************************************/
 			}else if (solverMode == USE_ACTIVITIES){
 				//Console.OUT.println("Solver Mode USE_ACTIVITIES, communication interval= "+commI);
@@ -95,26 +98,44 @@ public class ASSolverConf{
 	}
 	
 	
-	public def getRandomVector( ) : Rail[Int]{ 
-		val vectorOut = (at(commRef)commRef().getVector());
-		return vectorOut;
-	}
+	//public def getRandomVector( ) : Rail[Int]{ 
+		//val vectorOut = (at(commRef)commRef().getVector());
+		//return vectorOut;
+	//}
 	
 	/**
 	 *  get Inter Place Vector
 	 * 
 	 */
-	public def getIPVector(csp : ModelAS) : Int{
+	public def getIPVector(csp : ModelAS, myCost : Int, arrayRefs : Rail[GlobalRef[CommData]]) : Int{
 		var ret : Int = -1;
-		if(commOption != 0){
+		if (commOption == 1){
+			// All-To-One
 			//ask for vectors in other places
 			val entries = (at(commRef)commRef().nbEntries);
 			if (entries < 1){
 				ret = -1; //there's not avalables vectors (fail)
 			}else{ 
 				//get a vector
-				csp.setVariables(at(commRef)commRef().getVector());
-				ret = 1; 	// success
+				var remoteData : CSPSharedUnit = at(commRef)commRef().getRemoteData();  
+				if ( (myCost+100) > remoteData.cost ){					 
+					csp.setVariables(remoteData.vector);
+					ret = 1; 	// success
+				}
+			}
+		} else if (commOption == 3){
+			// Neighbors
+			// Look into inner pool and get a good vector
+			val myplace = here.id;
+			val entries = (at(arrayRefs(myplace))arrayRefs(myplace)().nbEntries);
+			if (entries < 1){
+				ret = -1; //there's not avalables vectors (fail)
+			}else{ 
+				var localData : CSPSharedUnit = at(arrayRefs(myplace))arrayRefs(myplace)().getRemoteData();
+				if ( (myCost+100) > localData.cost ){					 
+					csp.setVariables(localData.vector);
+					ret = 1; 	// success
+				}
 			}
 		}
 		return ret;

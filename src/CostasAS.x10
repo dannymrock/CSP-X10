@@ -70,6 +70,8 @@ public class CostasAS extends ModelAS{
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
 		
+		solverParams.probChangeVector = 1;
+		
 		toAdd(0) = 1; toAdd(1) = 2; toAdd(2) = length - 2; toAdd(3) = length - 3;
 		
 	} 
@@ -95,6 +97,9 @@ public class CostasAS extends ModelAS{
 		{
 			nbOcc.clear();
 			i = dist;
+			var penalty : Int = sizeSq - (dist * dist);
+			//var penalty : Int = 1;
+			//var penalty : Int = sizeSq - dist;
 			do
 			{
 				diff = variables( i - dist ) - variables(i);
@@ -112,17 +117,17 @@ public class CostasAS extends ModelAS{
 						{
 							firstI = first(diffTranslated);
 							//ErrOn(first_i);
-							err(firstI) += (sizeSq - (dist * dist));
-							err(firstI - dist) += (sizeSq - (dist * dist)); 
+							err(firstI) += penalty;
+							err(firstI - dist) += penalty; 
 						}
 						//ErrOn(i);
-						err(i) += (sizeSq - (dist * dist));
-						err(i - dist) += (sizeSq - (dist * dist));
+						err(i) += penalty;
+						err(i - dist) += penalty;
 					}  
 				}
 
 				if (nb > 1)
-					r += (sizeSq - (dist * dist));
+					r += penalty;
 			}while(++i < length);
 		}while(++dist <= size2);
 		return r;
