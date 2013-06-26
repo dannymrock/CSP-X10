@@ -255,20 +255,22 @@ public class ASSolverPermut{
 	 		if(kill)				// Check if other place or activity have finished
 	 			break;
 	 		
-	 		//if( nbIter % solverC.commI == 0 ){
-	 			//val res = solverC.communicate(total_cost, csp,commRefs);
-	 			/*if (res != 0 ){ //currently I have a bad cost
-	 				//Console.OUT.println("In ");
-	 				if (random.randomInt(100) < solverP.probChangeVector){
-	 					changeVector(csp);
-	 					//Console.OUT.println("Changing vector in "+ here);
+	 		if( nbIter % solverC.commI == 0 ){
+	 			//Console.OUT.println("In ");
+	 			if (random.randomInt(100) < solverP.probChangeVector){
+	 				val result = solverC.getIPVector(csp, total_cost, commRefs );
+	 				if (result != -1){
+	 					nbChangeV++;
+	 					nbSwap += size ; //I don't know what happened here with costas reset
+	 					mark.clear();
+	 					total_cost = csp.costOfSolution(1);
 	 				}
-	 			}*/
-	 			
+	 				//Console.OUT.println("Changing vector in "+ here);
+	 			}		
 	 			//Console.OUT.println("Print Vectors("+here.id+") :");
 	 			//myComm.printVectors();
 	 			
-	 		//}
+	 		}
 	 		
 	 		//Main.show("new vector ",csp.variables);
 		}
@@ -416,9 +418,9 @@ public class ASSolverPermut{
 			var altConf : Rail[Int] = new Rail[Int](0..(size-1));
 			Array.copy(csp.variables, altConf);
 			// swap var
-			val aux = altConf(alMinJ);
-			altConf(alMinJ) = altConf(max_i);
-			altConf(max_i) = aux;
+			//val aux = altConf(alMinJ);
+			//altConf(alMinJ) = altConf(max_i);
+			//altConf(max_i) = aux;
 			
 			val res = solverC.communicate( new_cost, altConf, commRefs);
 		}

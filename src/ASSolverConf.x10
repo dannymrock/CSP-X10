@@ -118,7 +118,7 @@ public class ASSolverConf{
 			}else{ 
 				//get a vector
 				var remoteData : CSPSharedUnit = at(commRef)commRef().getRemoteData();  
-				if ( (myCost+100) > remoteData.cost ){					 
+				if ( (myCost) > remoteData.cost ){					 
 					csp.setVariables(remoteData.vector);
 					ret = 1; 	// success
 				}
