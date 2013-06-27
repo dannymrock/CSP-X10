@@ -219,6 +219,7 @@ public class ASSolverPermut{
 				//Console.OUT.println("nb_var_marked "+nb_var_marked+"solverP.resetLimit= "+solverP.resetLimit);
 	 			if (nb_var_marked + 1 >= solverP.resetLimit)
 	 			{
+	 				/*
 	 				// do reset or get some vector from the comm pool
 	 				if (random.randomInt(100) < solverP.probChangeVector){
 	 					val result = solverC.getIPVector(csp, total_cost, commRefs );
@@ -231,11 +232,12 @@ public class ASSolverPermut{
 	 						total_cost = csp.costOfSolution(1);
 	 					}
 	 				}else{
+	 				*/
 	 				
 		 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
 		 				doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
 		 				//Main.show("after reset= ",csp.variables);
-	 				}
+	 				//}
 	 				
 	 				
 	 			}
@@ -257,6 +259,7 @@ public class ASSolverPermut{
 	 		
 	 		if( nbIter % solverC.commI == 0 ){
 	 			//Console.OUT.println("In ");
+	 			val res = solverC.communicate( total_cost, csp.variables, commRefs);
 	 			if (random.randomInt(100) < solverP.probChangeVector){
 	 				val result = solverC.getIPVector(csp, total_cost, commRefs );
 	 				if (result != -1){
@@ -412,6 +415,7 @@ public class ASSolverPermut{
 		}while(flagOut);
 	 	//Console.OUT.println("list_J = "+ list_j_nb);
 		
+		/*
 		//Here communicate alternative vector with some probability
 		if (lmin_j != alMinJ && solverC.commOption != 0){
 			//Console.OUT.println("lmin_j = "+ lmin_j+ " alMinJ = "+alMinJ);
@@ -424,6 +428,7 @@ public class ASSolverPermut{
 			
 			val res = solverC.communicate( new_cost, altConf, commRefs);
 		}
+		*/
 		return lmin_j;
 	}
 	
@@ -442,6 +447,7 @@ public class ASSolverPermut{
 		
 		mark.clear();
 		nbReset++;
+		//Console.OUT.println("Do reset...: "+ nbReset);
 		total_cost = (cost < 0) ? csp.costOfSolution(1) : cost; //Arg costofsol(1)
 	}
 	

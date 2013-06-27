@@ -132,7 +132,7 @@ public class ASSolverConf{
 				ret = -1; //there's not avalables vectors (fail)
 			}else{ 
 				var localData : CSPSharedUnit = at(arrayRefs(myplace))arrayRefs(myplace)().getRemoteData();
-				if ( (myCost+100) > localData.cost ){					 
+				if ( (myCost + 10) > localData.cost ){					 
 					csp.setVariables(localData.vector);
 					ret = 1; 	// success
 				}
