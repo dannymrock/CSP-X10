@@ -65,7 +65,6 @@ public class ASSolverPermut{
 	
 	val myCommRef : GlobalRef[CommData];
 	
-	var commRefs : Rail[GlobalRef[CommData]];
 	
 	/** Diversification approach **/
 	var alMaxI : Int;
@@ -94,7 +93,6 @@ public class ASSolverPermut{
 		// all-to-all
 		myComm = new CommData(solverC.poolSize);
 		myCommRef = GlobalRef[CommData](myComm);		
-		commRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
 		
 	}
 	
@@ -147,6 +145,9 @@ public class ASSolverPermut{
 		best_cost = total_cost;
 		var best_of_best: Int = x10.lang.Int.MAX_VALUE ;
 		
+		//var slope : Int = 0;
+		//var antcost : Int = total_cost;
+		
 		while( total_cost != 0 ){
 			if (best_cost < best_of_best)
 				best_of_best = best_cost;
@@ -174,6 +175,9 @@ public class ASSolverPermut{
 					
 					best_cost = total_cost = csp.costOfSolution(1);
 					best_of_best = x10.lang.Int.MAX_VALUE ;
+					//restart pool?
+					solverC.restartPool();
+					
 					continue;
 				}
 				break; 
@@ -219,10 +223,10 @@ public class ASSolverPermut{
 				//Console.OUT.println("nb_var_marked "+nb_var_marked+"solverP.resetLimit= "+solverP.resetLimit);
 	 			if (nb_var_marked + 1 >= solverP.resetLimit)
 	 			{
-	 				/*
+	 				
 	 				// do reset or get some vector from the comm pool
-	 				if (random.randomInt(100) < solverP.probChangeVector){
-	 					val result = solverC.getIPVector(csp, total_cost, commRefs );
+	 				/*if (random.randomInt(100) < solverP.probChangeVector){
+	 					val result = solverC.getIPVector(csp, total_cost );
 	 					if (result == -1)
 	 						doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
 	 					else{
@@ -231,8 +235,8 @@ public class ASSolverPermut{
 	 						mark.clear();
 	 						total_cost = csp.costOfSolution(1);
 	 					}
-	 				}else{
-	 				*/
+	 				}else{*/
+	 				
 	 				
 		 				//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
 		 				doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
@@ -251,6 +255,10 @@ public class ASSolverPermut{
 				nbSwap++;
 				csp.executedSwap(max_i, min_j);
 				total_cost = new_cost;
+				
+				//slope = antcost - total_cost;
+				//antcost = total_cost;
+				//Console.OUT.println("slope in "+here.id+" : "+slope+ " total cost : "+total_cost);
 			}
 	 		
 	 		Runtime.probe();		// Give a chance to the other activities
@@ -259,19 +267,21 @@ public class ASSolverPermut{
 	 		
 	 		if( nbIter % solverC.commI == 0 ){
 	 			//Console.OUT.println("In ");
-	 			val res = solverC.communicate( total_cost, csp.variables, commRefs);
+	 			val res = solverC.communicate( total_cost, csp.variables); 
 	 			if (random.randomInt(100) < solverP.probChangeVector){
-	 				val result = solverC.getIPVector(csp, total_cost, commRefs );
+	 				val result = solverC.getIPVector(csp, total_cost );
 	 				if (result != -1){
 	 					nbChangeV++;
 	 					nbSwap += size ; //I don't know what happened here with costas reset
 	 					mark.clear();
 	 					total_cost = csp.costOfSolution(1);
+	 					//Console.OUT.println("Changing vector in "+ here);
 	 				}
-	 				//Console.OUT.println("Changing vector in "+ here);
-	 			}		
+	 					
+	 			}	
 	 			//Console.OUT.println("Print Vectors("+here.id+") :");
 	 			//myComm.printVectors();
+	 			//Main.show("Vector ",csp.variables);
 	 			
 	 		}
 	 		
@@ -285,7 +295,7 @@ public class ASSolverPermut{
 		nbLocalMinTot += nbLocalMin; 
 		
 		//if(!kill)
-			//csp.displaySolution();//Main.show("final= ",csp.variables);
+			//Main.show("final= ",csp.variables);
 
 		//Console.OUT.println("Cost = "+total_cost);
 		
@@ -415,20 +425,20 @@ public class ASSolverPermut{
 		}while(flagOut);
 	 	//Console.OUT.println("list_J = "+ list_j_nb);
 		
-		/*
+		
 		//Here communicate alternative vector with some probability
-		if (lmin_j != alMinJ && solverC.commOption != 0){
+		/*if (lmin_j != alMinJ && solverC.commOption != 0){
 			//Console.OUT.println("lmin_j = "+ lmin_j+ " alMinJ = "+alMinJ);
 			var altConf : Rail[Int] = new Rail[Int](0..(size-1));
 			Array.copy(csp.variables, altConf);
 			// swap var
-			//val aux = altConf(alMinJ);
-			//altConf(alMinJ) = altConf(max_i);
-			//altConf(max_i) = aux;
+			val aux = altConf(alMinJ);
+			altConf(alMinJ) = altConf(max_i);
+			altConf(max_i) = aux;
 			
-			val res = solverC.communicate( new_cost, altConf, commRefs);
-		}
-		*/
+			val res = solverC.communicate( new_cost, altConf);
+		}*/
+		
 		return lmin_j;
 	}
 	

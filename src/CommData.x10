@@ -41,7 +41,7 @@ public class CommData{
 			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size , variables, place );
 			if (cost < bestCost){ 
 				bestCost = cost;
-				//Console.OUT.println("New Best Cost = "+bestCost);
+				//Console.OUT.println("New Best Cost = "+bestCost+" in place "+place);
 			}	
 			
 		}else{
@@ -66,9 +66,9 @@ public class CommData{
 			//Console.OUT.println("insert vector with cost "+cost);	
 			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size , variables, place);
 			
-			if (cost < bestCost){ 
+			if (cost <= bestCost){ 
 				bestCost = cost;
-					//Console.OUT.println("New Best Cost = "+bestCost);
+				//Console.OUT.println("New Best Cost = "+bestCost+" in place "+place);
 			}				
 		}
 		updateWorstCost();

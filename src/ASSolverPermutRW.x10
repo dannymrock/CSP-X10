@@ -133,7 +133,7 @@ public class ASSolverPermutRW{
 			finish for(p in Place.places())async at(p) async { 
 				var cost:Int = x10.lang.Int.MAX_VALUE;
 				
-				Array.copy(arrayRefs, solverDist(here.id).commRefs);
+				Array.copy(arrayRefs, solverDist(here.id).solverC.arrayRefs);
 				
 				/***/
 				

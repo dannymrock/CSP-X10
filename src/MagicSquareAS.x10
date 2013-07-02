@@ -60,14 +60,17 @@ public class MagicSquareAS extends ModelAS{
 		solverParams.probSelectLocMin = 6;
 		solverParams.freezeLocMin = 5;
 		solverParams.freezeSwap = 0;
+		//solverParams.resetLimit = squareLength / 2;
 		solverParams.resetLimit = squareLength;
 		solverParams.resetPercent = 10;
 		solverParams.restartLimit = 10000000;
 		solverParams.restartMax = 0;
+		//solverParams.restartLimit = 2 * length;
+		//solverParams.restartMax = 20;
 		solverParams.baseValue = 1;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
-		solverParams.probChangeVector = 100;
+		solverParams.probChangeVector = 50;
 		
 		square_length_m1 = squareLength - 1;
 		square_length_p1 = squareLength + 1;

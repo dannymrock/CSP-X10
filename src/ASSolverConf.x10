@@ -18,7 +18,7 @@ public class ASSolverConf{
 	/** inter-places reset enable */
 	var commOption : Int;
 	/** probability of change vector if bad cost */
-	val pChange : Int;
+	//val pChange : Int;
 	
 	/*** All-to-All***/
 	//val refCommDist : GlobalRef[DistArray[CommData]]; 
@@ -27,16 +27,21 @@ public class ASSolverConf{
 	
 	val poolSize : Int;
 	
+	var arrayRefs : Rail[GlobalRef[CommData]];
+	
+	var delta : Int;
 	
 	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
 		commOption = cOption;
-		pChange = 10;
+		//pChange = 10;
 		//refCommDist = commD ;
 		poolSize = ps;
 		myComm = new CommData(poolSize); 
+		arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
+		delta = 0;
 	}
 	
 	public def setValues(val toSet: ASSolverConf){
@@ -48,7 +53,7 @@ public class ASSolverConf{
 	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
 	 *  @return 0 if good cost, -1 if bad cost
 	 */
-	public def communicate( totalCost : Int, variables : Rail[Int], arrayRefs : Rail[GlobalRef[CommData]] ):Int{
+	public def communicate( totalCost : Int, variables : Rail[Int] ):Int{
 		if(commOption != 0){
 			if(solverMode == USE_PLACES){
 				/************************** Comm Places *******************************/
@@ -107,7 +112,7 @@ public class ASSolverConf{
 	 *  get Inter Place Vector
 	 * 
 	 */
-	public def getIPVector(csp : ModelAS, myCost : Int, arrayRefs : Rail[GlobalRef[CommData]]) : Int{
+	public def getIPVector(csp : ModelAS, myCost : Int) : Int{
 		var ret : Int = -1;
 		if (commOption == 1){
 			// All-To-One
@@ -118,7 +123,7 @@ public class ASSolverConf{
 			}else{ 
 				//get a vector
 				var remoteData : CSPSharedUnit = at(commRef)commRef().getRemoteData();  
-				if ( (myCost) > remoteData.cost ){					 
+				if ( (myCost + delta) > remoteData.cost ){					 
 					csp.setVariables(remoteData.vector);
 					ret = 1; 	// success
 				}
@@ -132,7 +137,7 @@ public class ASSolverConf{
 				ret = -1; //there's not avalables vectors (fail)
 			}else{ 
 				var localData : CSPSharedUnit = at(arrayRefs(myplace))arrayRefs(myplace)().getRemoteData();
-				if ( (myCost + 10) > localData.cost ){					 
+				if ( (myCost + delta) > localData.cost ){					 
 					csp.setVariables(localData.vector);
 					ret = 1; 	// success
 				}
@@ -145,6 +150,14 @@ public class ASSolverConf{
 	public def getWorstCostInPool():Int{
 		val wCost = (at(commRef)commRef().worstCost);
 		return wCost;
+	}
+	
+	public def restartPool(){
+		if (commOption == 1){
+			at(commRef)commRef().clear();
+		} else if (commOption == 3){
+			at(arrayRefs(here.id))arrayRefs(here.id)().clear();
+		}
 	}
 	
 	
