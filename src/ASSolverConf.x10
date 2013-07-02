@@ -31,7 +31,10 @@ public class ASSolverConf{
 	
 	var delta : Int;
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int){
+	val noGroups : Int;
+	val myGroupId : Int;
+	
+	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int, nG : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
@@ -39,9 +42,13 @@ public class ASSolverConf{
 		//pChange = 10;
 		//refCommDist = commD ;
 		poolSize = ps;
+		noGroups = nG;
+		myGroupId = here.id % noGroups;
 		myComm = new CommData(poolSize); 
 		arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
 		delta = 0;
+		
+		//Console.OUT.println("I'm "+here.id+ " and my group is "+myGroupId);
 	}
 	
 	public def setValues(val toSet: ASSolverConf){
@@ -83,14 +90,17 @@ public class ASSolverConf{
 					if (placedown >= 0){
 						at(arrayRefs(placedown)) async arrayRefs(placedown)().tryInsertVector( totalCost , variables, placeid);
 					}
+				}else if(commOption == 4){
+					at(arrayRefs(myGroupId)) async arrayRefs(myGroupId)().tryInsertVector( totalCost , variables, placeid);
 				}
 				
 				
-				// 
+				
+				 
 				//Debug
-				 // if(here.id == 0){
-				 //  	Console.OUT.println("Print Vectors");
-				 //  	commRef().printVectors();
+				 // if(here.id  == myGroupId){ //group heed
+				 //   	Console.OUT.println("I'm "+myGroupId+" head group, here my pool Vectors");
+				 //   	at(arrayRefs(myGroupId))arrayRefs(myGroupId)().printVectors();
 				 // }
 				/*********************************************************/
 			}else if (solverMode == USE_ACTIVITIES){
@@ -139,6 +149,18 @@ public class ASSolverConf{
 				var localData : CSPSharedUnit = at(arrayRefs(myplace))arrayRefs(myplace)().getRemoteData();
 				if ( (myCost + delta) > localData.cost ){					 
 					csp.setVariables(localData.vector);
+					ret = 1; 	// success
+				}
+			}
+		}else if(commOption == 4){
+			val entries = (at(arrayRefs(myGroupId))arrayRefs(myGroupId)().nbEntries);
+			if (entries < 1){
+				ret = -1; //there's not avalables vectors (fail)
+			}else{ 
+				//get a vector
+				var remoteData : CSPSharedUnit = at(arrayRefs(myGroupId))arrayRefs(myGroupId)().getRemoteData();  
+				if ( (myCost + delta) > remoteData.cost ){					 
+					csp.setVariables(remoteData.vector);
 					ret = 1; 	// success
 				}
 			}

@@ -42,10 +42,15 @@ public class ASSolverPermutRW{
 	
 	val thEnable : Int; 
 	
+	//Hybrid approach
+	val noGroups : Int;
+	val sizeGroup : Int;
+	//val refAllGroups :  Array[Rail[GlobalRef[CommData]]](1);
+	
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commOpt : Int , thread : Int , ps : Int){
+	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, nG : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -67,6 +72,13 @@ public class ASSolverPermutRW{
 		
 		//commDist = DistArray.make[CommData](Dist.makeUnique());
 		//refCommDist = GlobalRef[DistArray[CommData]] (commDist);
+		
+		noGroups = nG; // will be a parameter 
+		sizeGroup = Place.MAX_PLACES / noGroups ;
+		
+		//refAllGroups = new Array[Rail[GlobalRef[CommData]]](0..(noGroups-1));
+		
+		Console.OUT.println("There are "+noGroups+" groups each with "+sizeGroup+" nodes.");
 	}
 	
 	/** 
@@ -81,11 +93,11 @@ public class ASSolverPermutRW{
 		
 		var extTime : Long = -System.nanoTime();
 		val random = new Random();
+		
+		// Create solver and problem instances at each node
 		finish for(p in Place.places()){ 
-				
 			val seed = random.nextLong();
 			//val seed1 = 1234L;
-			
 			async at(p) async {
 				var nsize:Int = size;
 				//val fakeSeed = seed1;
@@ -112,26 +124,37 @@ public class ASSolverPermutRW{
 				
 				if (thEnable == 0){
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize ));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups ));
 				}else if (thEnable < 100){
 					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption , poolSize), thEnable);	
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption , poolSize, noGroups), thEnable);	
 				}else if (thEnable > 100){ 
 					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize), (thEnable-100));
+							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups), (thEnable-100));
 				}
 					
 				/***/
 			}
 		}
+		
+		//Getting comm reference of each node
 		val arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
 		for(p in Place.places()){
 			arrayRefs(p.id) = at(p){solverDist(here.id).myCommRef};	
 		}
 		
+		// var g : Int = 0;
+		// for( g = 0 ; g < noGroups; g++ ) {
+		// 	refAllGroups(g) = new Rail[GlobalRef[CommData]](0..(sizeGroup-1));
+		// 	//place de cadaq grupo
+		// 	for(p in Place.places()){
+		// 		//val g =p.id % noGroups;
+		// 		//refAllGroups(g,1) = at(p){solverDist(here.id).myCommRef};	
+		// 	}
+		// }
 		
-			finish for(p in Place.places())async at(p) async { 
-				var cost:Int = x10.lang.Int.MAX_VALUE;
+		finish for(p in Place.places())async at(p) async { 
+			var cost:Int = x10.lang.Int.MAX_VALUE;
 				
 				Array.copy(arrayRefs, solverDist(here.id).solverC.arrayRefs);
 				

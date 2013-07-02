@@ -26,6 +26,7 @@ public class Main {
 		                                          Option("t", "", "Using threads."),
 		                                          Option("c", "", "Communication option: 0 no comm 1 for \"place 0\", 2 for all-to-all and 3 for neighbors"),
 		                                          Option("i", "", "Communication Interval (iterations) . Default 10."),
+		                                          Option("g", "", "Number of groups. Default 4."),
 		                                          Option("k", "", "poolsize.")
 		                                          ]);
 		
@@ -36,7 +37,9 @@ public class Main {
 		val threads = opts("-t", 0);
 		val comm = opts("-c", 0);
 		val inter = opts("-i", 10000000);
+		val groupN = opts("-g", 4);
 		val poolSize = opts("-k", 4);
+		
 		
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
@@ -83,7 +86,7 @@ public class Main {
 		val accStats = new CSPStats();
 		
 		// communication interval = 10
-		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize); //this line -----***-----
+		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, groupN); //this line -----***-----
 		val solverT = new ASSolverPermutRWActivities(inter,solverMode);
 
 		if (solverMode == 0){
@@ -92,8 +95,8 @@ public class Main {
 			Console.OUT.println("Using "+solverMode+" Activities");
 		}
 		
-		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta|");
-		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|");
+		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Change|");
+		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|-------|");
 		
 		/*
 		 *  Execution loop
@@ -117,7 +120,7 @@ public class Main {
 			
 		}
 		Console.OUT.printf("\r");
-		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|");
+		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|-------|");
 		accStats.printAVG(testNo);
 		Console.OUT.printf("\n");
 		
