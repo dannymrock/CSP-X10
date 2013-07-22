@@ -36,7 +36,7 @@ public class PartitAS extends ModelAS{
 		solverParams.freezeSwap = 0;
 		solverParams.resetLimit = 1;
 		solverParams.resetPercent = 1;
-		solverParams.restartLimit = 100;
+		solverParams.restartLimit = 100;//(length < 100) ? 10 : (length < 1000) ? 150 : length / 10;
 		solverParams.restartMax = 100000;
 		solverParams.baseValue = 1;
 		solverParams.exhaustive = true;
@@ -81,7 +81,7 @@ public class PartitAS extends ModelAS{
 	 */
 	public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
 	{
-		var xi1 : Int, xi12 : Int, xi2 : Int, xi22 : Int, cmX : Int, cmX2 : Int, r : Int;
+		var xi1 : Int, xi12 : Int, xi2 : Int, xi22 : Int, cmX : Int, cmX2 : Long, r : Int;
 
 		//#if 0				/* useless with customized Next_I and Next_J */
 		if (i1 >= size2 || i2 < size2)
@@ -95,7 +95,7 @@ public class PartitAS extends ModelAS{
 		xi22 = xi2 * xi2;
 
 		cmX = curMidX - xi1 + xi2;
-		cmX2 = (curMidX2 as Int) - xi12 + xi22;
+		cmX2 = curMidX2  - (xi12 as Long ) + (xi22 as Long);
 		r = coeff * Math.abs(sumMidX - cmX) + (Math.abs(sumMidX2 - cmX2) as Int);
 
 		return r;

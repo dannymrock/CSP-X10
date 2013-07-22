@@ -177,7 +177,7 @@ public class ASSolverPermut{
 					best_of_best = x10.lang.Int.MAX_VALUE ;
 					//restart pool?
 					solverC.restartPool();
-					
+					//Console.OUT.println("Restart...");
 					continue;
 				}
 				break; 
@@ -267,6 +267,7 @@ public class ASSolverPermut{
 	 		
 	 		if( nbIter % solverC.commI == 0 ){
 	 			//Console.OUT.println("In ");
+	 			//Chang//
 	 			val res = solverC.communicate( total_cost, csp.variables); 
 	 			if (random.randomInt(100) < solverP.probChangeVector){
 	 				val result = solverC.getIPVector(csp, total_cost );
@@ -425,9 +426,9 @@ public class ASSolverPermut{
 		}while(flagOut);
 	 	//Console.OUT.println("list_J = "+ list_j_nb);
 		
-		
+		//Chang//
 		//Here communicate alternative vector with some probability
-		/*if (lmin_j != alMinJ && solverC.commOption != 0){
+		/*if (lmin_j != alMinJ && solverC.commOption != 0){//if (solverC.commOption != 0){//
 			//Console.OUT.println("lmin_j = "+ lmin_j+ " alMinJ = "+alMinJ);
 			var altConf : Rail[Int] = new Rail[Int](0..(size-1));
 			Array.copy(csp.variables, altConf);

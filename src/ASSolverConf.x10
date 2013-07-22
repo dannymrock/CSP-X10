@@ -46,7 +46,7 @@ public class ASSolverConf{
 		myGroupId = here.id % noGroups;
 		myComm = new CommData(poolSize); 
 		arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
-		delta = 0;
+		delta = -5;
 		
 		//Console.OUT.println("I'm "+here.id+ " and my group is "+myGroupId);
 	}

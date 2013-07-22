@@ -11,7 +11,7 @@ public class CommData{
 		poolSize = poolS;
 		bestPartialSolutions = new Rail[CSPSharedUnit](0..(poolSize-1));
 		bestCost = Int.MAX_VALUE;
-		worstCost = Int.MAX_VALUE;
+		worstCost = Int.MAX_VALUE; //
 		random = new RandomTools(123L);
 	}
 	

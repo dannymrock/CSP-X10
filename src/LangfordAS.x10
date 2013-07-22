@@ -55,7 +55,7 @@ public class LangfordAS extends ModelAS{
 		between = Math.abs(x - y) - 1;
 
 		//#ifndef SLOW			/* the best !!! simply count 1 for an error */
-		r = (between != i + 1) ? 1 : 0;
+		r = (between != i + 1) ? 1 : 0; //(between != i + 1);
 
 		return r;
 	}

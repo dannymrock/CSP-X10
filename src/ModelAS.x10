@@ -74,7 +74,7 @@ public class ModelAS{
 	 * 	Cost if swap function
 	 */
 	public def costIfSwap(current_cost:Int, i1:Int, i2:Int):Int{
-		//Console.OUT.println("Error costIfSwap");
+		Console.OUT.println("Error costIfSwap");
 		return 0;
 	}
 	

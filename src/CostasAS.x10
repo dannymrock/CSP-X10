@@ -63,6 +63,7 @@ public class CostasAS extends ModelAS{
 		solverParams.freezeLocMin = 1;
 		solverParams.freezeSwap = 0;
 		solverParams.resetLimit = 1;
+		//solverParams.resetLimit = 2;
 		solverParams.resetPercent = 5;
 		solverParams.restartLimit = 1000000000;
 		solverParams.restartMax = 0;
