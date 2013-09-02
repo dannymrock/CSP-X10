@@ -46,7 +46,7 @@ public class ASSolverConf{
 		myGroupId = here.id % noGroups;
 		myComm = new CommData(poolSize); 
 		arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
-		delta = -5;
+		delta = 0;
 		
 		//Console.OUT.println("I'm "+here.id+ " and my group is "+myGroupId);
 	}
@@ -94,9 +94,6 @@ public class ASSolverConf{
 					at(arrayRefs(myGroupId)) async arrayRefs(myGroupId)().tryInsertVector( totalCost , variables, placeid);
 				}
 				
-				
-				
-				 
 				//Debug
 				 // if(here.id  == myGroupId){ //group heed
 				 //   	Console.OUT.println("I'm "+myGroupId+" head group, here my pool Vectors");

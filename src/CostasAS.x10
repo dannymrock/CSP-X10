@@ -71,7 +71,7 @@ public class CostasAS extends ModelAS{
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
 		
-		solverParams.probChangeVector = 1;
+		solverParams.probChangeVector = 1; // 2 also works fine
 		
 		toAdd(0) = 1; toAdd(1) = 2; toAdd(2) = length - 2; toAdd(3) = length - 3;
 		

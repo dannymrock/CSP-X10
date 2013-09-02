@@ -42,6 +42,7 @@ public class PartitAS extends ModelAS{
 		solverParams.exhaustive = true;
 		solverParams.firstBest = false;
 		
+		solverParams.probChangeVector = 100; //seems to be the best (no tested yet)
 	} 
 	
 	/**

@@ -35,6 +35,8 @@ public class LangfordAS extends ModelAS{
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false; 
 		
+		solverParams.probChangeVector = 100; //best 
+		
 		if (order % 4 != 0 && order % 4 != 3)
 		{
 			Console.OUT.printf("no solution with size = %d\n", order);

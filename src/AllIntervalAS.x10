@@ -51,6 +51,7 @@ public class AllIntervalAS extends ModelAS {
 			solverParams.exhaustive = false;
 			solverParams.firstBest = false;
 		}
+		solverParams.probChangeVector = 1; //not deeply tested 
 	} 
 	
 	/**
