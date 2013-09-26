@@ -25,13 +25,14 @@ public class CommData{
 		return false;
 	}
 	
-	public def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ) {	
-		var i : Int;
+	public atomic def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ) {
 		
+		var i : Int;
+	
 		if (cost >= worstCost){
 			return;
 		}
-		
+	
 		//Console.OUT.println("in");
 		if( nbEntries < poolSize ){
 			//insert in the last place
@@ -103,7 +104,7 @@ public class CommData{
 		}
 	}
 	
-	public def getRemoteData():CSPSharedUnit{
+	public atomic def getRemoteData():CSPSharedUnit{
 		val random = new RandomTools( 123 );
 		val i = random.randomInt(nbEntries);
 		return bestPartialSolutions(i);

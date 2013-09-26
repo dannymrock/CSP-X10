@@ -43,14 +43,14 @@ public class ASSolverPermutRW{
 	val thEnable : Int; 
 	
 	//Hybrid approach
-	val noGroups : Int;
-	val sizeGroup : Int;
+	val nbExplorerPT : Int;
+	val nTeams : Int;
 	//val refAllGroups :  Array[Rail[GlobalRef[CommData]]](1);
 	
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, nG : Int ){
+	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, npT : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -73,12 +73,12 @@ public class ASSolverPermutRW{
 		//commDist = DistArray.make[CommData](Dist.makeUnique());
 		//refCommDist = GlobalRef[DistArray[CommData]] (commDist);
 		
-		noGroups = nG; // will be a parameter 
-		sizeGroup = Place.MAX_PLACES / noGroups ;
+		nbExplorerPT = npT; // will be a parameter 
+		nTeams = Place.MAX_PLACES / nbExplorerPT ;
 		
 		//refAllGroups = new Array[Rail[GlobalRef[CommData]]](0..(noGroups-1));
 		
-		Console.OUT.println("There are "+noGroups+" groups each with "+sizeGroup+" nodes.");
+		//Console.OUT.println("There are "+nTeams+" teams each with "+nbExplorerPT+" nodes.");
 	}
 	
 	/** 
@@ -122,18 +122,23 @@ public class ASSolverPermutRW{
 				// 	cspDist(here.id) = new QAPAS(sizeQAP, seed, fileQAP);
 				// }
 				
-				if (thEnable == 0){
-					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups ));
-				}else if (thEnable < 100){
+				//if (thEnable == 0){
+				
+				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
+					new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, nTeams ));
+				
+				//}
+				
+				/* Functional parallelism -  
+				 * 
+				else if (thEnable < 100){
 					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
 							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption , poolSize, noGroups), thEnable);	
 				}else if (thEnable > 100){ 
 					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
 							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups), (thEnable-100));
 				}
-					
-				/***/
+				*/
 			}
 		}
 		
@@ -183,7 +188,7 @@ public class ASSolverPermutRW{
 	
 	def setStats(  ){
 		val winPlace = here.id;
-		val time = (timeDist(winPlace))/1e9;
+		//val time = (timeDist(winPlace))/1e9;
 		val iters = solverDist(winPlace).nbIterTot;
 		val locmin = solverDist(winPlace).nbLocalMinTot;
 		val swaps = solverDist(winPlace).nbSwapTot;
@@ -192,7 +197,7 @@ public class ASSolverPermutRW{
 		val restart = solverDist(winPlace).nbRestart;
 		val change = solverDist(winPlace).nbChangeV;
 		
-		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart, change);
+		at(refStats) refStats().setStats(0,winPlace,0, 0, iters, locmin, swaps, reset, same, restart, change);
 		//val winstats = new CSPStats
 	}
 	

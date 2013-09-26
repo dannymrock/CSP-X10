@@ -60,8 +60,8 @@ public class ASSolverConf{
 	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
 	 *  @return 0 if good cost, -1 if bad cost
 	 */
-	public def communicate( totalCost : Int, variables : Rail[Int] ):Int{
-		if(commOption != 0){
+	public def communicate( totalCost : Int, variables : Rail[Int] ) : Int {
+		if(commOption != 0) {
 			if(solverMode == USE_PLACES){
 				/************************** Comm Places *******************************/
 				//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
@@ -71,7 +71,7 @@ public class ASSolverConf{
 				// All-to-one place 0
 				if (commOption == 1){
 					//Console.OUT.println("All-to-one");
-					at(commRef) async{ commRef().tryInsertVector( totalCost , variables, placeid); }
+					at(commRef) {commRef().tryInsertVector( totalCost , variables, placeid); }
 				}else if(commOption==2){
 					// All-to-All	
 					//Console.OUT.println("All-to-all");

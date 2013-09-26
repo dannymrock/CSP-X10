@@ -105,7 +105,7 @@ public class ASSolverPermutRWActivities{
 		val restart = solverArray(winPlace).nbRestart;
 		val change = solverArray(winPlace).nbChangeV;
 		
-		stats.setStats(winPlace, time, iters, locmin, swaps, reset, same, restart,change);
+		stats.setStats(0,winPlace, 0, time, iters, locmin, swaps, reset, same, restart,change);
 		//val winstats = new CSPStats
 	}
 }

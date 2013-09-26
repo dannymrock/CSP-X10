@@ -32,7 +32,7 @@ public class ASSolverPermut{
 	var list_i_nb : Int;
 	var list_j_nb : Int;
 	var list_i : Rail[Int]; 
-	val list_ij : Rail[Pair];
+	val list_ij : Rail[PairAS];
 	var nb_var_marked : Int;
 	val varRegion : Region(1);
 	/** Number of iterations to update kill status */
@@ -80,7 +80,7 @@ public class ASSolverPermut{
 		varRegion = 0..(size - 1);
 		mark = new Rail[Int](varRegion,0);
 		list_i = new Rail[Int](varRegion,0);
-		list_ij = new Rail[Pair](varRegion);
+		list_ij = new Rail[PairAS](varRegion);
 		solverP = new ASSolverParameters();
 		random = new RandomTools(seed);
 		nb_var_marked = 0;
@@ -295,9 +295,11 @@ public class ASSolverPermut{
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
 		
-		//if(!kill)
+		//if(!kill){
+			//Console.OUT.println(here);
 			//Main.show("final= ",csp.variables);
-
+		//}
+		
 		//Console.OUT.println("Cost = "+total_cost);
 		
 		return total_cost;
@@ -529,7 +531,7 @@ public class ASSolverPermut{
  							return; 
  						}
  					}
- 					list_ij(nbListIJ) = new Pair();
+ 					list_ij(nbListIJ) = new PairAS();
  					list_ij(nbListIJ).i = i;
  					list_ij(nbListIJ).j = j;
  					nbListIJ = (nbListIJ + 1) % size;
@@ -581,7 +583,7 @@ public class ASSolverPermut{
 	}
 }//End ASSolverPermut Class
 
-class Pair{
-	var i : Int;
-	var j : int;
-}
+// class Pair{
+// 	var i : Int;
+// 	var j : int;
+// }

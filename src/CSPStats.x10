@@ -6,8 +6,12 @@
  */
 
 public class CSPStats{
-	/** Place odf the solution */
-	var place : Int;
+	/** Final Cost of solution */
+	var cost : Int;	
+	/** Team id solution */
+	var team : Int;
+	/** explorer id solution */
+	var explorer : Int;
 	/** time to reach the solution */
 	var time : Double;
 	/** Number of iterations */
@@ -29,7 +33,9 @@ public class CSPStats{
 	 *  Constructor
 	 */
 	def this(){
-		place = -1;
+		cost = -1;
+		team = -1;
+		explorer = -1;
 		time = 0.0;
 		iters = 0;
 		locmin = 0;
@@ -51,8 +57,10 @@ public class CSPStats{
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	def setStats(p : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int){
-		this.place = p;
+	def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int){
+		this.cost = co;
+		this.team = p;
+		this.explorer = e;
 		this.time = t;
 		this.iters = it;
 		this.locmin = loc;
@@ -84,7 +92,7 @@ public class CSPStats{
 	def print(count:Int){
 		val sameIter : Float = (same as Float)/(iters as Float);
 		//val changeF : Float = (change as Float)/(count as Float);
-		Console.OUT.printf("| %3d | %8.4f | %8d | %3d | %8d |",count, time, iters, place, locmin);
+		Console.OUT.printf("| %3d | %8.4f | %8d | %2d-%2d | %8d |",count, time, iters, team, explorer, locmin);
 		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %5d |\n",swaps,reset,sameIter,restart, change);
 		
 	}
@@ -96,7 +104,7 @@ public class CSPStats{
 	def printAVG(no:Int){ 
 		val sameIter : Float = (same as Float)/(iters as Float);
 		val changeF : Float = (change as Float)/(no as Float);
-		Console.OUT.printf("| avg | %8.4f | %8d | N/A | %8d |",time/no, iters/no, locmin/no);
+		Console.OUT.printf("| avg | %8.4f | %8d |  N/A  | %8d |",time/no, iters/no, locmin/no);
 		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %5.2f |",swaps/no,reset/no,sameIter,restart/no, changeF);
 		
 	}

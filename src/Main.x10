@@ -5,7 +5,6 @@
  *  @version 0.1 	9 April, 2013 	-> First Version
  */
 
-
 import x10.io.File;
 import x10.io.FileWriter;
 import x10.util.OptionsParser;
@@ -22,11 +21,11 @@ public class Main {
 		                                          Option("p", "", "Problem Selection (magic-square, costas, all-interval or langford)"),
 		                                          Option("s", "", "Size of the problem"),
 		                                          Option("b", "", "Number of benchmark tests"),
-		                                          Option("m", "", "Solver mode distribution 0 for Places \"n\" for Activities (n number of activities). Default 1."),
+		                                          Option("m", "", "Solver mode distribution 0 for Places \"n\" for Activities (n number of activities). Default 0."),
 		                                          Option("t", "", "Using threads."),
 		                                          Option("c", "", "Communication option: 0 no comm 1 for \"place 0\", 2 for all-to-all and 3 for neighbors"),
 		                                          Option("i", "", "Communication Interval (iterations) . Default 10."),
-		                                          Option("g", "", "Number of groups. Default 4."),
+		                                          Option("n", "", "nodes_per_team parameter. Default 4."),
 		                                          Option("k", "", "poolsize.")
 		                                          ]);
 		
@@ -37,7 +36,7 @@ public class Main {
 		val threads = opts("-t", 0);
 		val comm = opts("-c", 0);
 		val inter = opts("-i", 10000000);
-		val groupN = opts("-g", 4);
+		val nodesPTeam = opts("-n", 1);
 		val poolSize = opts("-k", 4);
 		
 		
@@ -65,11 +64,7 @@ public class Main {
 			Console.OUT.println("Number Partition Problem");
 			param = 5;
 		}
-		// else if(cspProblem.equals("QAP")){
-		// 	Console.OUT.println("Quadratic assignment Problem");
-		// 	param = 99;
-		// 	file = argv(4);
-		// }
+	
 		else{
 			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas"); 
 			return;
@@ -78,7 +73,6 @@ public class Main {
 		/*
 		 *  Creating objects for solver execution
 		 */
-		
 		var timeStart:Long;
 		var cost:Int;
 		var timeEnd :Long;
@@ -86,17 +80,21 @@ public class Main {
 		val accStats = new CSPStats();
 		
 		// communication interval = 10
-		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, groupN); //this line -----***-----
-		val solverT = new ASSolverPermutRWActivities(inter,solverMode);
+		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, nodesPTeam); 
+		val solverT = new CooperativeMW(inter, comm, threads, poolSize, nodesPTeam);
 
 		if (solverMode == 0){
-			Console.OUT.println("Using "+Place.MAX_PLACES+" Places");
+			Console.OUT.println("Using multi-walks with "+Place.MAX_PLACES+" Places");
+			Console.OUT.println("There are "+Place.MAX_PLACES+" teams each one with "+nodesPTeam+" explorer places. "+
+					Place.MAX_PLACES*nodesPTeam+" explorers in total (places)");
 		} else{
-			Console.OUT.println("Using "+solverMode+" Activities");
+			Console.OUT.println("Using multi-walks with "+Place.MAX_PLACES+" places and "+nodesPTeam+" activities");
+			Console.OUT.println("There are "+Place.MAX_PLACES+" teams each one with "+nodesPTeam+
+					" explorer activities. "+Place.MAX_PLACES*nodesPTeam+" explorers in total (places and activities)");
 		}
 		
-		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Change|");
-		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|-------|");
+		Console.OUT.println("|Count| Time (s) |  Iters   | Place |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Change|");
+		Console.OUT.println("|-----|----------|----------|-------|----------|----------|----------|-------|-----|-------|");
 		
 		/*
 		 *  Execution loop
@@ -120,7 +118,7 @@ public class Main {
 			
 		}
 		Console.OUT.printf("\r");
-		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|-------|");
+		Console.OUT.println("|-----|----------|----------|-------|----------|----------|----------|-------|-----|-------|");
 		accStats.printAVG(testNo);
 		Console.OUT.printf("\n");
 		
