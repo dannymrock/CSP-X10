@@ -7,7 +7,7 @@
 public class ASSolverConf{
 	
 	public static USE_ACTIVITIES : Int = 0; 
-	public static USE_PLACES : Int = 1;
+	public static USE_PLACES : Int = 1; 
 	
 	/** Solver use activities or places */
 	var solverMode : Int;
