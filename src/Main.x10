@@ -87,7 +87,7 @@ public class Main {
 		
 		// communication interval = 10
 		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, groupN); //this line -----***-----
-		val solverT = new ASSolverPermutRWActivities(inter,solverMode);
+		//val solverT = new ASSolverPermutRWActivities(inter,solverMode);
 
 		if (solverMode == 0){
 			Console.OUT.println("Using "+Place.MAX_PLACES+" Places");
@@ -105,11 +105,10 @@ public class Main {
 			
 			//Solve the problem
 			val stats:CSPStats;
-			if (solverMode == 0){ 
-				stats = solverP.solve(size,param);
-			}else{
-				stats = solverT.solve(size,param);
-			}
+			//if (solverMode == 0){ 
+			stats = solverP.solve(size,param);
+			//}
+			
 			accStats.accStats(stats);
 			Console.OUT.printf("\r");
 			stats.print(j);

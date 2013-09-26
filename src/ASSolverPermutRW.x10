@@ -125,15 +125,7 @@ public class ASSolverPermutRW{
 				if (thEnable == 0){
 					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
 							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups ));
-				}else if (thEnable < 100){
-					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption , poolSize, noGroups), thEnable);	
-				}else if (thEnable > 100){ 
-					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups), (thEnable-100));
 				}
-					
-				/***/
 			}
 		}
 		
