@@ -30,12 +30,6 @@ public class ASSolverPermutRW{
 	val currentCosts : DistArray[Int];
 	var commData : CommData;
 	val refComm : GlobalRef[CommData];
-	//val fileQAP : String;
-	//val solverRef : GlobalRef[ASSolverPermutRW];
-	
-	//All to all comm
-	//val commDist : DistArray[CommData];
-	//val refCommDist : GlobalRef[DistArray[CommData]];
 	
 	val poolSize : Int;
 	
@@ -43,14 +37,14 @@ public class ASSolverPermutRW{
 	val thEnable : Int; 
 	
 	//Hybrid approach
-	val noGroups : Int;
-	val sizeGroup : Int;
+	val nodesPerTeam : Int;
+	val nbTeams : Int;
 	//val refAllGroups :  Array[Rail[GlobalRef[CommData]]](1);
 	
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, nG : Int ){
+	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, nPT : Int ){
 		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -67,18 +61,11 @@ public class ASSolverPermutRW{
 		refComm = GlobalRef[CommData](commData);
 		
 		thEnable = thread;
-		//fileQAP = file;
 		
+		nodesPerTeam = nPT; // will be a parameter 
+		nbTeams = Place.MAX_PLACES / nodesPerTeam ;
 		
-		//commDist = DistArray.make[CommData](Dist.makeUnique());
-		//refCommDist = GlobalRef[DistArray[CommData]] (commDist);
-		
-		noGroups = nG; // will be a parameter 
-		sizeGroup = Place.MAX_PLACES / noGroups ;
-		
-		//refAllGroups = new Array[Rail[GlobalRef[CommData]]](0..(noGroups-1));
-		
-		Console.OUT.println("There are "+noGroups+" groups each with "+sizeGroup+" nodes.");
+		Console.OUT.println("There are "+nbTeams+" teams each one with "+nodesPerTeam+" explorer nodes.");
 	}
 	
 	/** 
@@ -115,17 +102,9 @@ public class ASSolverPermutRW{
 				}else if (cspProblem == 5){ 		//All-Intervals
 					cspDist(here.id) = new PartitAS(size, seed);
 				}
-				// else if (cspProblem == 99){ 	//QAP
-				// 	val qapT = new QAPTools(fileQAP);
-				// 	val sizeQAP = qapT.getSize();
-				// 	nsize = sizeQAP;
-				// 	cspDist(here.id) = new QAPAS(sizeQAP, seed, fileQAP);
-				// }
 				
-				if (thEnable == 0){
-					solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups ));
-				}
+				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
+					new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, nodesPerTeam ));
 			}
 		}
 		
@@ -135,38 +114,26 @@ public class ASSolverPermutRW{
 			arrayRefs(p.id) = at(p){solverDist(here.id).myCommRef};	
 		}
 		
-		// var g : Int = 0;
-		// for( g = 0 ; g < noGroups; g++ ) {
-		// 	refAllGroups(g) = new Rail[GlobalRef[CommData]](0..(sizeGroup-1));
-		// 	//place de cadaq grupo
-		// 	for(p in Place.places()){
-		// 		//val g =p.id % noGroups;
-		// 		//refAllGroups(g,1) = at(p){solverDist(here.id).myCommRef};	
-		// 	}
-		// }
-		
+				
 		finish for(p in Place.places())async at(p) async { 
 			var cost:Int = x10.lang.Int.MAX_VALUE;
 				
-				Array.copy(arrayRefs, solverDist(here.id).solverC.arrayRefs);
-				
-				/***/
-				
-				//timeDist(here.id) = -System.nanoTime();
-				cost = solverDist(here.id).solve(cspDist(here.id));
-				//	timeDist(here.id) += System.nanoTime();
-				
-				if (cost==0){
-					for (k in Place.places()) if (here.id != k.id) at(k) 
-					async 
-					{
-						solverDist(here.id).kill = true;
-					}
-					winPlace = here;
-					bcost = cost;
-					setStats();
+			Array.copy(arrayRefs, solverDist(here.id).solverC.arrayRefs);
+								
+			//timeDist(here.id) = -System.nanoTime();
+			cost = solverDist(here.id).solve(cspDist(here.id));
+			//	timeDist(here.id) += System.nanoTime();
+			
+			if (cost==0){
+				for (k in Place.places()) if (here.id != k.id) at(k) async 
+				{
+					solverDist(here.id).kill = true;
 				}
+				winPlace = here;
+				bcost = cost;
+				setStats();
 			}
+		}
 		extTime += System.nanoTime();
 		stats.time = extTime/1e9;
 		this.clear();
@@ -185,14 +152,7 @@ public class ASSolverPermutRW{
 		val change = solverDist(winPlace).nbChangeV;
 		
 		at(refStats) refStats().setStats(winPlace, time, iters, locmin, swaps, reset, same, restart, change);
-		//val winstats = new CSPStats
 	}
-	
-	
-	// public def setParameters(){
-	// 	
-	// }
-	
 	
 	public def clear(){
 		commData.clear();

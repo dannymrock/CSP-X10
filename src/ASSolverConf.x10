@@ -17,12 +17,8 @@ public class ASSolverConf{
 	var commI : Int;
 	/** inter-places reset enable */
 	var commOption : Int;
-	/** probability of change vector if bad cost */
-	//val pChange : Int;
 	
 	/*** All-to-All***/
-	//val refCommDist : GlobalRef[DistArray[CommData]]; 
-	
 	val myComm : CommData;
 	
 	val poolSize : Int;
@@ -31,23 +27,20 @@ public class ASSolverConf{
 	
 	var delta : Int;
 	
-	val noGroups : Int;
+	val nbGroups : Int;
 	val myGroupId : Int;
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int, nG : Int){
+	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int, nPT : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
 		commI = commInterval;
 		commOption = cOption;
-		//pChange = 10;
-		//refCommDist = commD ;
 		poolSize = ps;
-		noGroups = nG;
-		myGroupId = here.id % noGroups;
+		nbGroups = Place.MAX_PLACES/nPT;
+		myGroupId = here.id % nbGroups;
 		myComm = new CommData(poolSize); 
 		arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
 		delta = 0;
-		
 		//Console.OUT.println("I'm "+here.id+ " and my group is "+myGroupId);
 	}
 	
@@ -99,7 +92,7 @@ public class ASSolverConf{
 				 //   	Console.OUT.println("I'm "+myGroupId+" head group, here my pool Vectors");
 				 //   	at(arrayRefs(myGroupId))arrayRefs(myGroupId)().printVectors();
 				 // }
-				/*********************************************************/
+			/************************************************************************************/
 			}else if (solverMode == USE_ACTIVITIES){
 				//Console.OUT.println("Solver Mode USE_ACTIVITIES, communication interval= "+commI);
 			}else{
