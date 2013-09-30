@@ -10,7 +10,7 @@ public class Team {
 	val updateI : Int;
 	
 	/**
-	 *  Global Memory Shared between activities
+	 *  Global Memory Shared between activities (Not used- replaced by static object)
 	 */
 	val sharedData : CommData;
 	val sharedDataRef : GlobalRef[CommData];
@@ -25,6 +25,8 @@ public class Team {
 	val commOption : Int;
 	val poolSize : Int;
 	val nbExplorerPT : Int;
+	
+	static val eliteP : ElitePool = new ElitePool ();
 		
 	def this (upI : Int, commOpt : Int , ps : Int, nbExPT : Int){
 		
@@ -46,9 +48,10 @@ public class Team {
 		interTeamSharedData = new CommData(1);
 		interTeamSharedDataRef = GlobalRef[CommData](interTeamSharedData); //Inter-Team communication
 		arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
-
+		
+		Team.eliteP.clear();
+		Team.eliteP.poolSize = poolSize;
 	}
-	
 	
 	def solve(size : Int , cspProblem : Int ) : Int{
 		
@@ -117,4 +120,8 @@ public class Team {
 		//stats.print(99);
 		//val winstats = new CSPStats
 	}	
+	//atomic static def itraTeamComm (){
+	//}
+
 }
+

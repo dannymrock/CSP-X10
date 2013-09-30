@@ -61,15 +61,13 @@ public class ASSolverPermutSM{
 	
 	
 	/** all-to-all comm **/
-	
-	val myComm : CommData;
-	
-	val myCommRef : GlobalRef[CommData];
+	// val myComm : CommData;
+	// val myCommRef : GlobalRef[CommData];
 	
 	
 	/** Diversification approach **/
-	var alMaxI : Int;
-	var alMinJ : Int;
+	//var alMaxI : Int;
+	//var alMinJ : Int;
 	/**
 	 *  Constructor of the class
 	 * 	@param sizeOfProblem size of the problem to solve
@@ -92,8 +90,8 @@ public class ASSolverPermutSM{
 		nbChangeV = 0;
 		
 		// all-to-all
-		myComm = new CommData(solverC.poolSize);
-		myCommRef = GlobalRef[CommData](myComm);		
+		//myComm = new CommData(solverC.poolSize);
+		//myCommRef = GlobalRef[CommData](myComm);		
 		
 	}
 	
@@ -177,7 +175,8 @@ public class ASSolverPermutSM{
 					best_cost = total_cost = csp.costOfSolution(1);
 					best_of_best = x10.lang.Int.MAX_VALUE ;
 					//restart pool?
-					solverC.restartPool();
+					Team.eliteP.clear();
+					//solverC.restartPool();
 					//Console.OUT.println("Restart...");
 					continue;
 				}
@@ -267,17 +266,23 @@ public class ASSolverPermutSM{
 				break;
 			
 			if( nbIter % solverC.commI == 0 ){
-				//Console.OUT.println("In ");
-				//Chang//
-				val res = solverC.communicate( total_cost, csp.variables); 
+
+				Team.eliteP.tryInsertVector(total_cost, csp.variables, here.id);
+				
 				if (random.randomInt(100) < solverP.probChangeVector){
-					val result = solverC.getIPVector(csp, total_cost );
-					if (result != -1){
-						nbChangeV++;
-						nbSwap += size ; //I don't know what happened here with costas reset
-						mark.clear();
-						total_cost = csp.costOfSolution(1);
-						//Console.OUT.println("Changing vector in "+ here);
+					//Console.OUT.println("get from solver: "+Team.eliteP.getData());
+					//val result = solverC.getIPVector(csp, total_cost );
+					val delta = 0 ; //parameter
+					if (Team.eliteP.nbEntries >= 1){ 
+						//get a vector
+						val remoteData = Team.eliteP.getConf();  
+						if ( (total_cost + delta) > remoteData.cost ){					 
+							csp.setVariables(remoteData.vector);
+							nbChangeV++;
+							nbSwap += size ; //I don't know what happened here with costas reset
+							mark.clear();
+							total_cost = csp.costOfSolution(1);
+						}
 					}
 				}
 				
@@ -350,7 +355,7 @@ public class ASSolverPermutSM{
 		
 		// get alternative maxI for communication pourposses
 		x = random.randomInt(list_i_nb);
-		alMaxI = list_i(x); // I hope list_i_nb are > 1 
+		//alMaxI = list_i(x); // I hope list_i_nb are > 1 
 		
 		return max_i;
 	}
@@ -391,7 +396,7 @@ public class ASSolverPermutSM{
 					lmin_j = j;
 					
 					//For alternative move 
-					alMinJ = j;
+					//alMinJ = j;
 					
 					if (solverP.firstBest)
 					{
@@ -402,8 +407,8 @@ public class ASSolverPermutSM{
 						lmin_j = j;
 					
 					//Select alternative move
-					if (random.randomInt(list_j_nb) == 0)
-						alMinJ = j;
+					//if (random.randomInt(list_j_nb) == 0)
+						//alMinJ = j;
 					
 				}
 			}

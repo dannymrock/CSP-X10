@@ -12,6 +12,9 @@ import x10.util.Option;
 import x10.util.Random;
 
 public class Main {
+	//static val paramObj = new Parameters();
+	//static val param = GlobalRef[Parameters](new Parameters());
+	
 	public static def main(args:Array[String](1)):void{
 		
 		/*
@@ -39,7 +42,7 @@ public class Main {
 		val nodesPTeam = opts("-n", 1);
 		val poolSize = opts("-k", 4);
 		
-		
+		//at(Main.param) Main.param().poolSize = poolSize;
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
 				" SolverMode: "+solverMode+" Communication strategy: "+comm+" Communication update inteval: "+inter+
@@ -132,3 +135,15 @@ public class Main {
 		Console.OUT.println("");
 	}
 }
+
+
+class Parameters{
+	var poolSize : Int;
+	
+	def this(){
+		Console.OUT.println("solo una vez");
+		poolSize = 2;
+	}
+	
+	
+} 
