@@ -59,6 +59,7 @@ public class ASSolverPermutSM{
 	/** For Exhaustive search */
 	var nbListIJ : Int;
 	
+	val ID : Int;
 	
 	/** all-to-all comm **/
 	// val myComm : CommData;
@@ -74,7 +75,8 @@ public class ASSolverPermutSM{
 	 *  @seed seed for the randomness in the object.
 	 * 
 	 */
-	public def this( sizeOfProblem : Int , seed : Long, conf : ASSolverConf) {
+	public def this( aID : Int , sizeOfProblem : Int , seed : Long, conf : ASSolverConf) {
+		ID = aID; 
 		size = sizeOfProblem;
 		varRegion = 0..(size - 1);
 		mark = new Rail[Int](varRegion,0);
@@ -175,7 +177,7 @@ public class ASSolverPermutSM{
 					best_cost = total_cost = csp.costOfSolution(1);
 					best_of_best = x10.lang.Int.MAX_VALUE ;
 					//restart pool?
-					Team.eliteP.clear();
+					Team.control.clear();
 					//solverC.restartPool();
 					//Console.OUT.println("Restart...");
 					continue;
@@ -267,15 +269,15 @@ public class ASSolverPermutSM{
 			
 			if( nbIter % solverC.commI == 0 ){
 
-				Team.eliteP.tryInsertVector(total_cost, csp.variables, here.id);
+				Team.control.tryInsertVector(total_cost, csp.variables, here.id);
 				
 				if (random.randomInt(100) < solverP.probChangeVector){
 					//Console.OUT.println("get from solver: "+Team.eliteP.getData());
 					//val result = solverC.getIPVector(csp, total_cost );
 					val delta = 0 ; //parameter
-					if (Team.eliteP.nbEntries >= 1){ 
+					if (Team.control.nbEntries >= 1){ 
 						//get a vector
-						val remoteData = Team.eliteP.getConf();  
+						val remoteData = Team.control.getConf();  
 						if ( (total_cost + delta) > remoteData.cost ){					 
 							csp.setVariables(remoteData.vector);
 							nbChangeV++;
@@ -290,6 +292,15 @@ public class ASSolverPermutSM{
 				//myComm.printVectors();
 				//Main.show("Vector ",csp.variables);
 				
+			}
+			// Start inter-team communication
+			if ( here.id == 0 && ID == 0 && nbIter % ( solverC.commI*5 ) == 0 ){
+				//Team.control.iterTeamT(csp.variables, total_cost);
+				Console.OUT.println("Here");
+				atomic{
+					Team.control.interTeam = true;
+					Team.control.event = true;
+				}
 			}
 			
 			//Main.show("new vector ",csp.variables);

@@ -1,4 +1,4 @@
-class ElitePool{
+class Control{
 	var nbEntries : Int;
 	val bestPartialSolutions : Rail[CSPSharedUnit] = new Rail[CSPSharedUnit](0..10); // 10 max pos
 	var poolSize : Int;
@@ -6,12 +6,23 @@ class ElitePool{
 	var worstCost : Int;
 	val random : RandomTools;
 	
+	
+	//Control Activity
+	var event : Boolean;
+	var exit : Boolean;
+	var interTeam : Boolean;
+	
 	def this (){
 	 	nbEntries = 0;
 	 	bestCost = Int.MAX_VALUE;
 	 	worstCost = Int.MAX_VALUE; //
 	 	random = new RandomTools(123L);
 	 	//Console.OUT.println(here+"EP size constr= "+poolSize);
+	 	
+	 	
+	 	event = false;
+	 	exit = false;
+	 	interTeam = false;
 	}	
 	
 	public atomic def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ) {
@@ -93,6 +104,10 @@ class ElitePool{
 		nbEntries = 0;
 		bestCost = Int.MAX_VALUE;
 		worstCost = Int.MAX_VALUE;
+		event = false;
+		exit = false;
+		interTeam = false;
 	}
+	
 	
 }

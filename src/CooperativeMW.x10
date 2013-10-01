@@ -88,9 +88,9 @@ class CooperativeMW{
 		}
 		
 		// 2nd Get comm references of each node
-		val arrayRefs = new Rail[GlobalRef[CommData]](0..((Place.MAX_PLACES)-1));
+		val arrayRefs = new Rail[GlobalRef[Team]](0..((Place.MAX_PLACES)-1));
 		for(p in Place.places()){
-			arrayRefs(p.id) = at(p){ teamDist(here.id).interTeamSharedDataRef };	
+			arrayRefs(p.id) = at(p){ GlobalRef[Team](teamDist(here.id)) };	
 		}
 		
 		// 3rd Start solve process at each team
@@ -109,6 +109,11 @@ class CooperativeMW{
 				{	
 					for (i in 0..(nbExplorerPT-1))
 						teamDist(here.id).solverArray(i).kill = true;
+					
+					atomic{
+						teamDist(here.id).control.exit = true;
+						teamDist(here.id).control.event = true; 
+					}
 				}
 				winTeam = here;
 				bcost = cost;
