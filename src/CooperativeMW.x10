@@ -18,8 +18,8 @@ class CooperativeMW{
 	val timeDist : DistArray[Long];
 	var winTeam : Place;
 	
-	val updateI : Int;
-	val commOption : Int;
+	val intraTI : Int;
+	val interTI : Int;
 	
 	var bcost : Int;
 	val stats : CSPStats;
@@ -38,11 +38,12 @@ class CooperativeMW{
 	//Hybrid approach
 	val nbExplorerPT : Int;
 	val sizeGroup : Int;
+	val minDistance:Double;
 	
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, nExPT : Int ){
+	def this( intraTeamI : Int, interTeamI : Int , thread : Int , ps : Int, nExPT : Int, minD:Double){
 		teamDist = DistArray.make[Team](Dist.makeUnique());
 		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
 		timeDist = DistArray.make[Long](Dist.makeUnique());
@@ -51,8 +52,9 @@ class CooperativeMW{
 		poolSize = ps;
 		commData = new CommData( poolSize ); 
 		
-		updateI = upI; 
-		commOption = commOpt;
+		intraTI = intraTeamI; 
+		interTI = interTeamI;
+		//commOption = commOpt;
 		
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
@@ -62,6 +64,8 @@ class CooperativeMW{
 				
 		nbExplorerPT = nExPT; 		// will be a parameter 
 		sizeGroup = nbExplorerPT ;
+		minDistance = minD;
+		
 		
 		//Console.OUT.println("Each Team with "+nbExplorerPT+" explorers.");
 	}
@@ -83,7 +87,7 @@ class CooperativeMW{
 		finish for(p in Place.places()){ 
 			val seed = random.nextLong();
 			async at(p){
-				teamDist(here.id) = new Team(updateI, commOption, poolSize, nbExplorerPT);	
+				teamDist(here.id) = new Team(intraTI, interTI, poolSize, nbExplorerPT, minDistance);	
 			}
 		}
 		
@@ -98,7 +102,7 @@ class CooperativeMW{
 			var cost:Int = x10.lang.Int.MAX_VALUE;
 			
 			//Passing all refs to each team
-			Array.copy(arrayRefs, teamDist(here.id).control.arrayRefs);
+			Array.copy(arrayRefs, teamDist(here.id).arrayRefs);
 				
 			//Starting solve at each team
 			cost = teamDist(here.id).solve(size , cspProblem); //cspDist(here.id));
@@ -139,8 +143,10 @@ class CooperativeMW{
 		val same = teamDist(winTeam).stats.same;
 		val restart = teamDist(winTeam).stats.restart;
 		val change = teamDist(winTeam).stats.change;
+		val forceR = teamDist(winTeam).stats.forceRestart;
 		// Console.OUT.println(winTeam+" "+winExp+" "+time+" "+iters+" "+locmin+" "+swaps+" "+reset+" "+same+" "+restart+" "+change);
-		at(refStats) refStats().setStats(tCost, winTeam, winExp , time, iters, locmin, swaps, reset, same, restart, change);
+		at(refStats) refStats().setStats(tCost, winTeam, winExp , time, iters, locmin, swaps, reset, same,
+				restart, change, forceR);
 		// val winstats = new CSPStats
 	}
 	

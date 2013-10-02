@@ -35,6 +35,10 @@ public class ASSolverParameters{
 	/** Probability to change variables vector for a vector in the pool (Comm Enable) */
 	var probChangeVector : Int;
 	
+	/** minimum permisible distance between places */
+	var minDistance : Double;
+	
+	
 	/**
 	 * 	Constructor
 	 */
@@ -42,6 +46,7 @@ public class ASSolverParameters{
 		firstBest = false; //revisar val por default
 		nbVarToReset = -1;
 		probChangeVector = 100;
+		minDistance = 0.3;
 	}
 	
 	/**
@@ -62,5 +67,6 @@ public class ASSolverParameters{
 		this.resetPercent = toSet.resetPercent;
 		this.baseValue = toSet.baseValue;
 		this.probChangeVector = toSet.probChangeVector;
+		this.minDistance = toSet.minDistance;
 	}	
 }

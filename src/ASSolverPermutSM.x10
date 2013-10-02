@@ -51,6 +51,9 @@ public class ASSolverPermutSM{
 	/** Number time to change vector due to communication */ 
 	var nbChangeV : Int;
 	
+	var nbInterTComm: Int;
+	var nbForceRestart : Int;
+	
 	/** Total Statistics */
 	var nbIterTot : Int;
 	var nbResetTot : Int;	
@@ -97,7 +100,8 @@ public class ASSolverPermutSM{
 		// all-to-all
 		//myComm = new CommData(solverC.poolSize);
 		//myCommRef = GlobalRef[CommData](myComm);		
-		
+		nbInterTComm = 0;
+		nbForceRestart = 0;
 	}
 	
 	/**
@@ -127,6 +131,8 @@ public class ASSolverPermutSM{
 		
 		mark.clear();
 		list_i.clear();
+		
+		nbForceRestart = 0;
 		
 		nbRestart = 0;
 		nbSwap = 0;
@@ -274,7 +280,9 @@ public class ASSolverPermutSM{
 				forceRestart = false;
 				csp.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
 				mark.clear();
-				nbRestart++;
+				//nbRestart++;
+				nbForceRestart++;
+				
 				//Update Total statistics
 				nbIterTot += nbIter;
 				nbResetTot += nbReset;	
@@ -289,16 +297,17 @@ public class ASSolverPermutSM{
 				nbReset = 0;
 				nb_in_plateau = 0;
 				
+				
 				best_cost = total_cost = csp.costOfSolution(1);
 				best_of_best = x10.lang.Int.MAX_VALUE ;
 				//restart pool?
 				Team.control.clear();
 				//solverC.restartPool();
-				Console.OUT.println("Force Restart..."+ here);
+				//Console.OUT.println("Force Restart..."+ here);
 				continue;	
 			}
 			
-			if( nbIter % solverC.commI == 0 ){
+			if( nbIter % solverC.intraTI == ID ){
 
 				Team.control.tryInsertVector(total_cost, csp.variables, here.id);
 				
@@ -325,14 +334,14 @@ public class ASSolverPermutSM{
 				
 			}
 			// Start inter-team communication
-			if ( here.id == 0 && ID == 0 && nbIter % ( solverC.commI * 5 ) == 0 ){
-				Console.OUT.println("Here");
-				Team.control.doIterTeamComm();//csp.variables, total_cost);
-				
-				// atomic{
-				// 	Team.control.interTeam = true;
-				// 	Team.control.event = true;
-				// }
+			if ( here.id == 0 && ID == 0 && nbIter % solverC.interTI == ID ){
+				nbInterTComm++;
+				//Console.OUT.println("solver start comm intention " +nbInterTComm);
+				//Team.control.doIterTeamComm();//csp.variables, total_cost);
+				atomic{
+					Team.control.interTeam = true;
+					Team.control.event = true;
+				}
 			}
 			//Main.show("new vector ",csp.variables);
 		}
@@ -343,10 +352,12 @@ public class ASSolverPermutSM{
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
 		
-		//if(!kill){
-		//Console.OUT.println(here);
+		//if(!kill)
 		//Main.show("final= ",csp.variables);
 		//}
+		
+		//if(ID == 0)
+			//Console.OUT.println(here+" nbForceRestart="+nbForceRestart);
 		
 		//Console.OUT.println("Cost = "+total_cost);
 		

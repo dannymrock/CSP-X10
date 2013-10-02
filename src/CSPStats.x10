@@ -28,6 +28,8 @@ public class CSPStats{
 	var restart : Int;
 	/** Number time to change vector due to communication */ 
 	var change : Int;
+	/** number of restarts */  
+	var forceRestart : Int;
 	 
 	/**
 	 *  Constructor
@@ -43,7 +45,8 @@ public class CSPStats{
 		reset = 0;
 		same = 0;
 		restart = 0;
-		change = 0; 
+		change = 0;
+		forceRestart = 0;
 	}
 	
 	/**
@@ -57,7 +60,8 @@ public class CSPStats{
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int){
+	def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
+			fr : Int){
 		this.cost = co;
 		this.team = p;
 		this.explorer = e;
@@ -69,6 +73,7 @@ public class CSPStats{
 		this.same = sa;
 		this.restart = rs;
 		this.change = ch;
+		this.forceRestart = fr;
 	}
 	/**
 	 *  Accumulate statistics in this object, Is used for average calculation
@@ -83,6 +88,7 @@ public class CSPStats{
 		this.same += stats.same;
 		this.restart += stats.restart;
 		this.change += stats.change;
+		this.forceRestart += stats.forceRestart; 
 	}
 	
 	/**
@@ -93,7 +99,7 @@ public class CSPStats{
 		val sameIter : Float = (same as Float)/(iters as Float);
 		//val changeF : Float = (change as Float)/(count as Float);
 		Console.OUT.printf("| %3d | %8.4f | %8d | %2d-%2d | %8d |",count, time, iters, team, explorer, locmin);
-		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %5d |\n",swaps,reset,sameIter,restart, change);
+		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %5d | %3d |\n",swaps,reset,sameIter,restart, change, forceRestart);
 		
 	}
 
@@ -105,7 +111,8 @@ public class CSPStats{
 		val sameIter : Float = (same as Float)/(iters as Float);
 		val changeF : Float = (change as Float)/(no as Float);
 		Console.OUT.printf("| avg | %8.4f | %8d |  N/A  | %8d |",time/no, iters/no, locmin/no);
-		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %5.2f |",swaps/no,reset/no,sameIter,restart/no, changeF);
+		Console.OUT.printf(" %8d | %8d | %5.2f | %3d | %5.2f | %3d |",swaps/no,reset/no,sameIter,restart/no,
+				changeF, forceRestart/no );
 		
 	}
 }

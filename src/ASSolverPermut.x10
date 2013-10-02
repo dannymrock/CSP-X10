@@ -265,7 +265,7 @@ public class ASSolverPermut{
 	 		if(kill)				// Check if other place or activity have finished
 	 			break;
 	 		
-	 		if( nbIter % solverC.commI == 0 ){
+	 		if( nbIter % solverC.intraTI == 0 ){
 	 			//Console.OUT.println("In ");
 	 			//Chang//
 	 			val res = solverC.communicate( total_cost, csp.variables); 

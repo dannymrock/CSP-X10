@@ -27,9 +27,11 @@ public class Main {
 		                                          Option("m", "", "Solver mode distribution 0 for Places \"n\" for Activities (n number of activities). Default 0."),
 		                                          Option("t", "", "Using threads."),
 		                                          Option("c", "", "Communication option: 0 no comm 1 for \"place 0\", 2 for all-to-all and 3 for neighbors"),
-		                                          Option("i", "", "Communication Interval (iterations) . Default 10."),
+		                                          Option("i", "", "Intra-team Communication Interval (iterations) . Default 10000000."),
+		                                          Option("j", "", "Inter-team Communication Interval (iterations) . Default 10000000."),
 		                                          Option("n", "", "nodes_per_team parameter. Default 4."),
-		                                          Option("k", "", "poolsize.")
+		                                          Option("k", "", "poolsize."),
+		                                          Option("d", "", "minimum permisible distance.")
 		                                          ]);
 		
 		val cspProblem = opts("-p", "magic-square");
@@ -38,14 +40,16 @@ public class Main {
 		val solverMode = opts("-m", 0);
 		val threads = opts("-t", 0);
 		val comm = opts("-c", 0);
-		val inter = opts("-i", 10000000);
+		val intraTI = opts("-i", 10000000);
+		val interTI = opts("-j", 10000000);
 		val nodesPTeam = opts("-n", 1);
 		val poolSize = opts("-k", 4);
+		val minDistance = opts("-d", 0.3);
 		
 		//at(Main.param) Main.param().poolSize = poolSize;
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
-				" SolverMode: "+solverMode+" Communication strategy: "+comm+" Communication update inteval: "+inter+
+				" SolverMode: "+solverMode+" Communication strategy: "+comm+" Intra-Team Comm. inteval: "+intraTI+
 				"\nThreads:"+threads+" Pool Size: "+poolSize);
 		
 		var param:Int = 0;
@@ -83,8 +87,8 @@ public class Main {
 		val accStats = new CSPStats();
 		
 		// communication interval = 10
-		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, nodesPTeam); 
-		val solverT = new CooperativeMW(inter, comm, threads, poolSize, nodesPTeam);
+		val solverP = new ASSolverPermutRW(intraTI, comm, threads, poolSize, nodesPTeam); 
+		val solverT = new CooperativeMW(intraTI, interTI, threads, poolSize, nodesPTeam, minDistance);
 
 		if (solverMode == 0){
 			Console.OUT.println("Using multi-walks with "+Place.MAX_PLACES+" Places");

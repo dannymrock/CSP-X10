@@ -125,7 +125,7 @@ public class ASSolverPermutRW{
 				//if (thEnable == 0){
 				
 				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
-					new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, nTeams ));
+					new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI,0, commOption, poolSize, nTeams ));
 				
 				//}
 				
@@ -197,7 +197,7 @@ public class ASSolverPermutRW{
 		val restart = solverDist(winPlace).nbRestart;
 		val change = solverDist(winPlace).nbChangeV;
 		
-		at(refStats) refStats().setStats(0,winPlace,0, 0, iters, locmin, swaps, reset, same, restart, change);
+		at(refStats) refStats().setStats(0,winPlace,0, 0, iters, locmin, swaps, reset, same, restart, change,0);
 		//val winstats = new CSPStats
 	}
 	

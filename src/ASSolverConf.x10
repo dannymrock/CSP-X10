@@ -14,7 +14,9 @@ public class ASSolverConf{
 	/** Global Reference for communicaction between places */
 	var commRef : GlobalRef[CommData];
 	/** Number of itararion between each communication activity */
-	var commI : Int;
+	var intraTI : Int;
+	/** Number of itararion between each communication activity */
+	var interTI : Int;
 	/** inter-places reset enable */
 	var commOption : Int;
 	/** probability of change vector if bad cost */
@@ -34,10 +36,11 @@ public class ASSolverConf{
 	val noGroups : Int;
 	val myGroupId : Int;
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], commInterval : Int , cOption : Int , ps : Int, nG : Int){
+	def this( solverModeIn : Int , commR : GlobalRef[CommData], intraTeamI : Int, interTeamI : Int , cOption : Int , ps : Int, nG : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
-		commI = commInterval;
+		intraTI = intraTeamI;
+		interTI = interTeamI;
 		commOption = cOption;
 		//pChange = 10;
 		//refCommDist = commD ;
@@ -54,7 +57,8 @@ public class ASSolverConf{
 	public def setValues(val toSet: ASSolverConf){
 		this.solverMode = toSet.solverMode;
 		this.commRef = toSet.commRef;
-		this.commI = toSet.commI;
+		this.intraTI = toSet.intraTI;
+		this.interTI = toSet.interTI;
 	}
 	/**
 	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
