@@ -98,7 +98,7 @@ class CooperativeMW{
 			var cost:Int = x10.lang.Int.MAX_VALUE;
 			
 			//Passing all refs to each team
-			Array.copy(arrayRefs, teamDist(here.id).arrayRefs);
+			Array.copy(arrayRefs, teamDist(here.id).control.arrayRefs);
 				
 			//Starting solve at each team
 			cost = teamDist(here.id).solve(size , cspProblem); //cspDist(here.id));

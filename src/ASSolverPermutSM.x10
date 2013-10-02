@@ -30,6 +30,8 @@ public class ASSolverPermutSM{
 	val random : RandomTools;
 	var kill : Boolean;
 	
+	var forceRestart : Boolean;
+	
 	var list_i_nb : Int;
 	var list_j_nb : Int;
 	var list_i : Rail[Int]; 
@@ -88,6 +90,7 @@ public class ASSolverPermutSM{
 		nbRestart = 0;
 		//updateP = updateI; //Default value 
 		kill = false;
+		forceRestart = false; 
 		solverC = conf;    //set??
 		nbChangeV = 0;
 		
@@ -266,6 +269,34 @@ public class ASSolverPermutSM{
 			Runtime.probe();		// Give a chance to the other activities
 			if(kill)				// Check if other place or activity have finished
 				break;
+			if(forceRestart){
+				//restart();
+				forceRestart = false;
+				csp.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
+				mark.clear();
+				nbRestart++;
+				//Update Total statistics
+				nbIterTot += nbIter;
+				nbResetTot += nbReset;	
+				nbSwapTot += nbSwap;
+				nbSameVarTot += nbSameVar;
+				nbLocalMinTot += nbLocalMin; 
+				//Restart local var
+				nbSwap = 0;
+				nbIter = 0;
+				nbSameVar = 0;
+				nbLocalMin = 0;
+				nbReset = 0;
+				nb_in_plateau = 0;
+				
+				best_cost = total_cost = csp.costOfSolution(1);
+				best_of_best = x10.lang.Int.MAX_VALUE ;
+				//restart pool?
+				Team.control.clear();
+				//solverC.restartPool();
+				Console.OUT.println("Force Restart..."+ here);
+				continue;	
+			}
 			
 			if( nbIter % solverC.commI == 0 ){
 
@@ -294,15 +325,15 @@ public class ASSolverPermutSM{
 				
 			}
 			// Start inter-team communication
-			if ( here.id == 0 && ID == 0 && nbIter % ( solverC.commI*5 ) == 0 ){
-				//Team.control.iterTeamT(csp.variables, total_cost);
+			if ( here.id == 0 && ID == 0 && nbIter % ( solverC.commI * 5 ) == 0 ){
 				Console.OUT.println("Here");
-				atomic{
-					Team.control.interTeam = true;
-					Team.control.event = true;
-				}
+				Team.control.doIterTeamComm();//csp.variables, total_cost);
+				
+				// atomic{
+				// 	Team.control.interTeam = true;
+				// 	Team.control.event = true;
+				// }
 			}
-			
 			//Main.show("new vector ",csp.variables);
 		}
 		

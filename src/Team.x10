@@ -26,7 +26,7 @@ public class Team {
 	val poolSize : Int;
 	val nbExplorerPT : Int;
 	
-	var arrayRefs : Rail[GlobalRef[Team]];
+	
 	
 	static val control : Control = new Control();
 		
@@ -54,8 +54,6 @@ public class Team {
 		Team.control.clear();
 		Team.control.poolSize = poolSize;
 		
-		arrayRefs = new Rail[GlobalRef[Team]](0..((Place.MAX_PLACES)-1));
-		
 	}
 	
 	def solve(size : Int , cspProblem : Int ) : Int{
@@ -64,9 +62,9 @@ public class Team {
 		val random = new Random();
 		finish{
 			
-			async{
-				control();
-			}
+			//async{
+				//control();
+			//}
 			
 			for(aID in region){ 
 				async{
@@ -136,74 +134,36 @@ public class Team {
 	
 	
 	
-	public def doIterTeamComm ( ){
-		var nextPlace : Int = here.id + 1;
-		
-		if (nextPlace >= Place.MAX_PLACES )
-			nextPlace = 0;
-		
-		// get a conf from any local explorer
-		val myConf : Rail[Int] = cspArray(0).variables;
-		val myCost : Int = solverArray(0).total_cost;
-		
-		// get a conf from any explorer in the next team
-		val next = nextPlace;
-		val nextConf : Rail[Int] = at(arrayRefs(next)) arrayRefs(next)().cspArray(0).variables;
-		val nextCost : Int = at(arrayRefs(next)) arrayRefs(next)().solverArray(0).total_cost;
-		
-		// compute distance
-		val dis = distance( myConf, nextConf );
-		
-		Console.OUT.println("distance " + dis);
-		// if distance < mindistance
-		// restart the team with greater cost
-		// end if
-		// trigget interTeam event in next place
-		
-	}
 	
-	def distance(conf1 : Rail[Int], conf2 : Rail[Int]) : Float {
-		val sizeC = conf1.size;
-		var i : Int = 0;
-		var count : Int = 0;
-		for (i = 0; i < sizeC; i++){
-			if(conf1(i) == conf2(i)){
-				count++; 
-			}
-		}
-		val dis = 1 - ( count / sizeC );
-		return dis;
-	}
-	
-	def control(){
-		var test : Boolean = true;
-		var act : Int = 0;
-		
-		while ( test ) {
-			
-			Runtime.probe();
-			
-			when ( control.event ) {
-				control.event = false;
-			}
-			
-			if ( control.exit )
-				test = false;
-			else
-				if ( control.interTeam ) {
-					control.interTeam = false;
-					//act = 1;
-					doIterTeamComm();
-					Console.OUT.println( "sending message" );
-				}				
-		
-			// if ( act == 1 ) {
-			// 	act = 0;
-			// 	doIterTeamComm();
-			// }
-			//Runtime.probe();
-		}
-		Console.OUT.println( "exit control " + here );
-	}
+	// def control(){
+	// 	var test : Boolean = true;
+	// 	var act : Int = 0;
+	// 	
+	// 	while ( test ) {
+	// 		
+	// 		Runtime.probe();
+	// 		
+	// 		when ( control.event ) {
+	// 			control.event = false;
+	// 		}
+	// 		
+	// 		if ( control.exit )
+	// 			test = false;
+	// 		else
+	// 			if ( control.interTeam ) {
+	// 				control.interTeam = false;
+	// 				//act = 1;
+	// 				doIterTeamComm();
+	// 				Console.OUT.println( "sending message" );
+	// 			}				
+	// 	
+	// 		// if ( act == 1 ) {
+	// 		// 	act = 0;
+	// 		// 	doIterTeamComm();
+	// 		// }
+	// 		//Runtime.probe();
+	// 	}
+	// 	Console.OUT.println( "exit control " + here );
+	// }
 }
 
