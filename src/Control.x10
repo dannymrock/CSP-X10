@@ -113,10 +113,4 @@ class Control{
 		exit = false;
 		interTeam = false;
 	}
-	
-	
-
-	
-	
-	
 }

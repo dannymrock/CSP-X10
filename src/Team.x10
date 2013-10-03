@@ -185,7 +185,16 @@ public class Team {
 	}
 	
 	public def doIterTeamComm (){// myConf : Rail[Int], myCost : Int ){
-		val nextPlace : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
+		// Compare against next team
+		//val nextPlace : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
+		
+		// Compare against random team
+		var tmp : Int = random.nextInt(Place.MAX_PLACES);
+		while (here.id == tmp){
+			tmp = random.nextInt(Place.MAX_PLACES);
+		}
+		val nextPlace = tmp; 
+		
 		
 		val conf1 = cspArray(0).variables;
 		val cost1 = solverArray(0).total_cost;
@@ -225,7 +234,7 @@ public class Team {
 				// for(i in 0..(x-1))
 				// 	at(arrayRefs(place1)) arrayRefs(place1)().solverArray(i).forceRestart = true;
 				//----
-				val x = solverArray.size; 
+				val x = solverArray.size /2; //restart only the first half in the explorer set
 				for(i in 0..(x-1))
 					solverArray(i).forceRestart = true;
 			}else{
@@ -235,7 +244,7 @@ public class Team {
 				// 	at(arrayRefs(place2)) arrayRefs(place2)().solverArray(i).forceRestart = true;
 				//----
 				at(arrayRefs(nextPlace)){
-					val x = arrayRefs(nextPlace)().solverArray.size; 
+					val x = arrayRefs(nextPlace)().solverArray.size /2; //restart only the half 
 					for(i in 0..(x-1))
 						arrayRefs(nextPlace)().solverArray(i).forceRestart = true;
 				}

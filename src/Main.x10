@@ -27,8 +27,8 @@ public class Main {
 		                                          Option("m", "", "Solver mode distribution 0 for Places \"n\" for Activities (n number of activities). Default 0."),
 		                                          Option("t", "", "Using threads."),
 		                                          Option("c", "", "Communication option: 0 no comm 1 for \"place 0\", 2 for all-to-all and 3 for neighbors"),
-		                                          Option("i", "", "Intra-team Communication Interval (iterations) . Default 10000000."),
-		                                          Option("j", "", "Inter-team Communication Interval (iterations) . Default 10000000."),
+		                                          Option("i", "", "Intra-team Communication Interval (iterations) . Default 0."),
+		                                          Option("j", "", "Inter-team Communication Interval (iterations) . Default 0."),
 		                                          Option("n", "", "nodes_per_team parameter. Default 4."),
 		                                          Option("k", "", "poolsize."),
 		                                          Option("d", "", "minimum permisible distance.")
@@ -40,8 +40,8 @@ public class Main {
 		val solverMode = opts("-m", 0);
 		val threads = opts("-t", 0);
 		val comm = opts("-c", 0);
-		val intraTI = opts("-i", 10000000);
-		val interTI = opts("-j", 10000000);
+		val intraTI = opts("-i", 0);
+		val interTI = opts("-j", 0);
 		val nodesPTeam = opts("-n", 1);
 		val poolSize = opts("-k", 4);
 		val minDistance = opts("-d", 0.3);
@@ -49,8 +49,10 @@ public class Main {
 		//at(Main.param) Main.param().poolSize = poolSize;
 
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
-				" SolverMode: "+solverMode+" Communication strategy: "+comm+" Intra-Team Comm. inteval: "+intraTI+
-				"\nThreads:"+threads+" Pool Size: "+poolSize);
+							"\nSolverMode: "+solverMode+"\nCommunication strategy: "+comm+
+				            "\nIntra-Team Comm. inteval: "+intraTI+"\nInter-Team Comm. inteval: "+interTI+
+				            "\nMinimum permissible distance: "+minDistance+
+							"\nPool Size: "+poolSize);
 		
 		var param:Int = 0;
 		//var file : String = "";

@@ -255,6 +255,28 @@ public class ASSolverPermutSM{
 					//}
 					
 					
+					// if (Team.control.nbEntries >= 1){ 
+					// 	//get a vector
+					// 	val remoteData = Team.control.getConf();  
+					// 	csp.setVariables( remoteData.vector );
+					// 	nbChangeV++;
+					// 	nbSwap += size ; //I don't know what happened here with costas reset
+					// 	mark.clear();
+					// 	total_cost = csp.costOfSolution(1);
+					// }else{
+					// 	doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
+					// }
+					
+					// // do reset or get some vector from the comm pool
+					// val result = solverC.getIPVector(csp, total_cost );
+					// if (result == -1)
+					// 	doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
+					// else{
+					// 	nbChangeV++;
+					// 	nbSwap += size ; //I don't know what happened here with costas reset
+					// 	mark.clear();
+					// 	total_cost = csp.costOfSolution(1);
+					// }
 				}
 			}
 			else
@@ -307,7 +329,7 @@ public class ASSolverPermutSM{
 				continue;	
 			}
 			
-			if( nbIter % solverC.intraTI == ID ){
+			if( solverC.intraTI != 0 && nbIter % solverC.intraTI == ID ){
 
 				Team.control.tryInsertVector(total_cost, csp.variables, here.id);
 				
@@ -334,7 +356,7 @@ public class ASSolverPermutSM{
 				
 			}
 			// Start inter-team communication
-			if ( here.id == 0 && ID == 0 && nbIter % solverC.interTI == ID ){
+			if ( solverC.interTI != 0 && here.id == 0 && ID == 0 && nbIter % solverC.interTI == ID ){
 				nbInterTComm++;
 				//Console.OUT.println("solver start comm intention " +nbInterTComm);
 				//Team.control.doIterTeamComm();//csp.variables, total_cost);
