@@ -41,56 +41,55 @@ public class Main {
 		val poolSize = opts("-k", 4);
 		
 		
-
 		Console.OUT.println("CSP Problem: "+cspProblem+" Size: "+size+"\nNumber of repetitions: "+testNo+
-				" SolverMode: "+solverMode+" Communication strategy: "+comm+" Communication update inteval: "+inter+
-				"\nThreads:"+threads+" Pool Size: "+poolSize);
+				"\nSolverMode: "+solverMode+"\nCommunication strategy: "+comm+
+				"\nIntra-Team Comm. inteval: "+ inter+//"\nInter-Team Comm. inteval: "+ interTI+ "\nMinimum permissible distance: "+minDistance
+			    "\nPool Size: "+poolSize+"\nCommunication strategy: "+comm);
 		
 		var param:Int = 0;
 		//var file : String = "";
 				
 		if (cspProblem.equals("magic-square")) {
-			Console.OUT.println("Magic Square Problem");
+			//Console.OUT.println("Magic Square Problem");
 			param = 1;
 		}else if(cspProblem.equals("costas")){
-			Console.OUT.println("Costas Array Problem");
+			//Console.OUT.println("Costas Array Problem");
 			param = 2;
 		}else if(cspProblem.equals("all-interval")){
-			Console.OUT.println("All-Interval Array Problem");
+			//Console.OUT.println("All-Interval Array Problem");
 			param = 3;
 		}else if(cspProblem.equals("langford")){
-			Console.OUT.println("Langford Pairing Problem");
+			//Console.OUT.println("Langford Pairing Problem");
 			param = 4;
 		}else if(cspProblem.equals("partit")){
-			Console.OUT.println("Number Partition Problem");
+			//Console.OUT.println("Number Partition Problem");
 			param = 5;
 		}
 
 		else{
-			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas"); 
+			Console.OUT.println("Error: Type a valid CSP example: magic-square"); 
 			return;
 		}
 		
 		/*
 		 *  Creating objects for solver execution
 		 */
-		
 		var timeStart:Long;
 		var cost:Int;
 		var timeEnd :Long;
 		var sumTimes:Long = 0;
 		val accStats = new CSPStats();
 		
-		// communication interval = 10
-		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, nodesPerTeam);
-		//val solverT = new ASSolverPermutRWActivities(inter,solverMode);
-
 		if (solverMode == 0){
 			Console.OUT.println("Using "+Place.MAX_PLACES+" Places");
 		} else{
 			Console.OUT.println("Using "+solverMode+" Activities");
 		}
 		
+		// communication interval = 10
+		val solverP = new ASSolverPermutRW(inter, comm, threads, poolSize, nodesPerTeam);
+		//val solverT = new ASSolverPermutRWActivities(inter,solverMode);
+
 		Console.OUT.println("|Count| Time (s) |  Iters   |Place|  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Change|");
 		Console.OUT.println("|-----|----------|----------|-----|----------|----------|----------|-------|-----|-------|");
 		
