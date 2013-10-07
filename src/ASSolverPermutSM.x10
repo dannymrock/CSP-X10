@@ -28,8 +28,8 @@ public class ASSolverPermutSM{
 	var new_cost : Int;
 	var total_cost : Int;
 	val random : RandomTools;
-	var kill : Boolean;
 	
+	var kill : Boolean;
 	var forceRestart : Boolean;
 	
 	var list_i_nb : Int;
@@ -38,8 +38,6 @@ public class ASSolverPermutSM{
 	val list_ij : Rail[PairAS];
 	var nb_var_marked : Int;
 	val varRegion : Region(1);
-	/** Number of iterations to update kill status */
-	//val updateP : Int;
 	
 	/**	Statistics	*/
 	var nbRestart : Int;
@@ -66,14 +64,6 @@ public class ASSolverPermutSM{
 	
 	val ID : Int;
 	
-	/** all-to-all comm **/
-	// val myComm : CommData;
-	// val myCommRef : GlobalRef[CommData];
-	
-	
-	/** Diversification approach **/
-	//var alMaxI : Int;
-	//var alMinJ : Int;
 	/**
 	 *  Constructor of the class
 	 * 	@param sizeOfProblem size of the problem to solve
@@ -91,15 +81,11 @@ public class ASSolverPermutSM{
 		random = new RandomTools(seed);
 		nb_var_marked = 0;
 		nbRestart = 0;
-		//updateP = updateI; //Default value 
 		kill = false;
 		forceRestart = false; 
 		solverC = conf;    //set??
 		nbChangeV = 0;
 		
-		// all-to-all
-		//myComm = new CommData(solverC.poolSize);
-		//myCommRef = GlobalRef[CommData](myComm);		
 		nbInterTComm = 0;
 		nbForceRestart = 0;
 	}
@@ -663,8 +649,3 @@ public class ASSolverPermutSM{
 		return timeEnd-timeStart;
 	}
 }//End ASSolverPermut Class
-
-// class Pair{
-// 	var i : Int;
-// 	var j : int;
-// }

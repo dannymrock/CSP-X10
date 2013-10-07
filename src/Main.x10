@@ -58,24 +58,24 @@ public class Main {
 		//var file : String = "";
 				
 		if (cspProblem.equals("magic-square")) {
-			Console.OUT.println("Magic Square Problem");
+			//Console.OUT.println("Magic Square Problem");
 			param = 1;
 		}else if(cspProblem.equals("costas")){
-			Console.OUT.println("Costas Array Problem");
+			//Console.OUT.println("Costas Array Problem");
 			param = 2;
 		}else if(cspProblem.equals("all-interval")){
-			Console.OUT.println("All-Interval Array Problem");
+			//Console.OUT.println("All-Interval Array Problem");
 			param = 3;
 		}else if(cspProblem.equals("langford")){
-			Console.OUT.println("Langford Pairing Problem");
+			//Console.OUT.println("Langford Pairing Problem");
 			param = 4;
 		}else if(cspProblem.equals("partit")){
-			Console.OUT.println("Number Partition Problem");
+			//Console.OUT.println("Number Partition Problem");
 			param = 5;
 		}
 	
 		else{
-			Console.OUT.println("Error: Type a valid CSP example: magic-square or costas"); 
+			Console.OUT.println("Error: Type a valid CSP example: magic-square"); 
 			return;
 		}
 		
@@ -102,8 +102,8 @@ public class Main {
 					" explorer activities. "+Place.MAX_PLACES*nodesPTeam+" explorers in total (places and activities)");
 		}
 		
-		Console.OUT.println("|Count| Time (s) |  Iters   | Place |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Change|");
-		Console.OUT.println("|-----|----------|----------|-------|----------|----------|----------|-------|-----|-------|");
+		Console.OUT.println("|Count| Time (s) |  Iters   | Place |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Change|  FR |");
+		Console.OUT.println("|-----|----------|----------|-------|----------|----------|----------|-------|-----|-------|-----|");
 		
 		/*
 		 *  Execution loop
@@ -127,7 +127,7 @@ public class Main {
 			
 		}
 		Console.OUT.printf("\r");
-		Console.OUT.println("|-----|----------|----------|-------|----------|----------|----------|-------|-----|-------|");
+		Console.OUT.println("|-----|----------|----------|-------|----------|----------|----------|-------|-----|-------|-----|");
 		accStats.printAVG(testNo);
 		Console.OUT.printf("\n");
 		

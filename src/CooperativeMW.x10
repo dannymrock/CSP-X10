@@ -14,51 +14,35 @@ import x10.util.Random;
 
 class CooperativeMW{  
 	val teamDist : DistArray[Team];
-	val cspDist : DistArray[ModelAS];
-	val timeDist : DistArray[Long];
-	var winTeam : Place;
 	
 	val intraTI : Int;
 	val interTI : Int;
 	
-	var bcost : Int;
 	val stats : CSPStats;
 	val refStats : GlobalRef[CSPStats];
 	
-	/** Comunication Variables*/
-	val currentCosts : DistArray[Int];
-	var commData : CommData;
-	val refComm : GlobalRef[CommData];
-	
 	val poolSize : Int;
-	
 	
 	val thEnable : Int; 
 	
 	//Hybrid approach
 	val nbExplorerPT : Int;
 	val sizeGroup : Int;
-	val minDistance:Double;
+	val minDistance : Double;
 	
 	/**
 	 * 	Constructor of the class
 	 */
 	def this( intraTeamI : Int, interTeamI : Int , thread : Int , ps : Int, nExPT : Int, minD:Double){
 		teamDist = DistArray.make[Team](Dist.makeUnique());
-		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
-		timeDist = DistArray.make[Long](Dist.makeUnique());
 		
-		currentCosts = DistArray.make[Int](Dist.makeUnique(), -1);
 		poolSize = ps;
-		commData = new CommData( poolSize ); 
 		
 		intraTI = intraTeamI; 
 		interTI = interTeamI;
-		//commOption = commOpt;
 		
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
-		refComm = GlobalRef[CommData](commData);
 		
 		thEnable = thread;
 				
@@ -83,7 +67,7 @@ class CooperativeMW{
 		var extTime : Long = -System.nanoTime();
 		val random = new Random();
 		
-		// 1st Create team instances at each node
+		// 1st step: Create team instances at each node
 		finish for(p in Place.places()){ 
 			val seed = random.nextLong();
 			async at(p){
@@ -91,13 +75,13 @@ class CooperativeMW{
 			}
 		}
 		
-		// 2nd Get comm references of each node
+		// 2nd step: Get comm references of each node
 		val arrayRefs = new Rail[GlobalRef[Team]](0..((Place.MAX_PLACES)-1));
 		for(p in Place.places()){
 			arrayRefs(p.id) = at(p){ GlobalRef[Team](teamDist(here.id)) };	
 		}
 		
-		// 3rd Start solve process at each team
+		// 3rd step: Start solve process at each team
 		finish for ( p in Place.places() ) at(p) async { 
 			var cost:Int = x10.lang.Int.MAX_VALUE;
 			
@@ -119,14 +103,11 @@ class CooperativeMW{
 						teamDist(here.id).control.event = true; 
 					}
 				}
-				winTeam = here;
-				bcost = cost;
 				setStats();
 			}
 		}
 		extTime += System.nanoTime();
 		stats.time = extTime/1e9;
-		this.clear();
 		//stats.print(98);
 		return stats; 
 	}
@@ -135,7 +116,6 @@ class CooperativeMW{
 		val winTeam = here.id;
 		val tCost = teamDist(winTeam).stats.cost;
 		val winExp = teamDist(winTeam).stats.explorer;
-		val time = (timeDist(winTeam))/1e9;
 		val iters = teamDist(winTeam).stats.iters;
 		val locmin = teamDist(winTeam).stats.locmin;
 		val swaps = teamDist(winTeam).stats.swaps;
@@ -145,12 +125,7 @@ class CooperativeMW{
 		val change = teamDist(winTeam).stats.change;
 		val forceR = teamDist(winTeam).stats.forceRestart;
 		// Console.OUT.println(winTeam+" "+winExp+" "+time+" "+iters+" "+locmin+" "+swaps+" "+reset+" "+same+" "+restart+" "+change);
-		at(refStats) refStats().setStats(tCost, winTeam, winExp , time, iters, locmin, swaps, reset, same,
+		at(refStats) refStats().setStats(tCost, winTeam, winExp , 0, iters, locmin, swaps, reset, same,
 				restart, change, forceR);
-		// val winstats = new CSPStats
-	}
-	
-	public def clear(){
-		commData.clear();
 	}
 }

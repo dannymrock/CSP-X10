@@ -9,25 +9,14 @@ public class Team {
 	
 	val intraTI : Int;
 	val interTI : Int;
-	
-	/**
-	 *  Global Memory Shared between activities (Not used- replaced by static object)
-	 */
-	val sharedData : CommData;
-	val sharedDataRef : GlobalRef[CommData];
-	
-	/**
-	 *  Shared reference for inter team (place) communication 
-	 */
-	//val interTeamSharedData : CommData;
-	//val interTeamSharedDataRef : GlobalRef[Team];
-	
-	
+
 	val commOption : Int;
 	val poolSize : Int;
 	val nbExplorerPT : Int;
 	
-	
+	/**
+	 *  Shared references for inter teams (places) communication 
+	 */
 	var arrayRefs : Rail[GlobalRef[Team]];
 	
 	var minDistance : Double;
@@ -36,7 +25,9 @@ public class Team {
 	
 	var count: Int;
 	
-	
+	/**
+	 *  Global Memory Shared between activities (static object)
+	 */
 	static val control : Control = new Control();
 		
 	def this (intraTeamI : Int, interTeamI : Int , ps : Int, nbExPT : Int, minD: Double){
@@ -51,15 +42,6 @@ public class Team {
 		solverArray = new Rail[ASSolverPermutSM](region);
 		cspArray = new Rail[ModelAS](region);
 		stats = new CSPStats();
-		
-		//Intra-Team communication
-		sharedData = new CommData(poolSize); 
-		sharedDataRef = GlobalRef[CommData](sharedData);
-		
-		//Inter-Team communication
-		//interTeamSharedData = new CommData(1);
-		//interTeamSharedDataRef = GlobalRef[Team](this); //Inter-Team communication
-		
 		
 		Team.control.clear();
 		Team.control.poolSize = poolSize;
@@ -101,8 +83,10 @@ public class Team {
 					}
 					
 					//minDistance = cspArray(aID).solverParams.minDistance;
-					solverArray(aID) = new ASSolverPermutSM(aID(0), nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, sharedDataRef, intraTI, interTI, commOption, poolSize, nbExplorerPT));
+					solverArray(aID) = new ASSolverPermutSM(aID(0), nsize, seed,
+							new ASSolverConf( ASSolverConf.USE_PLACES, GlobalRef[CommData](null), intraTI, 
+									interTI, commOption, poolSize, nbExplorerPT)
+						);
 					
 					val cost = solverArray(aID).solve(cspArray(aID));
 					
@@ -130,10 +114,8 @@ public class Team {
 	}
 	
 	def setStats(actID : Int  ){
-		
 		val winAct = actID;
 		val tCost = solverArray(winAct).total_cost;
-		//val time = (timeDist(winPlace))/1e9;
 		val iters = solverArray(winAct).nbIterTot;
 		val locmin = solverArray(winAct).nbLocalMinTot;
 		val swaps = solverArray(winAct).nbSwapTot;
@@ -145,7 +127,6 @@ public class Team {
 		
 		stats.setStats(tCost, here.id, winAct , 0, iters, locmin, swaps, reset, same, restart, change, forceR);
 		//stats.print(99);
-		//val winstats = new CSPStats
 	}	
 	
 	
@@ -154,14 +135,10 @@ public class Team {
 	def control(){
 		var test : Boolean = true;
 		var act : Int = 0;
-		
 		while ( test ) {
-			
 			//Runtime.probe();
-			
 			when ( control.event ) {
 				control.event = false;
-			
 				count++;
 			if ( control.exit )
 				test = false;
@@ -208,7 +185,6 @@ public class Team {
 		// val conf1 : Rail[Int] = at(arrayRefs(place1)) arrayRefs(place1)().cspArray(0).variables;
 		// val cost1 : Int = at(arrayRefs(place1)) arrayRefs(place1)().solverArray(0).total_cost;
 		
-		if ( control.exit ) return;
 		// get conf2 from any explorer in a random team
 		// var tmp : Int = random.nextInt(Place.MAX_PLACES);
 		// while (place1 == tmp){
@@ -267,14 +243,12 @@ public class Team {
 		var count : Int = 0;
 		for (i = 0; i < sizeC; i++){
 			//Console.OUT.println("comparing: "+conf1(i)+" - "+conf2(i));
+			if ( control.exit ) return 1.0;
 			if(conf1(i) == conf2(i)){
-				//Console.OUT.println("Equal!!!: "+conf1(i)+" - "+conf2(i));
 				count++; 
 			}
 		}
 		val dis = 1.0 - ( count as Double / sizeC );
 		return dis;
-	}
-	
+	}	
 }
-
