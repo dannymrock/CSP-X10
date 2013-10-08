@@ -135,14 +135,14 @@ public class Team {
 	def control(){
 		var test : Boolean = true;
 		var act : Int = 0;
-		while ( test ) {
+		loop: while ( true ) {
 			//Runtime.probe();
 			when ( control.event ) {
 				control.event = false;
 				count++;
-			if ( control.exit )
-				test = false;
-			else
+				if ( control.exit )
+					break loop;
+				
 				if ( control.interTeam ) {
 					control.interTeam = false;
 					act = 1;
@@ -163,22 +163,30 @@ public class Team {
 	
 	public def doIterTeamComm (){// myConf : Rail[Int], myCost : Int ){
 		// Compare against next team
-		//val nextPlace : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
+		//val tmp : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
 		
-		// Compare against random team
+		//Compare against random team
 		var tmp : Int = random.nextInt(Place.MAX_PLACES);
 		while (here.id == tmp){
 			tmp = random.nextInt(Place.MAX_PLACES);
 		}
-		val nextPlace = tmp; 
 		
-		
+		//val nextPlace = tmp; 
+		val ref = arrayRefs(tmp);
+		//var extTime : Long = -System.nanoTime();
+	
 		val conf1 = cspArray(0).variables;
 		val cost1 = solverArray(0).total_cost;
+		//extTime += System.nanoTime();
+		//Console.OUT.println(here+" time0: "+extTime);
 		
-		val conf2 : Rail[Int] = at(arrayRefs(nextPlace)) arrayRefs(nextPlace)().cspArray(0).variables;
-		val cost2 : Int = at(arrayRefs(nextPlace)) arrayRefs(nextPlace)().solverArray(0).total_cost;
+		//extTime = -System.nanoTime();
 		
+		val conf2 : Rail[Int] = at(ref) ref().cspArray(0).variables;
+		val cost2 : Int = at(ref) ref().solverArray(0).total_cost;
+		//extTime += System.nanoTime();
+		
+		//Console.OUT.println(here+" time1: "+extTime);
 		// // get conf1 from any explorer in a random team
 		// val place1 = random.nextInt(Place.MAX_PLACES);
 		// //val next = nextPlace;
@@ -210,7 +218,7 @@ public class Team {
 				// for(i in 0..(x-1))
 				// 	at(arrayRefs(place1)) arrayRefs(place1)().solverArray(i).forceRestart = true;
 				//----
-				val x = solverArray.size /2; //restart only the first half in the explorer set
+				val x = solverArray.size; // /2; //restart only the first half in the explorer set
 				for(i in 0..(x-1))
 					solverArray(i).forceRestart = true;
 			}else{
@@ -219,22 +227,22 @@ public class Team {
 				// for(i in 0..(x-1))
 				// 	at(arrayRefs(place2)) arrayRefs(place2)().solverArray(i).forceRestart = true;
 				//----
-				at(arrayRefs(nextPlace)){
-					val x = arrayRefs(nextPlace)().solverArray.size /2; //restart only the half 
+				at(ref){
+					val x = ref().solverArray.size; // /2; //restart only the half 
 					for(i in 0..(x-1))
-						arrayRefs(nextPlace)().solverArray(i).forceRestart = true;
+						ref().solverArray(i).forceRestart = true;
 				}
 			}			
 		}
 		// start inter-team comm in next place (ring)
-		if ( control.exit ) return;
-		if (here.id < Place.MAX_PLACES-1) //last place don't send iter-team comm intention
-			at(arrayRefs(nextPlace)){
-				atomic{
-					arrayRefs(nextPlace)().control.interTeam = true;
-					arrayRefs(nextPlace)().control.event = true;
-				}
-			}
+		// if ( control.exit ) return;
+		// if (here.id < Place.MAX_PLACES-1) //last place don't send iter-team comm intention
+		// 	at(ref){
+		// 		atomic{
+		// 			ref().control.interTeam = true;
+		// 			ref().control.event = true;
+		// 		}
+		// 	}
 	}
 	
 	def distance(conf1 : Rail[Int], conf2 : Rail[Int]) : Double {
@@ -243,7 +251,7 @@ public class Team {
 		var count : Int = 0;
 		for (i = 0; i < sizeC; i++){
 			//Console.OUT.println("comparing: "+conf1(i)+" - "+conf2(i));
-			if ( control.exit ) return 1.0;
+			//if ( control.exit ) return 1.0;
 			if(conf1(i) == conf2(i)){
 				count++; 
 			}

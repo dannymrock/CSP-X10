@@ -342,7 +342,7 @@ public class ASSolverPermutSM{
 				
 			}
 			// Start inter-team communication
-			if ( solverC.interTI != 0 && here.id == 0 && ID == 0 && nbIter % solverC.interTI == ID ){
+			if ( solverC.interTI != 0 && ID == 0 && nbIter % solverC.interTI == ID ){
 				nbInterTComm++;
 				//Console.OUT.println("solver start comm intention " +nbInterTComm);
 				//Team.control.doIterTeamComm();//csp.variables, total_cost);
