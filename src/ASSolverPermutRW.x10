@@ -12,12 +12,12 @@
  */
 import x10.util.Random;
 //import x10.compiler.Pragma;
-import x10.regionarray.*; //Change x10.array.*;
+import x10.array.*; //Change x10.array.*;
 
 public class ASSolverPermutRW{  
-	val solverDist : DistArray[ASSolverPermut];
-	val cspDist : DistArray[ModelAS];
-	val timeDist : DistArray[Long];
+	val solverDist : DistArray_Unique[ASSolverPermut];
+	val cspDist : DistArray_Unique[ModelAS];
+	val timeDist : DistArray_Unique[Long];
 	var winPlace : Place;
 	
 	val updateI : Int;
@@ -52,9 +52,9 @@ public class ASSolverPermutRW{
 	 * 	Constructor of the class
 	 */
 	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, npT : Int ){
-		solverDist = DistArray.make[ASSolverPermut](Dist.makeUnique());
-		cspDist = DistArray.make[ModelAS](Dist.makeUnique());
-		timeDist = DistArray.make[Long](Dist.makeUnique());
+		solverDist = new DistArray_Unique[ASSolverPermut] ();
+		cspDist = new DistArray_Unique[ModelAS]();
+		timeDist = new DistArray_Unique[Long]();
 		
 		//currentCosts = DistArray.make[Int](Dist.makeUnique(), -1n);
 		poolSize = ps;

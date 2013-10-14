@@ -11,10 +11,10 @@
  * 					12 April, 2013 -> TLP support
  */
 import x10.util.Random;
-import x10.regionarray.*; //Change for x10.array.*;
+import x10.array.*; //Change for x10.array.*;
 
 class CooperativeMW{  
-	val teamDist : DistArray[Team];
+	val teamDist : DistArray_Unique[Team];
 	
 	val intraTI : Int;
 	val interTI : Int;
@@ -35,7 +35,7 @@ class CooperativeMW{
 	 * 	Constructor of the class
 	 */
 	def this( intraTeamI : Int, interTeamI : Int , thread : Int , ps : Int, nExPT : Int, minD:Double){
-		teamDist = DistArray.make[Team](Dist.makeUnique());
+		teamDist = new DistArray_Unique[Team]();
 		
 		poolSize = ps;
 		
