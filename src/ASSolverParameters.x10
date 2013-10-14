@@ -44,8 +44,8 @@ public class ASSolverParameters{
 	 */
 	public def this(){
 		firstBest = false; //revisar val por default
-		nbVarToReset = -1;
-		probChangeVector = 100;
+		nbVarToReset = -1n;
+		probChangeVector = 100n;
 		minDistance = 0.3;
 	}
 	

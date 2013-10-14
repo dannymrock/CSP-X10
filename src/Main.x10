@@ -15,12 +15,12 @@ public class Main {
 	//static val paramObj = new Parameters();
 	//static val param = GlobalRef[Parameters](new Parameters());
 	
-	public static def main(args:Array[String](1)):void{
+	public static def main(args:Rail[String]):void{
 		
 		/*
 		 *  Parsing Options
 		 */
-		val opts = new OptionsParser(args, null, [
+		val opts = new OptionsParser(args, new Rail[Option](0L), [
 		                                          Option("p", "", "Problem Selection (magic-square, costas, all-interval or langford)"),
 		                                          Option("s", "", "Size of the problem"),
 		                                          Option("b", "", "Number of benchmark tests"),
@@ -35,15 +35,15 @@ public class Main {
 		                                          ]);
 		
 		val cspProblem = opts("-p", "magic-square");
-		val size = opts("-s", 10);
-		val testNo = opts("-b", 10);
-		val solverMode = opts("-m", 0);
-		val threads = opts("-t", 0);
-		val comm = opts("-c", 0);
-		val intraTI = opts("-i", 0);
-		val interTI = opts("-j", 0);
-		val nodesPTeam = opts("-n", 1);
-		val poolSize = opts("-k", 4);
+		val size = opts("-s", 10n);
+		val testNo = opts("-b", 10n);
+		val solverMode = opts("-m", 0n);
+		val threads = opts("-t", 0n);
+		val comm = opts("-c", 0n);
+		val intraTI = opts("-i", 0n);
+		val interTI = opts("-j", 0n);
+		val nodesPTeam = opts("-n", 1n);
+		val poolSize = opts("-k", 4n);
 		val minDistance = opts("-d", 0.3);
 		
 		//at(Main.param) Main.param().poolSize = poolSize;
@@ -54,24 +54,24 @@ public class Main {
 				            "\nMinimum permissible distance: "+minDistance+
 							"\nPool Size: "+poolSize);
 		
-		var param:Int = 0;
+		var param : Int = 0n;
 		//var file : String = "";
 				
 		if (cspProblem.equals("magic-square")) {
 			//Console.OUT.println("Magic Square Problem");
-			param = 1;
+			param = 1n;
 		}else if(cspProblem.equals("costas")){
 			//Console.OUT.println("Costas Array Problem");
-			param = 2;
+			param = 2n;
 		}else if(cspProblem.equals("all-interval")){
 			//Console.OUT.println("All-Interval Array Problem");
-			param = 3;
+			param = 3n;
 		}else if(cspProblem.equals("langford")){
 			//Console.OUT.println("Langford Pairing Problem");
-			param = 4;
+			param = 4n;
 		}else if(cspProblem.equals("partit")){
 			//Console.OUT.println("Number Partition Problem");
-			param = 5;
+			param = 5n;
 		}
 	
 		else{
@@ -82,17 +82,17 @@ public class Main {
 		/*
 		 *  Creating objects for solver execution
 		 */
-		var timeStart:Long;
-		var cost:Int;
-		var timeEnd :Long;
-		var sumTimes:Long = 0;
+		var timeStart : Long;
+		var cost : Int;
+		var timeEnd : Long;
+		var sumTimes: Long = 0L;
 		val accStats = new CSPStats();
 		
 		// communication interval = 10
 		val solverP = new ASSolverPermutRW(intraTI, comm, threads, poolSize, nodesPTeam); 
 		val solverT = new CooperativeMW(intraTI, interTI, threads, poolSize, nodesPTeam, minDistance);
 
-		if (solverMode == 0){
+		if (solverMode == 0n){
 			Console.OUT.println("Using multi-walks with "+Place.MAX_PLACES+" Places");
 			Console.OUT.println("There are "+Place.MAX_PLACES+" teams each one with "+nodesPTeam+" explorer places. "+
 					Place.MAX_PLACES*nodesPTeam+" explorers in total (places)");
@@ -108,11 +108,11 @@ public class Main {
 		/*
 		 *  Execution loop
 		 */
-		for (var j : Int = 1; j <= testNo ; j++ ){
+		for (var j : Int = 1n; j <= testNo ; j++ ){
 			
 			//Solve the problem
 			val stats:CSPStats;
-			if (solverMode == 0){ 
+			if (solverMode == 0n){ 
 				stats = solverP.solve(size,param);
 			}else{
 				stats = solverT.solve(size,param);
@@ -143,13 +143,13 @@ public class Main {
 }
 
 
-class Parameters{
-	var poolSize : Int;
-	
-	def this(){
-		Console.OUT.println("solo una vez");
-		poolSize = 2;
-	}
-	
-	
-} 
+// class Parameters{
+// 	var poolSize : Int;
+// 	
+// 	def this(){
+// 		Console.OUT.println("solo una vez");
+// 		poolSize = 2n;
+// 	}
+// 	
+// 	
+// } 

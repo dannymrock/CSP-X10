@@ -12,16 +12,16 @@ public class PartitAS extends ModelAS{
 	
 	def this(val lengthProblem : Int, seed : Long){
 		super(lengthProblem, seed);
-		size2 = length / 2;
+		size2 = length / 2n;
 		
-		if (length < 8 || length % 4 != 0)
+		if (length < 8n || length % 4n != 0n)
 		{
 			Console.OUT.printf("no solution with size = %d\n", length);
 			//exit(1);
 		}
 		
-		sumMidX = (length * (length + 1)) / 4;
-		sumMidX2 = (sumMidX as Long * (2 * length + 1)) / 3L;
+		sumMidX = (length * (length + 1n)) / 4n;
+		sumMidX2 = (sumMidX as Long * (2n * length + 1n)) / 3L;
 		coeff = ( sumMidX2 / sumMidX ) as Int;
 		initParameters();
 	}
@@ -31,18 +31,18 @@ public class PartitAS extends ModelAS{
 	 *  Set Initial values for the problem
 	 */
 	private def initParameters(){
-		solverParams.probSelectLocMin = 80;
-		solverParams.freezeLocMin = 1;
-		solverParams.freezeSwap = 0;
-		solverParams.resetLimit = 1;
-		solverParams.resetPercent = 1;
-		solverParams.restartLimit = 100;//(length < 100) ? 10 : (length < 1000) ? 150 : length / 10;
-		solverParams.restartMax = 100000;
-		solverParams.baseValue = 1;
+		solverParams.probSelectLocMin = 80n;
+		solverParams.freezeLocMin = 1n;
+		solverParams.freezeSwap = 0n;
+		solverParams.resetLimit = 1n;
+		solverParams.resetPercent = 1n;
+		solverParams.restartLimit = 100n;//(length < 100) ? 10 : (length < 1000) ? 150 : length / 10;
+		solverParams.restartMax = 100000n;
+		solverParams.baseValue = 1n;
 		solverParams.exhaustive = true;
 		solverParams.firstBest = false;
 		
-		solverParams.probChangeVector = 100; //seems to be the best (no tested yet)
+		solverParams.probChangeVector = 100n; //seems to be the best (no tested yet)
 	} 
 	
 	/**
@@ -57,10 +57,10 @@ public class PartitAS extends ModelAS{
 		var r : Int;
 		var x : Int;
 
-		curMidX = 0;
-		curMidX2 = 0;
+		curMidX = 0n;
+		curMidX2 = 0L;
 		
-		for(i = 0; i < size2; i++)
+		for(i = 0n; i < size2; i++)
 		{
 			x = variables(i);
 			curMidX += x;

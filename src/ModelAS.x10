@@ -67,7 +67,7 @@ public class ModelAS{
 	 */
 	public def costOnVariable(var i:Int):Int{
 		//Console.OUT.println("Error bad costOnVariable");
-		return 0;
+		return 0n;
 	}
 	
 	/**
@@ -75,7 +75,7 @@ public class ModelAS{
 	 */
 	public def costIfSwap(current_cost:Int, i1:Int, i2:Int):Int{
 		Console.OUT.println("Error costIfSwap");
-		return 0;
+		return 0n;
 	}
 	
 	/**
@@ -94,7 +94,7 @@ public class ModelAS{
 		
 	public def costOfSolution(shouldBeRecorded : Int):Int {
 		//Console.OUT.println("Error costOfSolution");
-		return 0;
+		return 0n;
 	}
 		
 	static def show(s:String, d: Rail[Int]) {
@@ -109,12 +109,12 @@ public class ModelAS{
 		var j:Int; 
 		var z:Int;
 		
-		for ([k] in variables) {
-			variables(k) = baseValue + k;
+		for(k in variables){
+			variables(k) = baseValue + k as Int;
 		}
 		
-		for( i = length - 1 ; i >	0 ; i-- ) {
-			j = r.randomInt( i + 1 );
+		for( i = length - 1n ; i >	0n ; i-- ) {
+			j = r.randomInt( i + 1n );
 			z = variables(i);
 			variables(i) = variables(j);
 			variables(j) = z;
@@ -133,16 +133,16 @@ public class ModelAS{
 		var j:Int;
 		var x:Int;
 		
-		while( n-- != 0 ) {
+		while( n-- != 0n ) {
 			i = r.randomInt(length);
 			j = r.randomInt(length);
 			this.swapVariables(i,j);
 		}
-		return -1;
+		return -1n;
 	}
 	
 	public def setVariables(array : Rail[Int]){
-		Array.copy(array,this.variables);
+		Rail.copy(array,this.variables);
 	}
 	
 	public def displaySolution()

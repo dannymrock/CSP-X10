@@ -10,24 +10,24 @@
 import x10.util.Random;
 public class MagicSquareAS extends ModelAS{   
 	
-	var squareLength:Int; 
+	var squareLength : Int; 
 	
-	var square_length_m1:Int;    	/* square_length - 1 */
-	var square_length_p1:Int;    	/* square_length + 1 */
-	var avg:Int;					/* sum to reach for each l/c/d */
+	var square_length_m1 : Int;    	/* square_length - 1 */
+	var square_length_p1 : Int;    	/* square_length + 1 */
+	var avg : Int;					/* sum to reach for each l/c/d */
 	
-	val err_l :Rail[Int]; 
-	val err_l_abs: Rail[Int];  /* errors on lines (relative + absolute) */
+	val err_l : Rail[Int]; 
+	val err_l_abs : Rail[Int];  /* errors on lines (relative + absolute) */
 	val err_c : Rail[Int];
-	val err_c_abs: Rail[Int];	/* errors on columns */
+	val err_c_abs : Rail[Int];	/* errors on columns */
 	
-	var err_d1:Int;
-	var err_d1_abs:Int; 	/* error on d1 (\) */
-	var err_d2:Int;
-	var err_d2_abs:Int;	/* error on d2 (/) */
-	val xref:Rail[Xref];
+	var err_d1 : Int;
+	var err_d1_abs : Int; 	/* error on d1 (\) */
+	var err_d2 : Int;
+	var err_d2_abs : Int;	/* error on d2 (/) */
+	val xref : Rail[Xref];
 	
-	val regionSquare : Region(1);
+	//val regionSquare : Region(1);
 	
 	/**
 	 * 	Constructor
@@ -38,12 +38,12 @@ public class MagicSquareAS extends ModelAS{
 		
 		super(lengthProblem*lengthProblem, seed);
 		squareLength = lengthProblem;
-		regionSquare = 0..( squareLength - 1 );
-		err_l = new Rail[Int]( regionSquare, 0 );		
-		err_c = new Rail[Int]( regionSquare, 0 );		
-		err_l_abs = new Rail[Int]( regionSquare, 0 );	
-		err_c_abs = new Rail[Int]( regionSquare, 0 );	
-		xref = new Rail[Xref]( varRegion );
+		//regionSquare = 0..( squareLength - 1 );
+		err_l = new Rail[Int] (squareLength, 0n);		
+		err_c = new Rail[Int] (squareLength, 0n);		
+		err_l_abs = new Rail[Int] (squareLength, 0n);	
+		err_c_abs = new Rail[Int] (squareLength, 0n);	
+		xref = new Rail[Xref]( length );
 		initParameters();
 	}
 	
@@ -55,36 +55,36 @@ public class MagicSquareAS extends ModelAS{
 		
 		val xr: Xref = new Xref();
 		
-		avg = squareLength * (length + 1) / 2;		/* sum to reach for each l/c/d */
+		avg = squareLength * (length + 1n) / 2n;		/* sum to reach for each l/c/d */
 		
-		solverParams.probSelectLocMin = 6;
-		solverParams.freezeLocMin = 5;
-		solverParams.freezeSwap = 0;
-		//solverParam.resetLimit = squareLength / 2;
+		solverParams.probSelectLocMin = 6n;
+		solverParams.freezeLocMin = 5n;
+		solverParams.freezeSwap = 0n;
+		//solverParam.resetLimit = squareLength / 2n;
 		solverParams.resetLimit = squareLength;
-		solverParams.resetPercent = 10;
-		solverParams.restartLimit = 10000000;
-		solverParams.restartMax = 0;
-		//solverParams.restartLimit = 2 * length;
-		//solverParams.restartMax = 20;
-		solverParams.baseValue = 1;
+		solverParams.resetPercent = 10n;
+		solverParams.restartLimit = 10000000n;
+		solverParams.restartMax = 0n;
+		//solverParams.restartLimit = 2n * length;
+		//solverParams.restartMax = 20n;
+		solverParams.baseValue = 1n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
-		solverParams.probChangeVector = 50; //Works with 50 and 75%
+		solverParams.probChangeVector = 50n; //Works with 50 and 75%
 		
-		square_length_m1 = squareLength - 1;
-		square_length_p1 = squareLength + 1;
+		square_length_m1 = squareLength - 1n;
+		square_length_p1 = squareLength + 1n;
 		
 		var i : Int;
 		var j : Int; 
 		
 		//for(var k:Int = 0; k < length; k++)
-		for( [k] in varRegion)
+		for( k in 0..(length-1))
 		{	
 			xref(k)= new Xref();
 			
-			i = k / squareLength;
-			j = k % squareLength;
+			i = k as Int / squareLength;
+			j = k as Int % squareLength;
 			
 			//Console.OUT.println("i j"+i+j+(i == j)+(i + j == squareLength+1));
 			xref(k).xSet(i, j, (i == j), (i + j == square_length_m1));
@@ -110,7 +110,7 @@ public class MagicSquareAS extends ModelAS{
 		err_l.clear();
 		err_c.clear();
 		
-		k = 0;
+		k = 0n;
 		
 		do{
 			var xr:Xref = xref(k); // is it neccessary? I can do only xref(k).get????
@@ -119,8 +119,8 @@ public class MagicSquareAS extends ModelAS{
 			err_c(xr.getC()) += variables(k);
 		}while( ++k < length );
 		
-		var k1:Int = 0;
-		var k2:Int = 0;
+		var k1 : Int = 0n;
+		var k2 : Int = 0n;
 		
 		do{
 			k2 += square_length_m1;
@@ -135,7 +135,7 @@ public class MagicSquareAS extends ModelAS{
 		err_d2_abs = Math.abs(err_d2);
 		
 		r = err_d1_abs + err_d2_abs;
-		k = 0;
+		k = 0n;
 		
 		do{
 			err_l(k) -= avg; 
@@ -162,7 +162,7 @@ public class MagicSquareAS extends ModelAS{
 		var r:Int;
 
 		r = err_l_abs(xr.getL()) + err_c_abs(xr.getC()) + 
-			(xr.d1 ? err_d1_abs : 0) + (xr.d2 ? err_d2_abs : 0);
+			(xr.d1 ? err_d1_abs : 0n) + (xr.d2 ? err_d2_abs : 0n);
 		//r = err_l(xr.getL()) + err_c(xr.getC()) + 
 		//	(xr.d1 ? err_d1 : 0) + (xr.d2 ? err_d2 : 0);
 
@@ -182,15 +182,15 @@ public class MagicSquareAS extends ModelAS{
 	 */
 	public def costIfSwap( current_cost : Int, i1 : Int, i2 : Int ) : Int {
 
-		var xr1:Xref = xref(i1);
-		var xr2:Xref = xref(i2);
-		var l1:Int = xr1.getL();
-		var c1:Int = xr1.getC();
-		var l2:Int = xr2.getL();
-		var c2:Int = xr2.getC();
-		var diff1:Int;
-		var diff2:Int;
-		var r:Int;
+		var xr1 : Xref = xref(i1);
+		var xr2 : Xref = xref(i2);
+		var l1 : Int = xr1.getL();
+		var c1 : Int = xr1.getC();
+		var l2 : Int = xr2.getL();
+		var c2 : Int = xr2.getC();
+		var diff1 : Int;
+		var diff2 : Int;
+		var r : Int;
 		
 		r = current_cost;
 
@@ -240,14 +240,14 @@ public class MagicSquareAS extends ModelAS{
 	 *  @param i2 Second variable already swapped
 	 */
 	public def executedSwap( i1 : Int, i2 : Int) {
-		var xr1:Xref = xref(i1);
-		var xr2:Xref = xref(i2);
-		var l1:Int = xr1.getL();
-		var c1:Int = xr1.getC();
-		var l2:Int = xr2.getL();
-		var c2:Int = xr2.getC();
-		var diff1:Int;
-		var diff2:Int;
+		var xr1 : Xref = xref(i1);
+		var xr2 : Xref = xref(i2);
+		var l1 : Int = xr1.getL();
+		var c1 : Int = xr1.getC();
+		var l2 : Int = xr2.getL();
+		var c2 : Int = xr2.getC();
+		var diff1 : Int;
+		var diff2 : Int;
 		
 		diff1 = variables(i1) - variables(i2); /* swap already executed */
 		diff2 = -diff1;
@@ -290,14 +290,14 @@ public class MagicSquareAS extends ModelAS{
  *  Data structure that helps to make the Magic Square funtions easier
  */
 class Xref {
-	var d1:Boolean;
-	var d2:Boolean;
-	var l:Int;
-	var c:Int;
+	var d1 : Boolean;
+	var d2 : Boolean;
+	var l : Int;
+	var c : Int;
 	
-	public def this(){d1=false;d2=false;l=15;c=15;}
-	public def xSet(line:Int, col:Int, diag1:Boolean, diag2: Boolean){
+	public def this(){ d1 = false; d2 = false; l = 15n; c = 15n;}
+	public def xSet(line : Int, col : Int, diag1 : Boolean, diag2 : Boolean){
 		this.l = line; this.c = col; this.d1 = diag1; this.d2 = diag2;}
-	public def getL():Int{return this.l;}
-	public def getC():Int{return this.c;}
+	public def getL() : Int{ return this.l; }
+	public def getC() : Int{ return this.c; }
 }

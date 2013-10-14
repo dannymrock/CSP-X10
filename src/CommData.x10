@@ -7,9 +7,9 @@ public class CommData{
 	val random : RandomTools;
 	 
 	def this( poolS : Int ){
-		nbEntries = 0;
+		nbEntries = 0n;
 		poolSize = poolS;
-		bestPartialSolutions = new Rail[CSPSharedUnit](0..(poolSize-1));
+		bestPartialSolutions = new Rail[CSPSharedUnit](poolSize);
 		bestCost = Int.MAX_VALUE;
 		worstCost = Int.MAX_VALUE; //
 		random = new RandomTools(123L);
@@ -17,8 +17,8 @@ public class CommData{
 	
 	public def isGoodCost(cost : Int) : Boolean {
 		var i :Int;
-		if (nbEntries == 0) return true;
-		for (i = 0; i < nbEntries; i++){
+		if (nbEntries == 0n) return true;
+		for (i = 0n; i < nbEntries; i++){
 			if (cost <= bestPartialSolutions(i).cost)
 				return true;
 		}
@@ -39,7 +39,7 @@ public class CommData{
 			//Console.OUT.println("insert cost "+cost);
 			//Main.show("insert vector", variables);
 			//Console.OUT.println("insert vector with cost "+cost);
-			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size , variables, place );
+			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int , variables, place );
 			if (cost < bestCost){ 
 				bestCost = cost;
 				//Console.OUT.println("New Best Cost = "+bestCost+" in place "+place);
@@ -49,13 +49,13 @@ public class CommData{
 			// No place available select a victim
 			
 			var equal : Boolean = false;
-			var victim : Int = 0;
-			var nvic : Int = 0;
+			var victim : Int = 0n;
+			var nvic : Int = 0n;
 			var costToChange : Int = cost;
 			
-			for (i = 0; i < nbEntries; i++){
+			for (i = 0n; i < nbEntries; i++){
 				if (worstCost == bestPartialSolutions(i).cost){
-					if (random.randomInt(++nvic) == 0)
+					if (random.randomInt(++nvic) == 0n)
 						victim = i;
 				}
 				
@@ -65,7 +65,7 @@ public class CommData{
 				}
 			}	
 			//Console.OUT.println("insert vector with cost "+cost);	
-			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size , variables, place);
+			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size as Int, variables, place);
 			
 			if (cost <= bestCost){ 
 				bestCost = cost;
@@ -78,8 +78,8 @@ public class CommData{
 	
 	public def compareVectors (vec1 : Rail[Int], vec2 : Rail[Int]):Boolean{
 		var result : Boolean = true;
-		var i : Int = 0;
-		for (i = 0; i < vec1.size; i++){
+		var i : Int = 0n;
+		for (i = 0n; i < vec1.size; i++){
 			if(vec1(i) != vec2(i)){
 				return false;
 			}
@@ -89,8 +89,8 @@ public class CommData{
 	
 	public def updateWorstCost(){
 		var i : Int;
-		var wc : Int = 0;
-		for(i = 0; i < nbEntries; i++){
+		var wc : Int = 0n;
+		for(i = 0n; i < nbEntries; i++){
 			if (bestPartialSolutions(i).cost > wc) wc = bestPartialSolutions(i).cost; 
 		}
 		worstCost = wc;	
@@ -98,14 +98,14 @@ public class CommData{
 	
 	public def printVectors(){
 		var i : Int;
-		for (i = 0; i < nbEntries; i++){
+		for (i = 0n; i < nbEntries; i++){
 			Console.OUT.print(i+". Cost = "+bestPartialSolutions(i).cost+" place "+bestPartialSolutions(i).place);
 			Main.show(" Vector",bestPartialSolutions(i).vector);
 		}
 	}
 	
 	public atomic def getRemoteData():CSPSharedUnit{
-		val random = new RandomTools( 123 );
+		val random = new RandomTools( 123L );
 		val i = random.randomInt(nbEntries);
 		return bestPartialSolutions(i);
 		
@@ -118,7 +118,7 @@ public class CommData{
 	}
 	
 	public def clear(){
-		nbEntries = 0;
+		nbEntries = 0n;
 		bestCost = Int.MAX_VALUE;
 		worstCost = Int.MAX_VALUE;
 	}

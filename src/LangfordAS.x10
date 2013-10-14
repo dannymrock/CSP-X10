@@ -13,7 +13,7 @@ public class LangfordAS extends ModelAS{
 	val order : Int;
 	
 	def this (val lengthProblem : Int, seed : Long){
-		super(lengthProblem * 2, seed);
+		super(lengthProblem * 2n, seed);
 		order = lengthProblem;
 		initParameters();
 	}
@@ -23,21 +23,21 @@ public class LangfordAS extends ModelAS{
 	 *  Set Initial values for the problem
 	 */
 	private def initParameters(){
-		solverParams.probSelectLocMin = 3;
-		solverParams.freezeLocMin = 1;
-		solverParams.freezeSwap = 0;
-		solverParams.resetLimit = (order < 12) ? 4 : 10;
+		solverParams.probSelectLocMin = 3n;
+		solverParams.freezeLocMin = 1n;
+		solverParams.freezeSwap = 0n;
+		solverParams.resetLimit = (order < 12n) ? 4n : 10n;
 		//solverParams.resetPercent = 1;      //var to reset
-		solverParams.nbVarToReset = 1;
-		solverParams.restartLimit = 100000;
-		solverParams.restartMax = 100;
-		solverParams.baseValue = 0;
+		solverParams.nbVarToReset = 1n;
+		solverParams.restartLimit = 100000n;
+		solverParams.restartMax = 100n;
+		solverParams.baseValue = 0n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false; 
 		
-		solverParams.probChangeVector = 100; //best 
+		solverParams.probChangeVector = 100n; //best 
 		
-		if (order % 4 != 0 && order % 4 != 3)
+		if (order % 4n != 0n && order % 4n != 3n)
 		{
 			Console.OUT.printf("no solution with size = %d\n", order);
 			//exit(1);
@@ -46,7 +46,7 @@ public class LangfordAS extends ModelAS{
 	
 	public def costVar(i : Int) : Int {
 		/* here i < order */
-		var r : Int = 0;
+		var r : Int = 0n;
 		var x : Int;
 		var y : Int;
 		var between : Int;
@@ -54,10 +54,10 @@ public class LangfordAS extends ModelAS{
 		x = variables(i);
 		y = variables(order + i);
 
-		between = Math.abs(x - y) - 1;
+		between = Math.abs(x - y) - 1n;
 
 		//#ifndef SLOW			/* the best !!! simply count 1 for an error */
-		r = (between != i + 1) ? 1 : 0; //(between != i + 1);
+		r = (between != i + 1n) ? 1n : 0n; //(between != i + 1);
 
 		return r;
 	}
@@ -72,9 +72,9 @@ public class LangfordAS extends ModelAS{
 	 */
 	public def costOfSolution( shouldBeRecorded : Int ) : Int {
 		var i : Int;
-		var r : Int = 0;
+		var r : Int = 0n;
 
-		for(i = 0; i < order; i++)
+		for(i = 0n; i < order; i++)
 			r += costVar(i);
 		return r;
 	}
@@ -108,7 +108,7 @@ public class LangfordAS extends ModelAS{
 		variables(i1) = variables(i2);
 		variables(i2) = x;
 
-		r = costOfSolution(0);
+		r = costOfSolution(0n);
 
 		variables(i2) = variables(i1);
 		variables(i1) = x;
@@ -125,9 +125,9 @@ public class LangfordAS extends ModelAS{
 		var j : Int;
 		
 		//  Ad_Display(p_ad->sol, p_ad, NULL); // to see actual values
-		for(i = 0; i < length; i++)
+		for(i = 0n; i < length; i++)
 		{
-			for(j = 0; variables(j) != i; j++)
+			for(j = 0n; variables(j) != i; j++)
 				;
 			if (j >= order)
 				j -= order;

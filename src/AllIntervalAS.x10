@@ -20,7 +20,7 @@ public class AllIntervalAS extends ModelAS {
 	 */
 	def this ( val lengthProblem : Int , seed : Long, exahustive:Boolean ){
 		super( lengthProblem, seed );
-		nbOcc = new Rail[Int]( varRegion , 0 );
+		nbOcc = new Rail[Int] (length , 0n);
 		exh = exahustive;
 		initParameters();
 		
@@ -29,29 +29,29 @@ public class AllIntervalAS extends ModelAS {
 	
 	private def initParameters(){
 		if (exh){
-			solverParams.probSelectLocMin = 66;
-			solverParams.freezeLocMin = 1;
-			solverParams.freezeSwap = 0;
-			solverParams.resetLimit = 1;
-			solverParams.resetPercent = 25;
-			solverParams.restartLimit = 10000000;
-			solverParams.restartMax = 0;
-			solverParams.baseValue = 0;
+			solverParams.probSelectLocMin = 66n;
+			solverParams.freezeLocMin = 1n;
+			solverParams.freezeSwap = 0n;
+			solverParams.resetLimit = 1n;
+			solverParams.resetPercent = 25n;
+			solverParams.restartLimit = 10000000n;
+			solverParams.restartMax = 0n;
+			solverParams.baseValue = 0n;
 			solverParams.exhaustive = true;
 			solverParams.firstBest = true;
 		}else{
-			solverParams.probSelectLocMin = 6;
-			solverParams.freezeLocMin = 5;
-			solverParams.freezeSwap = 0;
-			solverParams.resetLimit = length/6;
-			solverParams.resetPercent = 10;
-			solverParams.restartLimit = 10000000;
-			solverParams.restartMax = 0;
-			solverParams.baseValue = 0;
+			solverParams.probSelectLocMin = 6n;
+			solverParams.freezeLocMin = 5n;
+			solverParams.freezeSwap = 0n;
+			solverParams.resetLimit = length / 6n;
+			solverParams.resetPercent = 10n;
+			solverParams.restartLimit = 10000000n;
+			solverParams.restartMax = 0n;
+			solverParams.baseValue = 0n;
 			solverParams.exhaustive = false;
 			solverParams.firstBest = false;
 		}
-		solverParams.probChangeVector = 1; //not deeply tested 
+		solverParams.probChangeVector = 1n; //not deeply tested 
 	} 
 	
 	/**
@@ -61,12 +61,12 @@ public class AllIntervalAS extends ModelAS {
 	 */
 	public def cost() : Int 
 	{
-		var r : Int = 0;
+		var r : Int = 0n;
 		var i : Int = length;
 
-		this.nbOcc(0) = 0;                /* 0 is unused, use it as a sentinel */
+		this.nbOcc(0) = 0n;                /* 0 is unused, use it as a sentinel */
 
-		while(this.nbOcc(--i) != 0 );//{
+		while(this.nbOcc(--i) != 0n );//{
 			//Console.OUT.print("nbOcc("+i+")= "+nbOcc(i));
 		//}
 			
@@ -86,9 +86,9 @@ public class AllIntervalAS extends ModelAS {
 
 		this.nbOcc.clear();
 		
-		for(i = 0; i < length - 1; i++){
-			val aux = Math.abs(variables(i) - variables(i + 1)); 
-			this.nbOcc(aux) = this.nbOcc(aux) + 1;
+		for(i = 0n; i < length - 1; i++){
+			val aux = Math.abs(variables(i) - variables(i + 1n)); 
+			this.nbOcc(aux) = this.nbOcc(aux) + 1n;
 		}
 		
 		if (Is_Trivial_Solution(variables, length))
@@ -97,9 +97,9 @@ public class AllIntervalAS extends ModelAS {
 		return cost();
 	}
 	
-	public def Is_Trivial_Solution(sol : Array[Int], size : Int) : Boolean
+	public def Is_Trivial_Solution(sol : Rail[Int], size : Int) : Boolean
 	{
-		return ( 	sol(0) == 0 || sol(0) == size - 1 || sol(size - 1) == 0 || sol(size - 1) == size - 1);
+		return ( 	sol(0) == 0n || sol(0) == size - 1n || sol(size - 1n) == 0n || sol(size - 1n) == size - 1n);
 	}
 	
 	/**
@@ -124,8 +124,8 @@ public class AllIntervalAS extends ModelAS {
 		var add3 : Int;
 		var add4 : Int;
 
-		if ((i1 == 0 && (variables(i2) == 0 || variables(i2) == length - 1)) ||
-				(i2 == 0 && (variables(i1) == 0 || variables(i1) == length - 1)))
+		if ((i1 == 0n && (variables(i2) == 0n || variables(i2) == length - 1n)) ||
+				(i2 == 0n && (variables(i1) == 0n || variables(i1) == length - 1n)))
 			return length;
 		
 		if(i2 < i1){
@@ -140,55 +140,55 @@ public class AllIntervalAS extends ModelAS {
 		s1 = variables(i1);
 		s2 = variables(i2);
 
-		if (i1 > 0)
+		if (i1 > 0n)
 		{
 			rem1 = Math.abs(variables(i1 - 1) - s1); 
-			this.nbOcc(rem1) = this.nbOcc(rem1) - 1; 
+			this.nbOcc(rem1) = this.nbOcc(rem1) - 1n; 
 			add1 = Math.abs(variables(i1 - 1) - s2); 
-			this.nbOcc(add1) = this.nbOcc(add1) + 1; 
+			this.nbOcc(add1) = this.nbOcc(add1) + 1n; 
 		}
 		else
-			rem1 = add1 = 0;
+			rem1 = add1 = 0n;
 
 
-		if (i1 < i2 - 1)		// i1 and i2 are not consecutive    ...if(Math.abs(i1-i2) > 1) 
+		if (i1 < i2 - 1n)		// i1 and i2 are not consecutive    ...if(Math.abs(i1-i2) > 1) 
 		{	
 			//Console.OUT.println("nocon");
 			rem2 = Math.abs(s1 - variables(i1 + 1));
-			this.nbOcc(rem2) = this.nbOcc(rem2) - 1; 
+			this.nbOcc(rem2) = this.nbOcc(rem2) - 1n; 
 			add2 = Math.abs(s2 - variables(i1 + 1));
-			this.nbOcc(add2) = this.nbOcc(add2) + 1; 
+			this.nbOcc(add2) = this.nbOcc(add2) + 1n; 
 
 			rem3 = Math.abs(variables(i2 - 1) - s2); 
-			this.nbOcc(rem3) = this.nbOcc(rem3) - 1; 
+			this.nbOcc(rem3) = this.nbOcc(rem3) - 1n; 
 			add3 = Math.abs(variables(i2 - 1) - s1);
-			this.nbOcc(add3) = this.nbOcc(add3) + 1; 
+			this.nbOcc(add3) = this.nbOcc(add3) + 1n; 
 		}
 		else
-			rem2 = add2 = rem3 = add3 = 0;
+			rem2 = add2 = rem3 = add3 = 0n;
 
-		if (i2 < length - 1)
+		if (i2 < length - 1n)
 		{
 			rem4 = Math.abs(s2 - variables(i2 + 1)); 
-			this.nbOcc(rem4) = this.nbOcc(rem4) - 1;
+			this.nbOcc(rem4) = this.nbOcc(rem4) - 1n;
 			add4 = Math.abs(s1 - variables(i2 + 1));
-			this.nbOcc(add4) = this.nbOcc(add4) + 1;
+			this.nbOcc(add4) = this.nbOcc(add4) + 1n;
 		}
 		else
-			rem4 = add4 = 0;
+			rem4 = add4 = 0n;
 
 		var r : Int = cost();
 		//Console.OUT.println("r = "+r);
 		// undo 
 
-		this.nbOcc(rem1) = this.nbOcc(rem1) + 1;
-		this.nbOcc(rem2) = this.nbOcc(rem2) + 1;
-		this.nbOcc(rem3) = this.nbOcc(rem3) + 1;
-		this.nbOcc(rem4) = this.nbOcc(rem4) + 1; 
-		this.nbOcc(add1) = this.nbOcc(add1) - 1;
-		this.nbOcc(add2) = this.nbOcc(add2) - 1;
-		this.nbOcc(add3) = this.nbOcc(add3) - 1;
-		this.nbOcc(add4) = this.nbOcc(add4) - 1;
+		this.nbOcc(rem1) = this.nbOcc(rem1) + 1n;
+		this.nbOcc(rem2) = this.nbOcc(rem2) + 1n;
+		this.nbOcc(rem3) = this.nbOcc(rem3) + 1n;
+		this.nbOcc(rem4) = this.nbOcc(rem4) + 1n; 
+		this.nbOcc(add1) = this.nbOcc(add1) - 1n;
+		this.nbOcc(add2) = this.nbOcc(add2) - 1n;
+		this.nbOcc(add3) = this.nbOcc(add3) - 1n;
+		this.nbOcc(add4) = this.nbOcc(add4) - 1n;
 
 		return r;
 	}
@@ -229,33 +229,33 @@ public class AllIntervalAS extends ModelAS {
 		s1 = variables(i2);			// swap already executed 
 		s2 = variables(i1);
 
-		if (i1 > 0)
+		if (i1 > 0n)
 		{
 			rem1 = Math.abs(variables(i1 - 1) - s1); 
-			this.nbOcc(rem1) = this.nbOcc(rem1) - 1; 
+			this.nbOcc(rem1) = this.nbOcc(rem1) - 1n; 
 			add1 = Math.abs(variables(i1 - 1) - s2); 
-			this.nbOcc(add1) = this.nbOcc(add1) + 1; 
+			this.nbOcc(add1) = this.nbOcc(add1) + 1n; 
 		}
 
-		if (i1 < i2 - 1)              // i1 and i2 are not consecutive 
+		if (i1 < i2 - 1n)              // i1 and i2 are not consecutive 
 		{
 			rem2 = Math.abs(s1 - variables(i1 + 1)); 
-			this.nbOcc(rem2) = this.nbOcc(rem2) - 1; 
+			this.nbOcc(rem2) = this.nbOcc(rem2) - 1n; 
 			add2 = Math.abs(s2 - variables(i1 + 1)); 
-			this.nbOcc(add2) = this.nbOcc(add2) + 1; 
+			this.nbOcc(add2) = this.nbOcc(add2) + 1n; 
 
 			rem3 = Math.abs(variables(i2 - 1) - s2);
-			this.nbOcc(rem3) = this.nbOcc(rem3) - 1; 
+			this.nbOcc(rem3) = this.nbOcc(rem3) - 1n; 
 			add3 = Math.abs(variables(i2 - 1) - s1); 
-			this.nbOcc(add3) = this.nbOcc(add3) + 1; 
+			this.nbOcc(add3) = this.nbOcc(add3) + 1n; 
 		}
 
-		if (i2 < length - 1)
+		if (i2 < length - 1n)
 		{
 			rem4 = Math.abs(s2 - variables(i2 + 1)); 
-			this.nbOcc(rem4) = this.nbOcc(rem4) - 1;
+			this.nbOcc(rem4) = this.nbOcc(rem4) - 1n;
 			add4 = Math.abs(s1 - variables(i2 + 1)); 
-			this.nbOcc(add4) = this.nbOcc(add4) + 1;
+			this.nbOcc(add4) = this.nbOcc(add4) + 1n;
 		}
 		
 		//Console.OUT.print("New nbOcc = ");
@@ -273,11 +273,11 @@ public class AllIntervalAS extends ModelAS {
 	 */
 	public def reset( n : Int, totalCost : Int ): Int // AdData *p_ad
 	{
-		var distMin : Int = length - 3;	// size - 1 also works pretty well 
+		var distMin : Int = length - 3n;	// size - 1 also works pretty well 
 		var i : Int;
 		var j : Int;
 		
-		for(i = 1; i < length; i++)
+		for(i = 1n; i < length; i++)
 		{
 			if (Math.abs(variables(i - 1) - variables(i)) >= distMin)
 			{
@@ -285,12 +285,12 @@ public class AllIntervalAS extends ModelAS {
 				this.swapVariables(i,j);
 			}
 		}
-		return -1;
+		return -1n;
 	}
 	
 	
 	public def costOnVariable(var i:Int):Int{
-		var costV : Int = 0;
+		var costV : Int = 0n;
 		val miss = cost();
 		
 		if(variables(i) >= miss)

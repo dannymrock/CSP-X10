@@ -26,11 +26,11 @@ public class RandomTools {
 		var i:Int; 
 		var j:Int;
 		var z:Int;
-		val vec : Rail[Int] = new Rail[Int](0..(size - 1), ([k]:Point) => (baseValue + k));
+		val vec : Rail[Int] = new Rail[Int] (size, (k:Long) => baseValue + k as Int);
 				
-		for(i = size - 1; i > 0 ; i--)
+		for(i = size - 1n; i > 0n ; i--)
 		{
-			j = r.nextInt( i + 1 );
+			j = r.nextInt( i + 1n );
 			z = vec(i);
 			vec(i) = vec(j);
 			vec(j) = z;
@@ -49,11 +49,11 @@ public class RandomTools {
 		var i:Int; 
 		var j:Int;
 		var z:Int;
-		val vSize = vec.size;
+		val vSize = vec.size as Int;
 		
-		for(i = vSize - 1; i > 0 ; i--)
+		for(i = vSize - 1n; i > 0n ; i--)
 		{
-			j = r.nextInt( i + 1 );
+			j = r.nextInt(i + 1n);
 			z = vec(i);
 			vec(i) = vec(j);
 			vec(j) = z;

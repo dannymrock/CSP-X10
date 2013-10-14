@@ -4,7 +4,7 @@ public class Team {
 	val solverArray : Rail[ASSolverPermutSM];
 	val cspArray : Rail[ModelAS];
 
-	val region : Region(1);
+	//val region : Region(1);
 	val stats : CSPStats;
 	
 	val intraTI : Int;
@@ -32,24 +32,24 @@ public class Team {
 		
 	def this (intraTeamI : Int, interTeamI : Int , ps : Int, nbExPT : Int, minD: Double){
 		
-		commOption = 0;
+		commOption = 0n;
 		poolSize = ps;
 		nbExplorerPT = nbExPT;
 		intraTI = intraTeamI;
 		interTI = interTeamI;
 		
-		region = 0..(nbExplorerPT-1);
-		solverArray = new Rail[ASSolverPermutSM](region);
-		cspArray = new Rail[ModelAS](region);
+		//region = 0..(nbExplorerPT-1);
+		solverArray = new Rail[ASSolverPermutSM] (nbExplorerPT);
+		cspArray = new Rail[ModelAS] (nbExplorerPT);
 		stats = new CSPStats();
 		
 		Team.control.clear();
 		Team.control.poolSize = poolSize;
 		
-		arrayRefs = new Rail[GlobalRef[Team]](0..((Place.MAX_PLACES)-1));
+		arrayRefs = new Rail[GlobalRef[Team]](Place.MAX_PLACES);
 		minDistance = minD;
 		random =  new Random();
-		count = 0;
+		count = 0n;
 	}
 	
 	def solve(size : Int , cspProblem : Int ) : Int{
@@ -62,40 +62,42 @@ public class Team {
 				control();
 			}
 			
-			for(aID in region){ 
+			for(aID in solverArray.range()){ 
 				async{
 					val seed = random.nextLong();
 					var nsize:Int = size;
 					//val fakeSeed = seed1;
 					//val seed = here.id as Long;
-					if (cspProblem == 1) {			//Magic-Square
+					if (cspProblem == 1n) {			//Magic-Square
 						nsize = size*size; 
 						cspArray(aID) = new MagicSquareAS(size, seed);
-					}else if(cspProblem == 2)  		//Costas
+					}else if(cspProblem == 2n)  		//Costas
 						cspArray(aID) = new CostasAS(size, seed);
-					else if (cspProblem == 3) 		//All-Intervals
+					else if (cspProblem == 3n) 		//All-Intervals
 						cspArray(aID) = new AllIntervalAS(size, seed, true);
-					else if (cspProblem == 4){		//Langford
-						nsize = size*2;
+					else if (cspProblem == 4n){		//Langford
+						nsize = size*2n;
 						cspArray(aID) = new LangfordAS(size, seed);
-					}else if (cspProblem == 5){ 		//All-Intervals
+					}else if (cspProblem == 5n){ 		//All-Intervals
 						cspArray(aID) = new PartitAS(size, seed);
 					}
 					
 					//minDistance = cspArray(aID).solverParams.minDistance;
-					solverArray(aID) = new ASSolverPermutSM(aID(0), nsize, seed,
+					solverArray(aID) = new ASSolverPermutSM(aID as Int, nsize, seed,
 							new ASSolverConf( ASSolverConf.USE_PLACES, GlobalRef[CommData](null), intraTI, 
 									interTI, commOption, poolSize, nbExplorerPT)
 						);
 					
 					val cost = solverArray(aID).solve(cspArray(aID));
 					
-					if (cost == 0){
-						for (k in region) if (aID != k) async {
+					//Console.OUT.println("costTeam= "+cost);
+					
+					if (cost == 0n){
+						for (k in solverArray.range()) if (aID != k) async {
 							solverArray(k).kill = true;
 						}
 						// Store info in global memory
-						setStats(aID(0));
+						setStats(aID as Int);
 						//extTime += System.nanoTime();
 						//Console.OUT.println("time "+here+" =" + extTime/1e9);
 						atomic{
@@ -125,7 +127,7 @@ public class Team {
 		val change = solverArray(winAct).nbChangeV;
 		val forceR = solverArray(winAct).nbForceRestart;
 		
-		stats.setStats(tCost, here.id, winAct , 0, iters, locmin, swaps, reset, same, restart, change, forceR);
+		stats.setStats(tCost, here.id as Int, winAct , 0n, iters, locmin, swaps, reset, same, restart, change, forceR);
 		//stats.print(99);
 	}	
 	
@@ -134,9 +136,9 @@ public class Team {
 	
 	def control(){
 		var test : Boolean = true;
-		var act : Int = 0;
+		var act : Int = 0n;
 		loop: while ( true ) {
-			//Runtime.probe();
+			//Runtime.x10rtProbe(); //Runtime.probe();
 			when ( control.event ) {
 				control.event = false;
 				count++;
@@ -145,18 +147,18 @@ public class Team {
 				
 				if ( control.interTeam ) {
 					control.interTeam = false;
-					act = 1;
+					act = 1n;
 					//doIterTeamComm();
 					//Console.OUT.println(here+" C: put action "+count );
 				}				
 			}
-			if ( act == 1 ) {
-				act = 0;
+			if ( act == 1n ) {
+				act = 0n;
 				//Console.OUT.println(here+" C: starting inter team comm "+count );
 				doIterTeamComm();
 				//Console.OUT.println(here+" C: end inter team comm "+count);
 			}
-			Runtime.probe();
+			Runtime.x10rtProbe(); //Runtime.probe();
 		}
 		//Console.OUT.println( count+" exit control " + here );
 	}
@@ -166,24 +168,24 @@ public class Team {
 		//val tmp : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
 		
 		//Compare against random team
-		var tmp : Int = random.nextInt(Place.MAX_PLACES);
-		while (here.id == tmp){
-			tmp = random.nextInt(Place.MAX_PLACES);
+		var tmp : Int = random.nextInt(Place.MAX_PLACES as Int);
+		while (here.id as Int == tmp){
+			tmp = random.nextInt(Place.MAX_PLACES as Int);
 		}
 		
 		//val nextPlace = tmp; 
 		val ref = arrayRefs(tmp);
 		//var extTime : Long = -System.nanoTime();
 	
-		val conf1 = cspArray(0).variables;
-		val cost1 = solverArray(0).total_cost;
+		val conf1 = cspArray(0n).variables;
+		val cost1 = solverArray(0n).total_cost;
 		//extTime += System.nanoTime();
 		//Console.OUT.println(here+" time0: "+extTime);
 		
 		//extTime = -System.nanoTime();
 		
-		val conf2 : Rail[Int] = at(ref) ref().cspArray(0).variables;
-		val cost2 : Int = at(ref) ref().solverArray(0).total_cost;
+		val conf2 : Rail[Int] = at(ref) ref().cspArray(0n).variables;
+		val cost2 : Int = at(ref) ref().solverArray(0n).total_cost;
 		//extTime += System.nanoTime();
 		
 		//Console.OUT.println(here+" time1: "+extTime);
@@ -246,10 +248,10 @@ public class Team {
 	}
 	
 	def distance(conf1 : Rail[Int], conf2 : Rail[Int]) : Double {
-		val sizeC = conf1.size;
-		var i : Int = 0;
-		var count : Int = 0;
-		for (i = 0; i < sizeC; i++){
+		val sizeC = conf1.size as Int;
+		var i : Int = 0n;
+		var count : Int = 0n;
+		for (i = 0n; i < sizeC ; i++){
 			//Console.OUT.println("comparing: "+conf1(i)+" - "+conf2(i));
 			//if ( control.exit ) return 1.0;
 			if(conf1(i) == conf2(i)){

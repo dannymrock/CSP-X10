@@ -2,7 +2,7 @@ import x10.util.Random;
 
 class Control{
 	var nbEntries : Int;
-	val bestPartialSolutions : Rail[CSPSharedUnit] = new Rail[CSPSharedUnit](0..10); // 10 max pos
+	val bestPartialSolutions : Rail[CSPSharedUnit] = new Rail[CSPSharedUnit] (10); // 10 max pos
 	var poolSize : Int;
 	var bestCost : Int;
 	var worstCost : Int;
@@ -17,7 +17,7 @@ class Control{
 	
 	
 	def this (){
-	 	nbEntries = 0;
+	 	nbEntries = 0n;
 	 	bestCost = Int.MAX_VALUE;
 	 	worstCost = Int.MAX_VALUE; //
 	 	random =  new Random();
@@ -36,7 +36,7 @@ class Control{
 			return;
 		
 		if( nbEntries < poolSize ){
-			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size , variables, place );
+			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int, variables, place );
 			if (cost < bestCost){ 
 				bestCost = cost;
 				//Console.OUT.println("New Best Cost = "+bestCost+" in team "+place);
@@ -46,12 +46,12 @@ class Control{
 		}else{
 			// No place available select a victim
 			var equal : Boolean = false;
-			var victim : Int = 0;
-			var nvic : Int = 0;
+			var victim : Int = 0n;
+			var nvic : Int = 0n;
 			var costToChange : Int = cost;
-			for (i = 0; i < nbEntries; i++){
+			for (i = 0n; i < nbEntries; i++){
 				if (worstCost == bestPartialSolutions(i).cost){
-					if (random.nextInt(++nvic) == 0)
+					if (random.nextInt(++nvic) == 0n)
 						victim = i;
 				}
 				
@@ -61,7 +61,7 @@ class Control{
 				}
 			}	
 			//Console.OUT.println("insert vector with cost "+cost);	
-			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size , variables, place);
+			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size as Int, variables, place);
 			
 			if (cost <= bestCost){ 
 				bestCost = cost;
@@ -74,8 +74,8 @@ class Control{
 	
 	public def compareVectors (vec1 : Rail[Int], vec2 : Rail[Int]):Boolean{
 		var result : Boolean = true;
-		var i : Int = 0;
-		for (i = 0; i < vec1.size; i++){
+		var i : Int = 0n;
+		for (i = 0n; i < vec1.size; i++){
 			if(vec1(i) != vec2(i)){
 				return false;
 			}
@@ -85,15 +85,15 @@ class Control{
 	
 	public def updateWorstCost(){
 		var i : Int;
-		var wc : Int = 0;
-		for(i = 0; i < nbEntries; i++){
+		var wc : Int = 0n;
+		for(i = 0n; i < nbEntries; i++){
 			if (bestPartialSolutions(i).cost > wc) wc = bestPartialSolutions(i).cost; 
 		}
 		worstCost = wc;	
 	}
 	
 	public atomic def getConf():CSPSharedUnit{
-		val random = new RandomTools( 123 );
+		val random = new RandomTools( 123L );
 		val i = random.randomInt(nbEntries);
 		return bestPartialSolutions(i);
 		
@@ -106,7 +106,7 @@ class Control{
 	}
 	
 	public def clear(){
-		nbEntries = 0;
+		nbEntries = 0n;
 		bestCost = Int.MAX_VALUE;
 		worstCost = Int.MAX_VALUE;
 		event = false;

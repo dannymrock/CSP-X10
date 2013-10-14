@@ -35,18 +35,18 @@ public class CSPStats{
 	 *  Constructor
 	 */
 	def this(){
-		cost = -1;
-		team = -1;
-		explorer = -1;
+		cost = -1n;
+		team = -1n;
+		explorer = -1n;
 		time = 0.0;
-		iters = 0;
-		locmin = 0;
-		swaps = 0;
-		reset = 0;
-		same = 0;
-		restart = 0;
-		change = 0;
-		forceRestart = 0;
+		iters = 0n;
+		locmin = 0n;
+		swaps = 0n;
+		reset = 0n;
+		same = 0n;
+		restart = 0n;
+		change = 0n;
+		forceRestart = 0n;
 	}
 	
 	/**

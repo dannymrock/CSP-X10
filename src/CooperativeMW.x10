@@ -11,6 +11,7 @@
  * 					12 April, 2013 -> TLP support
  */
 import x10.util.Random;
+import x10.regionarray.*; //Change for x10.array.*;
 
 class CooperativeMW{  
 	val teamDist : DistArray[Team];
@@ -76,7 +77,7 @@ class CooperativeMW{
 		}
 		
 		// 2nd step: Get comm references of each node
-		val arrayRefs = new Rail[GlobalRef[Team]](0..((Place.MAX_PLACES)-1));
+		val arrayRefs = new Rail[GlobalRef[Team]] (Place.MAX_PLACES);
 		for(p in Place.places()){
 			arrayRefs(p.id) = at(p){ GlobalRef[Team](teamDist(here.id)) };	
 		}
@@ -86,12 +87,12 @@ class CooperativeMW{
 			var cost:Int = x10.lang.Int.MAX_VALUE;
 			
 			//Passing all refs to each team
-			Array.copy(arrayRefs, teamDist(here.id).arrayRefs);
+			Rail.copy(arrayRefs, teamDist(here.id).arrayRefs);
 				
 			//Starting solve at each team
 			cost = teamDist(here.id).solve(size , cspProblem); //cspDist(here.id));
 				
-			if (cost==0){
+			if (cost == 0n){
 				for (k in Place.places()) if (here.id != k.id) at(k) 
 				async 
 				{	
@@ -125,7 +126,7 @@ class CooperativeMW{
 		val change = teamDist(winTeam).stats.change;
 		val forceR = teamDist(winTeam).stats.forceRestart;
 		// Console.OUT.println(winTeam+" "+winExp+" "+time+" "+iters+" "+locmin+" "+swaps+" "+reset+" "+same+" "+restart+" "+change);
-		at(refStats) refStats().setStats(tCost, winTeam, winExp , 0, iters, locmin, swaps, reset, same,
+		at(refStats) refStats().setStats(tCost, winTeam as Int, winExp , 0n, iters, locmin, swaps, reset, same,
 				restart, change, forceR);
 	}
 }
