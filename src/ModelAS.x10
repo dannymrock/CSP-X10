@@ -13,7 +13,7 @@ public class ModelAS{
 	val length : Int;
 	val r : RandomTools;
 	
-	val varRegion : Region(1);
+	//val varRegion : Region(1);
 
 	val solverParams : ASSolverParameters; 
 	
@@ -21,10 +21,10 @@ public class ModelAS{
 	 * 	Constructor of the class
 	 */
 	public def this( lengthProblem : Int, seed : Long ){
-		varRegion = 0..(lengthProblem-1);
+		//varRegion = 0..(lengthProblem-1);
 		solverParams = new ASSolverParameters();
 		length = lengthProblem;
-		variables = new Rail[Int]( varRegion, ([i]:Point) => i);
+		variables = new Rail[Int]( length, (i:Long) => i as Int);
 		r = new RandomTools(seed);
 		this.initParameters();
 	}
@@ -42,16 +42,16 @@ public class ModelAS{
 	private def initParameters(){
 		
 		//Default values
-		solverParams.probSelectLocMin = 0;
-		solverParams.freezeLocMin = 0;
-		solverParams.freezeSwap = 0;
+		solverParams.probSelectLocMin = 0n;
+		solverParams.freezeLocMin = 0n;
+		solverParams.freezeSwap = 0n;
 		solverParams.resetLimit = length;
-		solverParams.resetPercent = 10;
-		solverParams.restartLimit = 10000000;
-		solverParams.restartMax = 0;
+		solverParams.resetPercent = 10n;
+		solverParams.restartLimit = 10000000n;
+		solverParams.restartMax = 0n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
-		solverParams.nbVarToReset = -1;
+		solverParams.nbVarToReset = -1n;
 	}
 	
 	/**
