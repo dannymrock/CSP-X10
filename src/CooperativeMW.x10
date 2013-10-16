@@ -96,11 +96,11 @@ class CooperativeMW{
 				for (k in Place.places()) if (here.id != k.id) at(k) 
 				async 
 				{	
-					for (i in 0..(nbExplorerPT-1))
-						teamDist(here.id).solverArray(i).kill = true;
-					
+					//for (i in 0..(nbExplorerPT-1)){
+						//teamDist(here.id).solverArray(i).kill = true;
+					//}
+					teamDist(here.id).control.exit = true;
 					atomic{
-						teamDist(here.id).control.exit = true;
 						teamDist(here.id).control.event = true; 
 					}
 				}

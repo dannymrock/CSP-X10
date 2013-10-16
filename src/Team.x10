@@ -93,15 +93,16 @@ public class Team {
 					//Console.OUT.println("costTeam= "+cost);
 					
 					if (cost == 0n){
-						for (k in solverArray.range()) if (aID != k) async {
-							solverArray(k).kill = true;
-						}
+						//for (k in solverArray.range()) if (aID != k) async {
+							//solverArray(k).kill = true;
+						//}
 						// Store info in global memory
 						setStats(aID as Int);
 						//extTime += System.nanoTime();
 						//Console.OUT.println("time "+here+" =" + extTime/1e9);
-						atomic{
+						
 							control.exit = true;
+						atomic{
 							control.event = true; 
 						}
 						
@@ -138,7 +139,7 @@ public class Team {
 		var test : Boolean = true;
 		var act : Int = 0n;
 		loop: while ( true ) {
-			//Runtime.x10rtProbe(); //Runtime.probe();
+			Runtime.x10rtProbe(); //Runtime.probe();
 			when ( control.event ) {
 				control.event = false;
 				count++;
@@ -158,7 +159,7 @@ public class Team {
 				doIterTeamComm();
 				//Console.OUT.println(here+" C: end inter team comm "+count);
 			}
-			Runtime.x10rtProbe(); //Runtime.probe();
+			//Runtime.x10rtProbe(); //Runtime.probe();
 		}
 		//Console.OUT.println( count+" exit control " + here );
 	}

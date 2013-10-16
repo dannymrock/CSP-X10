@@ -281,8 +281,9 @@ public class ASSolverPermutSM{
 			}
 			
 			Runtime.x10rtProbe();		// Give a chance to the other activities
-			if(kill)				// Check if other place or activity have finished
+			if(Team.control.exit)				// Check if other place or activity have finished
 				break;
+			
 			if(forceRestart){
 				//restart();
 				forceRestart = false;
