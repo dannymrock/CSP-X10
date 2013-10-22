@@ -101,7 +101,7 @@ public class Team {
 						//extTime += System.nanoTime();
 						//Console.OUT.println("time "+here+" =" + extTime/1e9);
 						
-							control.exit = true;
+						control.exit = true;
 						atomic{
 							control.event = true; 
 						}
@@ -139,7 +139,7 @@ public class Team {
 		var test : Boolean = true;
 		var act : Int = 0n;
 		loop: while ( true ) {
-			Runtime.x10rtProbe(); //Runtime.probe();
+			//Runtime.probe();
 			when ( control.event ) {
 				control.event = false;
 				count++;

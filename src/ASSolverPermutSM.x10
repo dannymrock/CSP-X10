@@ -97,7 +97,7 @@ public class ASSolverPermutSM{
 	 *  @return the final total cost after solving process (If success returns 0)
 	 */ 
 	public def solve( csp : ModelAS ) : Int { //
-		
+		//var extTime : Long = -System.nanoTime();
 		var nb_in_plateau:Int; 
 		
 		csp.setParameters(solverP);
@@ -280,7 +280,7 @@ public class ASSolverPermutSM{
 				//Console.OUT.println("slope in "+here.id+" : "+slope+ " total cost : "+total_cost);
 			}
 			
-			Runtime.x10rtProbe();		// Give a chance to the other activities
+			Runtime.probe();		// Give a chance to the other activities
 			if(Team.control.exit)				// Check if other place or activity have finished
 				break;
 			
@@ -361,9 +361,11 @@ public class ASSolverPermutSM{
 		nbSameVarTot += nbSameVar;
 		nbLocalMinTot += nbLocalMin; 
 		
-		//if(!kill)
-			//Main.show("final= ",csp.variables);
-		//}
+		// if(!Team.control.exit){
+		// 	//Main.show("final= ",csp.variables);
+		// 	extTime += System.nanoTime();
+		// 	Console.OUT.println(here+"-"+ID+" time: "+ extTime/1e9);
+		// }
 		
 		//if(ID == 0)
 			//Console.OUT.println(here+" nbForceRestart="+nbForceRestart);
