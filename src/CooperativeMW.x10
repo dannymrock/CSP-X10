@@ -101,7 +101,8 @@ class CooperativeMW{
 					//}
 					teamDist(here.id).control.exit = true;
 					atomic{
-						teamDist(here.id).control.event = true; 
+						teamDist(here.id).control.event = true;
+						//teamDist(here.id).control.controlSignal();
 					}
 				}
 				setStats();

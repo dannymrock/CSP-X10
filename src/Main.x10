@@ -136,7 +136,7 @@ public class Main {
 
 	static def show(s:String, d: Rail[Int]) {
 		Console.OUT.print(s + " in "+here.id+" : ");
-		for(k in d) 
+		for(k in d.range()) 
 			Console.OUT.print(" " + d(k));		
 		Console.OUT.println("");
 	}

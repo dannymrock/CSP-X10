@@ -14,7 +14,12 @@ class Control{
 	var exit : Boolean;
 	var interTeam : Boolean;
 	
+	val monitor = new MonitorV();
+	//val mPool = new MonitorV();
 	
+	var wait : Boolean =  false;
+	
+
 	
 	def this (){
 	 	nbEntries = 0n;
@@ -27,13 +32,28 @@ class Control{
 	 	exit = false;
 	 	interTeam = false;
 	 	
-	 	
 	}	
 	
-	public atomic def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ) {
+	public def controlWait(){
+		monitor.on[Unit](()=>wait, ()=>{wait = false; Unit()});
+		
+	}
+	
+	public def controlSignal(){
+		wait = true;
+		monitor.awaken();
+		
+	}
+	
+	
+	//public def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ){
+		//mPool.atomicBlock[Unit](()=>insertVector(cost,variables, place));
+	//}
+	
+	public atomic def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ):Unit {
 		var i : Int;
 		if (cost >= worstCost)
-			return;
+			return Unit();
 		
 		if( nbEntries < poolSize ){
 			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int, variables, place );
@@ -57,7 +77,7 @@ class Control{
 				
 				if (cost == bestPartialSolutions(i).cost){
 					if (compareVectors(variables, bestPartialSolutions(i).vector))
-						return;
+						return Unit();
 				}
 			}	
 			//Console.OUT.println("insert vector with cost "+cost);	
@@ -70,6 +90,7 @@ class Control{
 			}				
 		}
 		updateWorstCost();
+		return Unit();
 	}
 	
 	public def compareVectors (vec1 : Rail[Int], vec2 : Rail[Int]):Boolean{
@@ -95,8 +116,13 @@ class Control{
 	public atomic def getConf():CSPSharedUnit{
 		val random = new RandomTools( 123L );
 		val i = random.randomInt(nbEntries);
-		return bestPartialSolutions(i);
 		
+		//val sol = mPool.atomicBlock[CSPSharedUnit](()=>bestPartialSolutions(i));
+		
+		//return sol;
+		
+		
+		return bestPartialSolutions(i);
 		// var i : Int;
 		// var best : Int = 0;
 		// for(i = 0; i < nbEntries; i++){

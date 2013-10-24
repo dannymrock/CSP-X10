@@ -103,7 +103,8 @@ public class Team {
 						
 						control.exit = true;
 						atomic{
-							control.event = true; 
+							control.event = true;
+						//control.controlSignal();
 						}
 						
 					}
@@ -141,6 +142,7 @@ public class Team {
 		loop: while ( true ) {
 			//Runtime.probe();
 			when ( control.event ) {
+				//control.controlWait();
 				control.event = false;
 				count++;
 				if ( control.exit )
@@ -168,16 +170,17 @@ public class Team {
 		// Compare against next team
 		//val tmp : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
 		
-		//Compare against random team
+		//Compare against a random team
 		var tmp : Int = random.nextInt(Place.MAX_PLACES as Int);
 		while (here.id as Int == tmp){
 			tmp = random.nextInt(Place.MAX_PLACES as Int);
 		}
 		
 		//val nextPlace = tmp; 
-		val ref = arrayRefs(tmp);
+		val remote = arrayRefs(tmp);
 		//var extTime : Long = -System.nanoTime();
-	
+		
+		// Taking current values from explorer 0 in this (here) team
 		val conf1 = cspArray(0n).variables;
 		val cost1 = solverArray(0n).total_cost;
 		//extTime += System.nanoTime();
@@ -185,8 +188,10 @@ public class Team {
 		
 		//extTime = -System.nanoTime();
 		
-		val conf2 : Rail[Int] = at(ref) ref().cspArray(0n).variables;
-		val cost2 : Int = at(ref) ref().solverArray(0n).total_cost;
+		
+		// Taking curren values in remote team (Explorer 0)
+		val conf2 : Rail[Int] = at(remote) remote().cspArray(0n).variables;
+		val cost2 : Int = at(remote) remote().solverArray(0n).total_cost;
 		//extTime += System.nanoTime();
 		
 		//Console.OUT.println(here+" time1: "+extTime);
@@ -230,10 +235,10 @@ public class Team {
 				// for(i in 0..(x-1))
 				// 	at(arrayRefs(place2)) arrayRefs(place2)().solverArray(i).forceRestart = true;
 				//----
-				at(ref){
-					val x = ref().solverArray.size; // /2; //restart only the half 
+				at(remote){
+					val x = remote().solverArray.size; // /2; //restart only the half 
 					for(i in 0..(x-1))
-						ref().solverArray(i).forceRestart = true;
+						remote().solverArray(i).forceRestart = true;
 				}
 			}			
 		}

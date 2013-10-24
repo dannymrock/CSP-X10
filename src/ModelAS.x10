@@ -99,7 +99,7 @@ public class ModelAS{
 		
 	static def show(s:String, d: Rail[Int]) {
 		x10.io.Console.OUT.print(s + " = ");
-		for(p in d) 
+		for(p in d.range()) 
 			x10.io.Console.OUT.print(" " + d(p));
 		x10.io.Console.OUT.println("");
 	}
@@ -109,16 +109,17 @@ public class ModelAS{
 		var j:Int; 
 		var z:Int;
 		
-		for(k in variables){
+		for(k in variables.range()){
 			variables(k) = baseValue + k as Int;
 		}
-		
+		//Main.show("before ini",variables);
 		for( i = length - 1n ; i >	0n ; i-- ) {
 			j = r.randomInt( i + 1n );
 			z = variables(i);
 			variables(i) = variables(j);
 			variables(j) = z;
 		}
+		//Main.show("after ini",variables);
 	}
 	
 	/**

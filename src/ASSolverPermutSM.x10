@@ -313,6 +313,7 @@ public class ASSolverPermutSM{
 				Team.control.clear();
 				//solverC.restartPool();
 				//Console.OUT.println("Force Restart..."+ here);
+				//Main.show("after restart",csp.variables);
 				continue;	
 			}
 			
@@ -347,9 +348,10 @@ public class ASSolverPermutSM{
 				nbInterTComm++;
 				//Console.OUT.println("solver start comm intention " +nbInterTComm);
 				//Team.control.doIterTeamComm();//csp.variables, total_cost);
+				Team.control.interTeam = true;
 				atomic{
-					Team.control.interTeam = true;
 					Team.control.event = true;
+					//Team.control.controlSignal();
 				}
 			}
 			//Main.show("new vector ",csp.variables);
@@ -362,9 +364,9 @@ public class ASSolverPermutSM{
 		nbLocalMinTot += nbLocalMin; 
 		
 		// if(!Team.control.exit){
-		// 	//Main.show("final= ",csp.variables);
-		// 	extTime += System.nanoTime();
-		// 	Console.OUT.println(here+"-"+ID+" time: "+ extTime/1e9);
+		// 	Main.show("final= ",csp.variables);
+		// 	// 	extTime += System.nanoTime();
+		// 	// 	Console.OUT.println(here+"-"+ID+" time: "+ extTime/1e9);
 		// }
 		
 		//if(ID == 0)
