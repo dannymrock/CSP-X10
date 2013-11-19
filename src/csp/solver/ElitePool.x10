@@ -3,9 +3,9 @@ package csp.solver;
 
 import csp.utils.*;
 
-public class CommData{
+public class ElitePool{
 	var nbEntries : Int;
-	val bestPartialSolutions : Rail[CSPSharedUnit];
+	val pool : Rail[CSPSharedUnit];
 	val poolSize : Int;
 	var bestCost : Int;
 	var worstCost : Int;
@@ -14,7 +14,7 @@ public class CommData{
 	def this( poolS : Int ){
 		nbEntries = 0n;
 		poolSize = poolS;
-		bestPartialSolutions = new Rail[CSPSharedUnit](poolSize);
+		pool = new Rail[CSPSharedUnit](poolSize);
 		bestCost = Int.MAX_VALUE;
 		worstCost = Int.MAX_VALUE; //
 		random = new RandomTools(123L);
@@ -24,13 +24,13 @@ public class CommData{
 		var i :Int;
 		if (nbEntries == 0n) return true;
 		for (i = 0n; i < nbEntries; i++){
-			if (cost <= bestPartialSolutions(i).cost)
+			if (cost <= pool(i).cost)
 				return true;
 		}
 		return false;
 	}
 	
-	public atomic def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ) {
+	public def tryInsertVector( cost : Int , variables : Rail[Int], place : Int ) {
 		
 		var i : Int;
 	
@@ -44,7 +44,7 @@ public class CommData{
 			//Console.OUT.println("insert cost "+cost);
 			//Main.show("insert vector", variables);
 			//Console.OUT.println("insert vector with cost "+cost);
-			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int , variables, place );
+			pool( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int , variables, place );
 			if (cost < bestCost){ 
 				bestCost = cost;
 				//Console.OUT.println("New Best Cost = "+bestCost+" in place "+place);
@@ -59,18 +59,18 @@ public class CommData{
 			var costToChange : Int = cost;
 			
 			for (i = 0n; i < nbEntries; i++){
-				if (worstCost == bestPartialSolutions(i).cost){
+				if (worstCost == pool(i).cost){
 					if (random.randomInt(++nvic) == 0n)
 						victim = i;
 				}
 				
-				if (cost == bestPartialSolutions(i).cost){
-					if (compareVectors(variables, bestPartialSolutions(i).vector))
+				if (cost == pool(i).cost){
+					if (compareVectors(variables, pool(i).conf))
 						return;
 				}
 			}	
 			//Console.OUT.println("insert vector with cost "+cost);	
-			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size as Int, variables, place);
+			pool(victim) = new CSPSharedUnit( cost, variables.size as Int, variables, place);
 			
 			if (cost <= bestCost){ 
 				bestCost = cost;
@@ -96,7 +96,7 @@ public class CommData{
 		var i : Int;
 		var wc : Int = 0n;
 		for(i = 0n; i < nbEntries; i++){
-			if (bestPartialSolutions(i).cost > wc) wc = bestPartialSolutions(i).cost; 
+			if (pool(i).cost > wc) wc = pool(i).cost; 
 		}
 		worstCost = wc;	
 	}
@@ -104,15 +104,23 @@ public class CommData{
 	public def printVectors(){
 		var i : Int;
 		for (i = 0n; i < nbEntries; i++){
-			Console.OUT.print(i+". Cost = "+bestPartialSolutions(i).cost+" place "+bestPartialSolutions(i).place);
-			Utils.show(" Vector",bestPartialSolutions(i).vector);
+			Console.OUT.print(i+". Cost = "+pool(i).cost+" place "+pool(i).place);
+			Utils.show(" Vector",pool(i).conf);
 		}
 	}
 	
-	public atomic def getRemoteData():CSPSharedUnit{
-		val random = new RandomTools( 123L );
-		val i = random.randomInt(nbEntries);
-		return bestPartialSolutions(i);
+	public def getRemoteData():CSPSharedUnit{
+		if (nbEntries < 1n){ 
+			// return null; //Not possible to return null here
+			return new CSPSharedUnit(Int.MAX_VALUE, 0n, null, 0n);
+		}
+		val index = random.randomInt(nbEntries);
+		if (index >= nbEntries) Console.OUT.println("Golden: index is " + index + " needed to be < " + nbEntries);
+		return pool(index);
+		 
+		// val random = new RandomTools( 123L );
+		// val i = random.randomInt(nbEntries);
+		// return pool(i);
 		
 		// var i : Int;
 		// var best : Int = 0;

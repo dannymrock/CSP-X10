@@ -17,7 +17,7 @@ import csp.models.*;
  */
 
 import x10.util.Random;
-public class ASSolverPermut{
+public class ASPermut{
 
 	val mark : Rail[Int]; 
 	val size : Int;  
@@ -33,7 +33,7 @@ public class ASSolverPermut{
 	var new_cost : Int;
 	var total_cost : Int;
 	val random : RandomTools;
-	var kill : Boolean;
+	var kill : Boolean = false;
 	
 	var list_i_nb : Int;
 	var list_j_nb : Int;
@@ -67,9 +67,9 @@ public class ASSolverPermut{
 	
 	/** all-to-all comm **/
 	
-	val myComm : CommData;
+	val myComm : ElitePool;
 	
-	val myCommRef : GlobalRef[CommData];
+	val myCommRef : GlobalRef[ElitePool];
 	
 	
 	/** Diversification approach **/
@@ -92,13 +92,12 @@ public class ASSolverPermut{
 		nb_var_marked = 0n;
 		nbRestart = 0n;
 		//updateP = updateI; //Default value 
-		kill = false;
 		solverC = conf;    //set??
 		nbChangeV = 0n;
 		
 		// all-to-all
-		myComm = new CommData(solverC.poolSize);
-		myCommRef = GlobalRef[CommData](myComm);		
+		myComm = new ElitePool(solverC.poolSize);
+		myCommRef = GlobalRef[ElitePool](myComm);		
 		
 	}
 	
@@ -267,31 +266,11 @@ public class ASSolverPermut{
 				//Console.OUT.println("slope in "+here.id+" : "+slope+ " total cost : "+total_cost);
 			}
 	 		
-	 		Runtime.probe();		// Give a chance to the other activities
-	 		if(kill)				// Check if other place or activity have finished
+	 		if(kill()){
 	 			break;
-	 		
-	 		if( nbIter % solverC.intraTI == 0n ){
-	 			//Console.OUT.println("In ");
-	 			//Chang//
-	 			val res = solverC.communicate( total_cost, csp.variables); 
-	 			if (random.randomInt(100n) < solverP.probChangeVector){
-	 				val result = solverC.getIPVector(csp, total_cost );
-	 				if (result != -1n){
-	 					nbChangeV++;
-	 					nbSwap += size ; //I don't know what happened here with costas reset
-	 					mark.clear();
-	 					total_cost = csp.costOfSolution(1n);
-	 					//Console.OUT.println("Changing vector in "+ here);
-	 				}
-	 					
-	 			}	
-	 			//Console.OUT.println("Print Vectors("+here.id+") :");
-	 			//myComm.printVectors();
-	 			//Main.show("Vector ",csp.variables);
-	 			
 	 		}
 	 		
+	 		interact(csp);
 	 		//Main.show("new vector ",csp.variables);
 		}
 		
@@ -587,6 +566,44 @@ public class ASSolverPermut{
 		
 		return timeEnd-timeStart;
 	}
+	
+	/**
+	 * 	Kill event if ther is interaction with other solvers
+	 */
+	public def kill():Boolean{
+		//return false; //for isolated execution
+		Runtime.probe();		// Give a chance to the other activities
+		return kill;				// Check if other place or activity have finished
+	}
+	
+	/**
+	 *  Interaction with other components in the execution 
+	 */
+	public def interact(csp:ModelAS){
+		// void function for isolated execution
+		
+		// if( nbIter % solverC.intraTI == 0n ){
+		// 	//Console.OUT.println("In ");
+		// 	//Chang//
+		// 	val res = solverC.communicate( total_cost, csp.variables); 
+		// 	if (random.randomInt(100n) < solverP.probChangeVector){
+		// 		val result = solverC.getIPVector(csp, total_cost );
+		// 		if (result != -1n){
+		// 			nbChangeV++;
+		// 			nbSwap += size ; //I don't know what happened here with costas reset
+		// 			mark.clear();
+		// 			total_cost = csp.costOfSolution(1n);
+		// 			//Console.OUT.println("Changing vector in "+ here);
+		// 		}
+		// 		
+		// 	}	
+		// 	//Console.OUT.println("Print Vectors("+here.id+") :");
+		// 	//myComm.printVectors();
+		// 	//Main.show("Vector ",csp.variables);
+		// 	
+		//}
+	}
+	
 }//End ASSolverPermut Class
 
 // class Pair{

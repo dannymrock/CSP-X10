@@ -12,8 +12,13 @@ package csp.solver;
  * 					10 April, 2013 -> Changes queens by costas problem
  * 					12 April, 2013 -> TLP support
  */
+import csp.utils.*;
+
 import x10.util.Random;
 import x10.array.*; //Change for x10.array.*;
+
+//import x10.util.concurrent.AtomicBoolean; 
+
 
 public class CooperativeMW{  
 	val teamDist : DistArray_Unique[Team];
@@ -65,16 +70,16 @@ public class CooperativeMW{
 	 * 	@param cspProblem code with the problem to be solved (1 for Magic Square Problems, other number for Queens Problem)
 	 * 	@return cost of the solution
 	 */
-	public def solve( size : Int , cspProblem : Int ) : CSPStats{ 
-		
+	public def spawnTeams( size : Int , cspProblem : Int ) : CSPStats{ 
+		Logger.debug("spawning teams");
 		var extTime : Long = -System.nanoTime();
 		val random = new Random();
 		
 		// 1st step: Create team instances at each node
 		finish for(p in Place.places()){ 
 			val seed = random.nextLong();
-			async at(p){
-				teamDist(here.id) = new Team(intraTI, interTI, poolSize, nbExplorerPT, minDistance);	
+			at(p) async{
+			 	teamDist(here.id) = new Team(intraTI, interTI, poolSize, nbExplorerPT, minDistance);	
 			}
 		}
 		
@@ -92,7 +97,7 @@ public class CooperativeMW{
 			Rail.copy(arrayRefs, teamDist(here.id).arrayRefs);
 				
 			//Starting solve at each team
-			cost = teamDist(here.id).solve(size , cspProblem); //cspDist(here.id));
+			cost = teamDist(here.id).spawnExplorers(size , cspProblem); //cspDist(here.id));
 				
 			if (cost == 0n){
 				for (k in Place.places()) if (here.id != k.id) at(k) 
@@ -102,10 +107,10 @@ public class CooperativeMW{
 						//teamDist(here.id).solverArray(i).kill = true;
 					//}
 					teamDist(here.id).control.exit = true;
-					atomic{
-						teamDist(here.id).control.event = true;
-						//teamDist(here.id).control.controlSignal();
-					}
+					// atomic{
+					// 	teamDist(here.id).control.event = true;
+					// 	//teamDist(here.id).control.controlSignal();
+					// }
 				}
 				setStats();
 			}
@@ -116,7 +121,7 @@ public class CooperativeMW{
 		return stats; 
 	}
 	
-	def setStats(  ){
+	def setStats(){
 		val winTeam = here.id;
 		val tCost = teamDist(winTeam).stats.cost;
 		val winExp = teamDist(winTeam).stats.explorer;
@@ -132,4 +137,25 @@ public class CooperativeMW{
 		at(refStats) refStats().setStats(tCost, winTeam as Int, winExp , 0n, iters, locmin, swaps, reset, same,
 				restart, change, forceR);
 	}
+	
+	//val monitor = new MonitorV("CooperativeMW");
+	// public def kill() {
+	// 	solver.kill=true;
+	// }
+	// 
+	//val winnerLatch = new AtomicBoolean(false);
+	
+	// public def announceWinner(p:Long):Boolean {
+	// 	val result = winnerLatch.compareAndSet(false, true);
+	// 	
+	// 	// Logger.info(()=> "announceWinner result=" + result + " for " + p + " this=" + this );
+	// 	if (result) {
+	// 		for (k in Place.places()) 
+	// 			if (p != k.id) 
+	// 				teamDist(k).control.exit = true;
+	// 				at(k) async ss().kill();
+	// 	}
+	// 	return result;
+	// }
+	
 }

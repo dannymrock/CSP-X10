@@ -94,7 +94,7 @@ public class Main {
 		val accStats = new CSPStats();
 		
 		// communication interval = 10
-		val solverP = new ASSolverPermutRW(intraTI, comm, threads, poolSize, nodesPTeam); 
+		val solverP = new IndependentWalks(intraTI, comm, threads, poolSize, nodesPTeam); 
 		val solverT = new CooperativeMW(intraTI, interTI, threads, poolSize, nodesPTeam, minDistance);
 
 		if (solverMode == 0n){
@@ -118,9 +118,9 @@ public class Main {
 			//Solve the problem
 			val stats:CSPStats;
 			if (solverMode == 0n){ 
-				stats = solverP.solve(size,param);
+				stats = solverP.spawn(size,param);
 			}else{
-				stats = solverT.solve(size,param);
+				stats = solverT.spawnTeams(size,param);
 			}
 			accStats.accStats(stats);
 			Console.OUT.printf("\r");
@@ -146,15 +146,3 @@ public class Main {
 		Console.OUT.println("");
 	}
 }
-
-
-// class Parameters{
-// 	var poolSize : Int;
-// 	
-// 	def this(){
-// 		Console.OUT.println("solo una vez");
-// 		poolSize = 2n;
-// 	}
-// 	
-// 	
-// } 

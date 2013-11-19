@@ -16,7 +16,7 @@ public class ASSolverConf{
 	/** Solver use activities or places */
 	var solverMode : Int;
 	/** Global Reference for communicaction between places */
-	var commRef : GlobalRef[CommData];
+	var commRef : GlobalRef[ElitePool];
 	/** Number of itararion between each communication activity */
 	var intraTI : Int;
 	/** Number of itararion between each communication activity */
@@ -29,18 +29,18 @@ public class ASSolverConf{
 	/*** All-to-All***/
 	//val refCommDist : GlobalRef[DistArray[CommData]]; 
 	
-	val myComm : CommData;
+	val myComm : ElitePool;
 	
 	val poolSize : Int;
 	
-	var arrayRefs : Rail[GlobalRef[CommData]];
+	var arrayRefs : Rail[GlobalRef[ElitePool]];
 	
 	var delta : Int;
 	
 	val noGroups : Int;
 	val myGroupId : Int;
 	
-	def this( solverModeIn : Int , commR : GlobalRef[CommData], intraTeamI : Int, interTeamI : Int , cOption : Int , ps : Int, nG : Int){
+	def this( solverModeIn : Int , commR : GlobalRef[ElitePool], intraTeamI : Int, interTeamI : Int , cOption : Int , ps : Int, nG : Int){
 		solverMode = solverModeIn;
 		commRef = commR;
 		intraTI = intraTeamI;
@@ -51,8 +51,8 @@ public class ASSolverConf{
 		poolSize = ps;
 		noGroups = nG;
 		myGroupId = here.id as Int % noGroups;
-		myComm = new CommData(poolSize); 
-		arrayRefs = new Rail[GlobalRef[CommData]](Place.MAX_PLACES);
+		myComm = new ElitePool(poolSize); 
+		arrayRefs = new Rail[GlobalRef[ElitePool]](Place.MAX_PLACES);
 		delta = 0n;
 		
 		//Console.OUT.println("I'm "+here.id+ " and my group is "+myGroupId);
@@ -139,7 +139,7 @@ public class ASSolverConf{
 				//get a vector
 				var remoteData : CSPSharedUnit = at(commRef)commRef().getRemoteData();  
 				if ( (myCost + delta) > remoteData.cost ){					 
-					csp.setVariables(remoteData.vector);
+					csp.setVariables(remoteData.conf);
 					ret = 1n; 	// success
 				}
 			}
@@ -153,7 +153,7 @@ public class ASSolverConf{
 			}else{ 
 				var localData : CSPSharedUnit = at(arrayRefs(myplace))arrayRefs(myplace)().getRemoteData();
 				if ( (myCost + delta) > localData.cost ){					 
-					csp.setVariables(localData.vector);
+					csp.setVariables(localData.conf);
 					ret = 1n; 	// success
 				}
 			}
@@ -165,7 +165,7 @@ public class ASSolverConf{
 				//get a vector
 				var remoteData : CSPSharedUnit = at(arrayRefs(myGroupId))arrayRefs(myGroupId)().getRemoteData();  
 				if ( (myCost + delta) > remoteData.cost ){					 
-					csp.setVariables(remoteData.vector);
+					csp.setVariables(remoteData.conf);
 					ret = 1n; 	// success
 				}
 			}

@@ -2,9 +2,12 @@ package csp.solver;
 
 import x10.util.Random;
 import csp.models.*;
+import csp.utils.*;
+import x10.util.concurrent.AtomicBoolean; 
+
 
 public class Team {
-	val solverArray : Rail[ASSolverPermutSM];
+	val solverArray : Rail[CooperativeASPermut];
 	val cspArray : Rail[ModelAS];
 
 	//val region : Region(1);
@@ -16,6 +19,8 @@ public class Team {
 	val commOption : Int;
 	val poolSize : Int;
 	val nbExplorerPT : Int;
+	
+	
 	
 	/**
 	 *  Shared references for inter teams (places) communication 
@@ -34,8 +39,7 @@ public class Team {
 	 */
 	static val control : Control = new Control();
 		
-	def this (intraTeamI : Int, interTeamI : Int , ps : Int, nbExPT : Int, minD: Double){
-		
+	public def this (intraTeamI : Int, interTeamI : Int , ps : Int, nbExPT : Int, minD: Double){
 		commOption = 0n;
 		poolSize = ps;
 		nbExplorerPT = nbExPT;
@@ -43,7 +47,7 @@ public class Team {
 		interTI = interTeamI;
 		
 		//region = 0..(nbExplorerPT-1);
-		solverArray = new Rail[ASSolverPermutSM] (nbExplorerPT);
+		solverArray = new Rail[CooperativeASPermut] (nbExplorerPT);
 		cspArray = new Rail[ModelAS] (nbExplorerPT);
 		stats = new CSPStats();
 		
@@ -56,15 +60,15 @@ public class Team {
 		count = 0n;
 	}
 	
-	def solve(size : Int , cspProblem : Int ) : Int{
-		
+	public def spawnExplorers(size : Int , cspProblem : Int ) : Int{
+		Logger.debug("spawning explorers");
 		//var extTime : Long = -System.nanoTime();
 		val random = new Random();
 		finish{
 			
-			async{
-				control();
-			}
+			// async{
+			// 	control();
+			// }
 			
 			for(aID in solverArray.range()){ 
 				async{
@@ -87,29 +91,26 @@ public class Team {
 					}
 					
 					//minDistance = cspArray(aID).solverParams.minDistance;
-					solverArray(aID) = new ASSolverPermutSM(aID as Int, nsize, seed,
-							new ASSolverConf( ASSolverConf.USE_PLACES, GlobalRef[CommData](null), intraTI, 
+					solverArray(aID) = new CooperativeASPermut(aID as Int, nsize, seed,
+							new ASSolverConf( ASSolverConf.USE_PLACES, GlobalRef[ElitePool](null), intraTI, 
 									interTI, commOption, poolSize, nbExplorerPT)
 						);
-					
+					// Console.OUT.println("calling solve");
 					val cost = solverArray(aID).solve(cspArray(aID));
 					
-					//Console.OUT.println("costTeam= "+cost);
+					// Console.OUT.println("costTeam= "+cost);
 					
 					if (cost == 0n){
-						//for (k in solverArray.range()) if (aID != k) async {
-							//solverArray(k).kill = true;
-						//}
-						// Store info in global memory
-						setStats(aID as Int);
-						//extTime += System.nanoTime();
-						//Console.OUT.println("time "+here+" =" + extTime/1e9);
 						
-						control.exit = true;
-						atomic{
-							control.event = true;
-						//control.controlSignal();
-						}
+						val home = here.id;
+						// val winner = announceWinner(home);
+						// 
+						// if (winner) {
+						Logger.info("winner "+here+" aid "+aID);
+						setStats(aID as Int);
+						val sol = cspArray(aID).variables;
+						Utils.show("Solution is ", sol);
+						Team.control.exit = true;
 						
 					}
 				}//async
@@ -144,35 +145,29 @@ public class Team {
 		var test : Boolean = true;
 		var act : Int = 0n;
 		loop: while ( true ) {
-			//Runtime.probe();
-			when ( control.event ) {
-				//control.controlWait();
-				control.event = false;
-				count++;
-				if ( control.exit )
-					break loop;
-				
-				if ( control.interTeam ) {
-					control.interTeam = false;
-					act = 1n;
-					//doIterTeamComm();
-					//Console.OUT.println(here+" C: put action "+count );
-				}				
-			}
-			if ( act == 1n ) {
-				act = 0n;
-				//Console.OUT.println(here+" C: starting inter team comm "+count );
-				doIterTeamComm();
-				//Console.OUT.println(here+" C: end inter team comm "+count);
-			}
-			//Runtime.x10rtProbe(); //Runtime.probe();
+			control.event = false;
+			count++;
+			if ( control.exit )
+				break loop;
+			
+			if ( control.interTeam ) {
+				control.interTeam = false;
+				act = 1n;
+				//doIterTeamComm();
+				//Console.OUT.println(here+" C: put action "+count );
+			}				
 		}
-		//Console.OUT.println( count+" exit control " + here );
+		if ( act == 1n ) {
+			act = 0n;
+			Logger.debug("Doing inter-Team Comm");
+			//doIterTeamComm();
+		}
 	}
 	
 	public def doIterTeamComm (){// myConf : Rail[Int], myCost : Int ){
 		//restart protection
 		control.protection = false;
+		Logger.debug(here+": Sending protection \"signal\"...");
 		
 		// Compare against next team
 		//val tmp : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
@@ -238,6 +233,7 @@ public class Team {
 					val workerNb = random.nextInt(solverArray.size as Int);
 					solverArray(workerNb).forceRestart = true;
 					control.protection = true;
+					Logger.debug(here+": Sending protection \"signal\"...");
 				}
 				
 			}else{
@@ -253,6 +249,7 @@ public class Team {
 						val workerNb = random.nextInt(sz as Int);
 						remote().solverArray(workerNb).forceRestart = true;
 						remote().control.protection = true;
+						Logger.debug(here+": Sending protection \"signal\"...");
 					}
 				}
 			}			
@@ -282,4 +279,21 @@ public class Team {
 		val dis = 1.0 - ( count as Double / sizeC );
 		return dis;
 	}	
+	
+	//val winnerLatch = new AtomicBoolean(false);
+	
+	// public def announceWinner(p:Long):Boolean {
+	// 	val result = winnerLatch.compareAndSet(false, true);
+	// 	
+	// 	if (result) {
+	// 		//Shared Memory exit
+	// 		control.exit = true;
+	// 		
+	// 		// We must finish explorer instances and the control activity
+	// 	}
+	// 	return result;
+	// }
+	
+	
+	
 }

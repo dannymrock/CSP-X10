@@ -62,12 +62,12 @@ public class CSPStats{
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
+	public def setStats(cost : Int, place : Int, expl : Int, time:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
 			fr : Int){
-		this.cost = co;
-		this.team = p;
-		this.explorer = e;
-		this.time = t;
+		this.cost = cost;
+		this.team = place;
+		this.explorer = expl;
+		this.time = time;
 		this.iters = it;
 		this.locmin = loc;
 		this.swaps = sw;

@@ -6,7 +6,7 @@ import x10.util.Random;
 
 class Control{
 	var nbEntries : Int;
-	val bestPartialSolutions : Rail[CSPSharedUnit] = new Rail[CSPSharedUnit] (10); // 10 max pos
+	val pool : Rail[CSPSharedUnit] = new Rail[CSPSharedUnit] (10); // 10 max pos
 	var poolSize : Int;
 	var bestCost : Int;
 	var worstCost : Int;
@@ -62,7 +62,7 @@ class Control{
 			return Unit();
 		
 		if( nbEntries < poolSize ){
-			bestPartialSolutions( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int, variables, place );
+			pool( nbEntries++ ) = new CSPSharedUnit( cost, variables.size as Int, variables, place );
 			if (cost < bestCost){ 
 				bestCost = cost;
 				//Console.OUT.println("New Best Cost = "+bestCost+" in team "+place);
@@ -76,18 +76,18 @@ class Control{
 			var nvic : Int = 0n;
 			var costToChange : Int = cost;
 			for (i = 0n; i < nbEntries; i++){
-				if (worstCost == bestPartialSolutions(i).cost){
+				if (worstCost == pool(i).cost){
 					if (random.nextInt(++nvic) == 0n)
 						victim = i;
 				}
 				
-				if (cost == bestPartialSolutions(i).cost){
-					if (compareVectors(variables, bestPartialSolutions(i).vector))
+				if (cost == pool(i).cost){
+					if (compareVectors(variables, pool(i).conf))
 						return Unit();
 				}
 			}	
 			//Console.OUT.println("insert vector with cost "+cost);	
-			bestPartialSolutions(victim) = new CSPSharedUnit( cost, variables.size as Int, variables, place);
+			pool(victim) = new CSPSharedUnit( cost, variables.size as Int, variables, place);
 			
 			if (cost <= bestCost){ 
 				bestCost = cost;
@@ -114,7 +114,7 @@ class Control{
 		var i : Int;
 		var wc : Int = 0n;
 		for(i = 0n; i < nbEntries; i++){
-			if (bestPartialSolutions(i).cost > wc) wc = bestPartialSolutions(i).cost; 
+			if (pool(i).cost > wc) wc = pool(i).cost; 
 		}
 		worstCost = wc;	
 	}
@@ -129,7 +129,7 @@ class Control{
 			//return sol;
 			
 			
-			return bestPartialSolutions(i);
+			return pool(i);
 		}else{
 			return new CSPSharedUnit(Int.MAX_VALUE as Int, 0n, null , 0n );
 		}

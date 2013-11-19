@@ -1,6 +1,3 @@
-package csp.solver;
-
-import csp.models.*;
 /** ASSolverPermutRW is the parallel implementation of Adaptive Search solver
  * 	in the x10 language. This implementation use distributed isolated intances
  * 	of the solver, each one with a diferent seeds in order to have differents 
@@ -13,14 +10,19 @@ import csp.models.*;
  * 					10 April, 2013 -> Changes queens by costas problem
  * 					12 April, 2013 -> TLP support
  */
-import x10.util.Random;
-//import x10.compiler.Pragma;
-import x10.array.*; //Change x10.array.*;
+package csp.solver;
 
-public class ASSolverPermutRW{  
-	val solverDist : DistArray_Unique[ASSolverPermut];
+import csp.models.*;
+import csp.utils.*;
+import x10.util.Random;
+import x10.array.*;
+import x10.util.concurrent.AtomicBoolean; 
+
+
+public class IndependentWalks{  
+	val solverDist : DistArray_Unique[ASPermut];
 	val cspDist : DistArray_Unique[ModelAS];
-	val timeDist : DistArray_Unique[Long];
+	
 	var winPlace : Place;
 	
 	val updateI : Int;
@@ -31,15 +33,8 @@ public class ASSolverPermutRW{
 	val refStats : GlobalRef[CSPStats];
 	
 	/** Comunication Variables*/
-	//val currentCosts : DistArray[Int];
-	var commData : CommData;
-	val refComm : GlobalRef[CommData];
-	//val fileQAP : String;
-	//val solverRef : GlobalRef[ASSolverPermutRW];
-	
-	//All to all comm
-	//val commDist : DistArray[CommData];
-	//val refCommDist : GlobalRef[DistArray[CommData]];
+	var commData : ElitePool;
+	val refComm : GlobalRef[ElitePool];
 	
 	val poolSize : Int;
 	
@@ -49,51 +44,41 @@ public class ASSolverPermutRW{
 	//Hybrid approach
 	val nbExplorerPT : Int;
 	val nTeams : Int;
-	//val refAllGroups :  Array[Rail[GlobalRef[CommData]]](1);
-	
+
 	/**
 	 * 	Constructor of the class
 	 */
 	public def this( upI : Int, commOpt : Int , thread : Int , ps : Int, npT : Int ){
-		solverDist = new DistArray_Unique[ASSolverPermut] ();
+		solverDist = new DistArray_Unique[ASPermut] ();
 		cspDist = new DistArray_Unique[ModelAS]();
-		timeDist = new DistArray_Unique[Long]();
 		
-		//currentCosts = DistArray.make[Int](Dist.makeUnique(), -1n);
 		poolSize = ps;
-		commData = new CommData( poolSize ); 
+		commData = new ElitePool( poolSize ); 
 		
 		updateI = upI; 
 		commOption = commOpt;
 		
+		// General stats in Place 0 
 		stats = new CSPStats();
 		refStats = GlobalRef[CSPStats](stats);
-		refComm = GlobalRef[CommData](commData);
+		
+		refComm = GlobalRef[ElitePool](commData);
 		
 		thEnable = thread;
-		//fileQAP = file;
-		
-		
-		//commDist = DistArray.make[CommData](Dist.makeUnique());
-		//refCommDist = GlobalRef[DistArray[CommData]] (commDist);
-		
-		nbExplorerPT = npT; // will be a parameter 
+				
+		nbExplorerPT = npT; 
 		nTeams = Place.MAX_PLACES as Int / nbExplorerPT ;
-		
-		//refAllGroups = new Array[Rail[GlobalRef[CommData]]](0..(noGroups-1));
-		
-		//Console.OUT.println("There are "+nTeams+" teams each with "+nbExplorerPT+" nodes.");
 	}
 	
 	/** 
-	 * 	Solve the csp problem with MAX_PLACES instance of AS solver
+	 * 	Spawn the csp problem with MAX_PLACES instance of AS solver
 	 * 	The first one that reach a valid solution send a kill to the others
 	 * 	to finish the process.
 	 * 	@param size size of the csp problem
 	 * 	@param cspProblem code with the problem to be solved (1 for Magic Square Problems, other number for Queens Problem)
 	 * 	@return cost of the solution
 	 */
-	public def solve( size : Int , cspProblem : Int ) : CSPStats{ 
+	public def spawn( size : Int , cspProblem : Int ) : CSPStats{ 
 		
 		var extTime : Long = -System.nanoTime();
 		val random = new Random();
@@ -101,11 +86,8 @@ public class ASSolverPermutRW{
 		// Create solver and problem instances at each node
 		finish for(p in Place.places()){ 
 			val seed = random.nextLong();
-			//val seed1 = 1234L;
 			async at(p) async {
 				var nsize:Int = size;
-				//val fakeSeed = seed1;
-				//val seed = here.id as Long;
 				if (cspProblem == 1n) {			//Magic-Square
 					nsize = size*size; 
 					cspDist(here.id) = new MagicSquareAS(size, seed);
@@ -119,78 +101,48 @@ public class ASSolverPermutRW{
 				}else if (cspProblem == 5n){ 		//All-Intervals
 					cspDist(here.id) = new PartitAS(size, seed);
 				}
-				// else if (cspProblem == 99){ 	//QAP
-				// 	val qapT = new QAPTools(fileQAP);
-				// 	val sizeQAP = qapT.getSize();
-				// 	nsize = sizeQAP;
-				// 	cspDist(here.id) = new QAPAS(sizeQAP, seed, fileQAP);
-				// }
-				
-				//if (thEnable == 0){
-				
-				solverDist(here.id) = new ASSolverPermut(nsize, seed, 
+								
+				solverDist(here.id) = new ASPermut(nsize, seed, 
 					new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI,0n, commOption, poolSize, nTeams ));
 				
-				//}
 				
-				/* Functional parallelism -  
-				 * 
-				else if (thEnable < 100){
-					solverDist(here.id) = new ASSolverPermutTLP(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption , poolSize, noGroups), thEnable);	
-				}else if (thEnable > 100){ 
-					solverDist(here.id) = new ASSolverPermutFP4(nsize, seed, 
-							new ASSolverConf(ASSolverConf.USE_PLACES, refComm, updateI, commOption, poolSize, noGroups), (thEnable-100));
-				}
-				*/
 			}
 		}
 		
 		//Getting comm reference of each node
-		val arrayRefs = new Rail[GlobalRef[CommData]] (Place.MAX_PLACES);
+		val arrayRefs = new Rail[GlobalRef[ElitePool]] (Place.MAX_PLACES);
 		for(p in Place.places()){
 			arrayRefs(p.id) = at(p){solverDist(here.id).myCommRef};	
 		}
 		
-		// var g : Int = 0;
-		// for( g = 0 ; g < noGroups; g++ ) {
-		// 	refAllGroups(g) = new Rail[GlobalRef[CommData]](0..(sizeGroup-1));
-		// 	//place de cadaq grupo
-		// 	for(p in Place.places()){
-		// 		//val g =p.id % noGroups;
-		// 		//refAllGroups(g,1) = at(p){solverDist(here.id).myCommRef};	
-		// 	}
-		// }
 		
 		finish for(p in Place.places())async at(p) async { 
 			var cost:Int = x10.lang.Int.MAX_VALUE;
+			
+			Rail.copy(arrayRefs, solverDist(here.id).solverC.arrayRefs);
+			
+			cost = solverDist(here.id).solve(cspDist(here.id));
+			
+			if (cost == 0n){
 				
-				Rail.copy(arrayRefs, solverDist(here.id).solverC.arrayRefs);
+				val home = here.id;
+				val winner = at (Place.FIRST_PLACE) announceWinner(home);
 				
-				/***/
-				
-				//timeDist(here.id) = -System.nanoTime();
-				cost = solverDist(here.id).solve(cspDist(here.id));
-				//	timeDist(here.id) += System.nanoTime();
-				
-				if (cost == 0n){
-					for (k in Place.places()) if (here.id != k.id) at(k) 
-					async 
-					{
-						solverDist(here.id).kill = true;
-					}
-					winPlace = here;
-					bcost = cost;
+				if (winner) {
+					//Logger.info("winner "+here);
 					setStats();
+					val sol = cspDist(here.id).variables;
+					Utils.show("Solution is ", sol);
 				}
 			}
+		}
 		extTime += System.nanoTime();
 		stats.time = extTime/1e9;
 		this.clear();
 		return stats; 
 	}
 	
-	def setStats(  ){
+	def setStats(){
 		val winPlace = here.id;
 		//val time = (timeDist(winPlace))/1e9;
 		val iters = solverDist(winPlace).nbIterTot;
@@ -205,13 +157,22 @@ public class ASSolverPermutRW{
 		//val winstats = new CSPStats
 	}
 	
-	
-	// public def setParameters(){
-	// 	
-	// }
-	
-	
 	public def clear(){
 		commData.clear();
 	}
+	
+	val winnerLatch = new AtomicBoolean(false);
+	
+	public def announceWinner(p:Long):Boolean {
+	 	val result = winnerLatch.compareAndSet(false, true);
+		
+		//Logger.info(()=> "announceWinner result=" + result + " for " + p + " this=" + this );
+		if (result) {
+			for (k in Place.places()) 
+				if (p != k.id) 
+					at(k) async solverDist(here.id).kill = true; //Why cannot use solverDist(k) here??
+		}
+	 	return result;
+	}
+	
 }
