@@ -1,3 +1,5 @@
+package csp.utils;
+
 /** RandomTools 
  * 	This class has some random tools
  * 

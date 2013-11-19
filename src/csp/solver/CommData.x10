@@ -1,3 +1,8 @@
+package csp.solver;
+
+
+import csp.utils.*;
+
 public class CommData{
 	var nbEntries : Int;
 	val bestPartialSolutions : Rail[CSPSharedUnit];
@@ -100,7 +105,7 @@ public class CommData{
 		var i : Int;
 		for (i = 0n; i < nbEntries; i++){
 			Console.OUT.print(i+". Cost = "+bestPartialSolutions(i).cost+" place "+bestPartialSolutions(i).place);
-			Main.show(" Vector",bestPartialSolutions(i).vector);
+			Utils.show(" Vector",bestPartialSolutions(i).vector);
 		}
 	}
 	

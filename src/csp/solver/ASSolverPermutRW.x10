@@ -1,3 +1,6 @@
+package csp.solver;
+
+import csp.models.*;
 /** ASSolverPermutRW is the parallel implementation of Adaptive Search solver
  * 	in the x10 language. This implementation use distributed isolated intances
  * 	of the solver, each one with a diferent seeds in order to have differents 
@@ -51,7 +54,7 @@ public class ASSolverPermutRW{
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( upI : Int, commOpt : Int , thread : Int , ps : Int, npT : Int ){
+	public def this( upI : Int, commOpt : Int , thread : Int , ps : Int, npT : Int ){
 		solverDist = new DistArray_Unique[ASSolverPermut] ();
 		cspDist = new DistArray_Unique[ModelAS]();
 		timeDist = new DistArray_Unique[Long]();

@@ -1,3 +1,5 @@
+package csp.models;
+
 /** CostasAS is the implementation of Costas Array problem for the Adaptive Search solver
  * 	in the x10 language.
  * 
@@ -38,7 +40,7 @@ public class CostasAS extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of the problem
 	 */
-	def this (val lengthProblem : Int, seed : Long){
+	public def this (val lengthProblem : Int, seed : Long){
 		super(lengthProblem, seed);
 		size2 = (length - 1n) / 2n;		
 		sizeSq = length * length;

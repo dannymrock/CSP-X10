@@ -1,3 +1,5 @@
+package csp.models;
+
 /** ASSolverParameters
  * 	Encapsulate all the parameters for AS Solver
  * 
@@ -9,34 +11,34 @@
 
 public class ASSolverParameters{
 	/** perform an exhausitve search */ 
-	var exhaustive : Boolean;
+	public var exhaustive : Boolean;
 	/** stop as soon as a better swap is found */
-	var firstBest : Boolean;
+	public var firstBest : Boolean;
 	/** % to select local min instead of staying on a plateau (or >100 to not use)*/
-	var probSelectLocMin : Int;	
+	public var probSelectLocMin : Int;	
 	/** nb swaps to freeze a (local min) var */
-	var freezeLocMin : Int;
+	public var freezeLocMin : Int;
 	/** nb swaps to freeze 2 swapped vars */
-	var freezeSwap : Int;
+	public var freezeSwap : Int;
 	/** nb of frozen vars before reset */
-	var resetLimit : Int;
+	public var resetLimit : Int;
 	/** nb variables to reset */
-	var nbVarToReset : Int;
+	public var nbVarToReset : Int;
 	/** nb of iterations before restart */
-	var restartLimit : Int;	
+	public var restartLimit : Int;	
 	/** max nb of times to restart (to retry) */
-	var restartMax : Int;
+	public var restartMax : Int;
 	/** true if Cost_Of_Solution must be called twice */
-	var reinitAfterIfSwap : Int;	
+	public var reinitAfterIfSwap : Int;	
 	/** percentage of variables to reset */
-	var resetPercent : Int;		
+	public var resetPercent : Int;		
 
-	var baseValue : Int;
+	public var baseValue : Int;
 	/** Probability to change variables vector for a vector in the pool (Comm Enable) */
-	var probChangeVector : Int;
+	public var probChangeVector : Int;
 	
 	/** minimum permisible distance between places */
-	var minDistance : Double;
+	public var minDistance : Double;
 	
 	
 	/**

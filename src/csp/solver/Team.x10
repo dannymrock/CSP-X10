@@ -1,4 +1,7 @@
+package csp.solver;
+
 import x10.util.Random;
+import csp.models.*;
 
 public class Team {
 	val solverArray : Rail[ASSolverPermutSM];
@@ -24,6 +27,7 @@ public class Team {
 	val random : Random;
 	
 	var count: Int;
+	//val monitor = new MonitorV("Team");
 	
 	/**
 	 *  Global Memory Shared between activities (static object)
@@ -167,10 +171,13 @@ public class Team {
 	}
 	
 	public def doIterTeamComm (){// myConf : Rail[Int], myCost : Int ){
+		//restart protection
+		control.protection = false;
+		
 		// Compare against next team
 		//val tmp : Int = here.id + 1 < Place.MAX_PLACES ?  here.id + 1 : 0;
 		
-		//Compare against a random team
+		//Compare against a random team		
 		var tmp : Int = random.nextInt(Place.MAX_PLACES as Int);
 		while (here.id as Int == tmp){
 			tmp = random.nextInt(Place.MAX_PLACES as Int);
@@ -226,9 +233,13 @@ public class Team {
 				// for(i in 0..(x-1))
 				// 	at(arrayRefs(place1)) arrayRefs(place1)().solverArray(i).forceRestart = true;
 				//----
-				val x = solverArray.size; // /2; //restart only the first half in the explorer set
-				for(i in 0..(x-1))
-					solverArray(i).forceRestart = true;
+				val sz = solverArray.size; //restart only the first half in the explorer set
+				for(i in 0..((sz/2)-1)){
+					val workerNb = random.nextInt(solverArray.size as Int);
+					solverArray(workerNb).forceRestart = true;
+					control.protection = true;
+				}
+				
 			}else{
 				//restart place2
 				// val x = at(arrayRefs(place2)) arrayRefs(place2)().solverArray.size; 
@@ -236,9 +247,13 @@ public class Team {
 				// 	at(arrayRefs(place2)) arrayRefs(place2)().solverArray(i).forceRestart = true;
 				//----
 				at(remote){
-					val x = remote().solverArray.size; // /2; //restart only the half 
-					for(i in 0..(x-1))
-						remote().solverArray(i).forceRestart = true;
+					val sz = remote().solverArray.size; //restart only the half 
+					val ran = new Random();
+					for(i in 0..((sz/2)-1)){
+						val workerNb = random.nextInt(sz as Int);
+						remote().solverArray(workerNb).forceRestart = true;
+						remote().control.protection = true;
+					}
 				}
 			}			
 		}

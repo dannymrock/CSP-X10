@@ -1,3 +1,5 @@
+package csp.solver;
+
 struct CSPSharedUnit {
 	val cost : Int;
 	val vector : Rail[Int];

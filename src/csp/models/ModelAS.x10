@@ -1,4 +1,9 @@
+package csp.models;
+
+import csp.utils.*;
+
 import x10.util.Random;
+
 
 /** ModelAS is the Base Model implementation of a CSP problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -9,7 +14,7 @@ import x10.util.Random;
  *  @version 0.1 April 9, 2013
  */
 public class ModelAS{
-	var variables : Rail[Int];
+	public var variables : Rail[Int];
 	val length : Int;
 	val r : RandomTools;
 	
@@ -148,7 +153,7 @@ public class ModelAS{
 	
 	public def displaySolution()
 	{
-		Main.show("final",variables);
+		Utils.show("final",variables);
 	}
 	
 }

@@ -1,9 +1,14 @@
+package csp.models; 
+
 /** Main
  * 	Main class of the project. 
  * 
  * 	@author Danny Munera
  *  @version 0.1 	9 April, 2013 	-> First Version
  */
+
+import csp.solver.*;
+//import csp.models.*;
 
 import x10.io.File;
 import x10.io.FileWriter;

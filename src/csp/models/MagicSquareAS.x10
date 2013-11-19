@@ -1,3 +1,5 @@
+package csp.models;
+
 /** MagicSquareAS is the implementation of Magic Square problem for the Adaptive Search solver
  * 	in the x10 language.
  * 

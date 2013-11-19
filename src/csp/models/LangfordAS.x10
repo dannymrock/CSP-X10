@@ -1,3 +1,5 @@
+package csp.models;
+
 /** LangfordAS is the implementation of Langford pairing problem for the Adaptive Search solver
  * 	in the x10 language.
  * 
@@ -12,7 +14,7 @@ public class LangfordAS extends ModelAS{
 	
 	val order : Int;
 	
-	def this (val lengthProblem : Int, seed : Long){
+	public def this (val lengthProblem : Int, seed : Long){
 		super(lengthProblem * 2n, seed);
 		order = lengthProblem;
 		initParameters();

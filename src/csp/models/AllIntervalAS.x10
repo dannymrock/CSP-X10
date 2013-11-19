@@ -1,3 +1,5 @@
+package csp.models;
+
 /** AllIntervalAS is the implementation of All-Intervals problem for the Adaptive Search solver
  * 	in the x10 language.
  * 
@@ -7,7 +9,7 @@
  * 	@author Danny Munera
  *  @version 0.1 	12 April, 2013 -> First Version
  */
-public class AllIntervalAS extends ModelAS {
+public class AllIntervalAS extends ModelAS{
 	 
 	/** nb occurrences (to compute total cost) 0 is unused */
 	val nbOcc : Rail[Int];	
@@ -18,7 +20,7 @@ public class AllIntervalAS extends ModelAS {
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	def this ( val lengthProblem : Int , seed : Long, exahustive:Boolean ){
+	public def this ( val lengthProblem : Int , seed : Long, exahustive:Boolean ){
 		super( lengthProblem, seed );
 		nbOcc = new Rail[Int] (length , 0n);
 		exh = exahustive;

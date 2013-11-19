@@ -1,3 +1,8 @@
+package csp.solver;
+
+
+import csp.models.*;
+import csp.utils.*;
 
 /** ASSolverPermut is the implementation of Adaptive Search solver
  * 	in the x10 lenguage.

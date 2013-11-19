@@ -1,3 +1,7 @@
+package csp.solver;
+
+import csp.models.ModelAS;
+
 /**	This class containts all the basic configutation info, for the
  * 	Adaptive search solver x10 implementation ASSolverPermut
  * 	

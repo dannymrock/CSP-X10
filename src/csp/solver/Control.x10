@@ -1,3 +1,7 @@
+package csp.solver;
+
+import csp.utils.*;
+
 import x10.util.Random; 
 
 class Control{
@@ -7,6 +11,8 @@ class Control{
 	var bestCost : Int;
 	var worstCost : Int;
 	val random : Random;
+	
+	var protection : Boolean;
 	
 	
 	//Control Activity
@@ -31,7 +37,7 @@ class Control{
 	 	event = false;
 	 	exit = false;
 	 	interTeam = false;
-	 	
+	 	protection = false;
 	}	
 	
 	public def controlWait(){
@@ -114,15 +120,19 @@ class Control{
 	}
 	
 	public atomic def getConf():CSPSharedUnit{
-		val random = new RandomTools( 123L );
-		val i = random.randomInt(nbEntries);
-		
-		//val sol = mPool.atomicBlock[CSPSharedUnit](()=>bestPartialSolutions(i));
-		
-		//return sol;
-		
-		
-		return bestPartialSolutions(i);
+		if (!protection){
+			val random = new RandomTools( 123L );
+			val i = random.randomInt(nbEntries);
+			
+			//val sol = mPool.atomicBlock[CSPSharedUnit](()=>bestPartialSolutions(i));
+			
+			//return sol;
+			
+			
+			return bestPartialSolutions(i);
+		}else{
+			return new CSPSharedUnit(Int.MAX_VALUE as Int, 0n, null , 0n );
+		}
 		// var i : Int;
 		// var best : Int = 0;
 		// for(i = 0; i < nbEntries; i++){

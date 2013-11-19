@@ -1,3 +1,5 @@
+package csp.models;
+
 public class PartitAS extends ModelAS{
 	
 	val size2 : Int;
@@ -10,7 +12,7 @@ public class PartitAS extends ModelAS{
 	val sumMidX2 : Long;
 	var curMidX2 : Long;
 	
-	def this(val lengthProblem : Int, seed : Long){
+	public def this(val lengthProblem : Int, seed : Long){
 		super(lengthProblem, seed);
 		size2 = length / 2n;
 		

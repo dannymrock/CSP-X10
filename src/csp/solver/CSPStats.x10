@@ -1,3 +1,5 @@
+package csp.solver;
+
 /** CSPStats
  * 	This class implements a container for the CSP solver statistics. 
  * 
@@ -34,7 +36,7 @@ public class CSPStats{
 	/**
 	 *  Constructor
 	 */
-	def this(){
+	public def this(){
 		cost = -1n;
 		team = -1n;
 		explorer = -1n;
@@ -60,7 +62,7 @@ public class CSPStats{
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
+	public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
 			fr : Int){
 		this.cost = co;
 		this.team = p;
@@ -79,7 +81,7 @@ public class CSPStats{
 	 *  Accumulate statistics in this object, Is used for average calculation
 	 * 	@param stats Object with solver data to accumulate 
 	 */
-	def accStats(stats:CSPStats){
+	public def accStats(stats:CSPStats){
 		this.time += stats.time;
 		this.iters += stats.iters;
 		this.locmin += stats.locmin;
@@ -95,7 +97,7 @@ public class CSPStats{
 	 * 	Print the stat values
 	 * 	@param count Number of this iteration
 	 */
-	def print(count:Int){
+	public def print(count:Int){
 		val sameIter : Float = (same as Float)/(iters as Float);
 		//val changeF : Float = (change as Float)/(count as Float);
 		Console.OUT.printf("| %3d | %8.4f | %8d | %2d-%2d | %8d |",count, time, iters, team, explorer, locmin);
@@ -107,7 +109,7 @@ public class CSPStats{
 	 * 	Print the stat averages
 	 * 	@param no total number of iterations
 	 */
-	def printAVG(no:Int){ 
+	public def printAVG(no:Int){ 
 		val sameIter : Float = (same as Float)/(iters as Float);
 		val changeF : Float = (change as Float)/(no as Float);
 		Console.OUT.printf("| avg | %8.4f | %8d |  N/A  | %8d |",time/no, iters/no, locmin/no);

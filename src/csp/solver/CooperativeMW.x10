@@ -1,3 +1,5 @@
+package csp.solver;
+
 /** ASSolverPermutRW is the parallel implementation of Adaptive Search solver
  * 	in the x10 language. This implementation use distributed isolated intances
  * 	of the solver, each one with a diferent seeds in order to have differents 
@@ -13,7 +15,7 @@
 import x10.util.Random;
 import x10.array.*; //Change for x10.array.*;
 
-class CooperativeMW{  
+public class CooperativeMW{  
 	val teamDist : DistArray_Unique[Team];
 	
 	val intraTI : Int;
@@ -34,7 +36,7 @@ class CooperativeMW{
 	/**
 	 * 	Constructor of the class
 	 */
-	def this( intraTeamI : Int, interTeamI : Int , thread : Int , ps : Int, nExPT : Int, minD:Double){
+	public def this( intraTeamI : Int, interTeamI : Int , thread : Int , ps : Int, nExPT : Int, minD:Double){
 		teamDist = new DistArray_Unique[Team]();
 		
 		poolSize = ps;
