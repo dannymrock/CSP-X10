@@ -54,7 +54,7 @@ public class PartitAS extends ModelAS{
 	 * 	@param shouldBeRecorded 0 for no record 1 for record
 	 * 	@return cost of solution
 	 */
-	public def costOfSolution( shouldBeRecorded : Int ) : Int {
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Int {
 		var i : Int;
 		var r : Int;
 		var x : Int;
@@ -129,7 +129,7 @@ public class PartitAS extends ModelAS{
 	 *  Checks if the solution is valid.
 	 */
 
-	public  def verified():Boolean {
+	public  def verify():Boolean {
 		var sumA:Int = 0n, sumB:Int = 0n;
 		var sumA2:Long = 0, sumB2:Long = 0;
 
@@ -168,6 +168,10 @@ public class PartitAS extends ModelAS{
 		return true;
 	}
 	
+	public def nextJ(i:Int, j:Int, exhaustive:Boolean) : Int {
+		return (j < 0n) ? size2 : j + 1n;
+	}
+
 	
 }
 public type PartitAS(s:Long)=PartitAS{self.sz==s};

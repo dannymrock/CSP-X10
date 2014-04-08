@@ -1,6 +1,7 @@
 
 package csp.solver;
 import csp.util.Logger;
+import csp.util.Utils;
 import csp.model.ModelAS;
 /** PlaceMultiWalk is the parallel implementation of Random Walk Adaptive Search solver
  * 	in the X10 language. This implementation use distributed isolated instances
@@ -136,7 +137,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	
     	csp_ = cspGen(); // use the supplied generator to generate the problem
     	    	
-    	Logger.debug(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
+    	Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
     	
     	time = -System.nanoTime();
     	cost = solver.solve(csp_);
@@ -157,7 +158,9 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     			interTeamKill = true;
     			setStats_(solvers);
     			//Console.OUT.println("\nerrors "+ err);
-    			//Utils.show("Solution is " + (csp_.verified()? "ok" : "WRONG") , csp_.variables);
+    			Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
+    			//Utils.show("Solution is ? ", csp_.getVariables());
+    			
     			//csp_.displaySolution2(solver.bestConf as Valuation(sz));
     			//Console.OUT.println("Solution is " + (csp_.verified(solver.bestConf as Valuation(sz))? "perfect" : "not perfect"));
     			//csp_.verify(solver.bestConf as Valuation(sz));

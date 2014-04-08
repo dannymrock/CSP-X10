@@ -76,7 +76,7 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  Compute the cost of the variables current assignation for the Magic Square problem.
 	 *  @return Integer with the value of the cost of the variables current assignation.
 	 */
-	public def costOfSolution(shouldBeRecorded : Int) : Int {
+	public def costOfSolution(shouldBeRecorded : Boolean) : Int {
 		
 		var k:Int;
 		var r:Int;
@@ -230,7 +230,7 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 		}
 	}
 	
-	public  def verified():Boolean {
+	public  def verify():Boolean {
 		val soln = Array_2.makeView(variables, squareLength as Long, squareLength as Long);
 		val I=soln.numElems_1, J=soln.numElems_2;
 		if (I != J) return false;

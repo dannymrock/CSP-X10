@@ -22,7 +22,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 * 	initParameters() 
 	 *  Set Initial values for the problem
 	 */
-	private def initParameters(){
+	private def initParameters(){ 
 		solverParams.probSelectLocMin = 3n;
 		solverParams.freezeLocMin = 1n;
 		solverParams.freezeSwap = 0n;
@@ -70,7 +70,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 * 	@param shouldBeRecorded 0 for no record 1 for record
 	 * 	@return cost of solution
 	 */
-	public def costOfSolution( shouldBeRecorded : Int ) : Int {
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Int {
 		var i : Int;
 		var r : Int = 0n;
 
@@ -108,7 +108,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 		variables(i1) = variables(i2);
 		variables(i2) = x;
 
-		r = costOfSolution(0n);
+		r = costOfSolution(false);
 
 		variables(i2) = variables(i1);
 		variables(i1) = x;
@@ -142,7 +142,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 * 
 	 *  Checks if the solution is valid.
 	 */
-	public  def verified():Boolean {
+	public  def verify():Boolean {
 		var order:Int = length / 2n;
 		var i:Int, x:Int, y:Int, between:Int;
 		

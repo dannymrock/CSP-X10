@@ -6,13 +6,23 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
-			<name>x10dt.ui.launch.cpp.X10CppBuilder</name>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>x10dt.ui.builder.java.X10JavaBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>x10dt.ui.launch.cpp.x10nature</nature>
+		<nature>x10dt.ui.builder.java.x10nature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
 </projectDescription>

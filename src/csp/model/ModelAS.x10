@@ -2,6 +2,7 @@ package csp.model;
 
 import csp.util.RandomTools;
 import csp.util.Utils;
+import csp.util.Logger;
 import csp.solver.Valuation;
 
 import x10.util.Random;
@@ -146,9 +147,13 @@ public class ModelAS(sz:Long, seed:Long) {
 		return variables;
 	}
 	
-	public def nextJ(i:Int, j:Int, exhaustive:Int) : Int {
+	public def nextJ(i:Int, j:Int, exhaustive:Boolean) : Int {
 		///Console.OUT.println("i= "+i+"  j= "+j+"  bp-i= "+bpi(i));
-		return (j < 0n) ? i : -1n;
+		var newj:Int = j;
+		if (j < 0 && exhaustive)
+			newj = i;
+
+		return newj + 1n;
 	}
 }
 public type ModelAS(s:Long)=ModelAS{self.sz==s};

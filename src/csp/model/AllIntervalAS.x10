@@ -82,7 +82,7 @@ public class AllIntervalAS extends ModelAS{
 	 * 	@param shouldBeRecorded 0 for no record 1 for record
 	 * 	@return cost of solution
 	 */
-	public def costOfSolution( shouldBeRecorded : Int ) : Int
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Int
 	{
 		var i : Int;
 
@@ -331,7 +331,7 @@ public class AllIntervalAS extends ModelAS{
 	 * 
 	 *  Checks if the solution is valid.
 	 */
-	public  def verified():Boolean {
+	public  def verify():Boolean {
  		var r:Int = 1n;
 // 		int i = Random_Permut_Check(p_ad->sol, p_ad->size, p_ad->actual_value, p_ad->base_value);
 

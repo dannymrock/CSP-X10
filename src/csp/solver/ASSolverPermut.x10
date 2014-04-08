@@ -4,7 +4,7 @@ import csp.util.Logger;
 import csp.model.ASSolverParameters;
 import x10.util.Random;
 import x10.util.concurrent.AtomicBoolean;
-import csp.model.ModelAS;
+import csp.model.ModelAS; 
 
 
 /** ASSolverPermut is the implementation of Adaptive Search solver
@@ -287,19 +287,11 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 				//restart
 				Logger.debug(()=>"   ASSolverPermut : force Restart");
 				forceRestart = false;
-				//nbIter = solverP.restartLimit;
-				//csp_.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
 				nbForceRestart++;
 				restartVar(csp_);
-				// totalCost = csp_.costOfSolution(true);
-				// bestOfBest = x10.lang.Int.MAX_VALUE ;
-				// nbInPlateau = 0n;
-				// solver.clear();
 				continue;
 			}
 			// ----- end of interaction with other solvers -----
-			
-			//csp.util.Utils.show("new vector ",csp_.variables);
 		} // while (totalCost != 0n)
 		
 		nbIterTot += nbIter;
@@ -309,10 +301,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 		nbLocalMinTot += nbLocalMin; 
 		
 		//csp_.displaySolution();
-		Logger.debug(()=>{"   ASSolverPermut: Finish search with cost: "+bestCost+" kill="+kill });
+		Logger.info(()=>{"   ASSolverPermut: Finish search with cost: "+bestCost+" kill="+kill });
 		
 		if (bestCost == 0n){
-			Logger.debug(()=>{"perfect marriage found "});
+			Logger.debug(()=>{"perfect solution found "});
 			//csp_.displaySolution(bestConf as Valuation(sz));
 		}
 		// else{
@@ -394,7 +386,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 			
 			j = -1n;
 			
-			while((j = csp.nextJ(maxI, j, 0n)) as UInt < size as UInt) // false if j < 0
+			while((j = csp.nextJ(maxI, j, false)) as UInt < size as UInt) // false if j < 0 //solverP.exhaustive???
 			{	
 				if (nbSwap < mark(j)) {
 					continue;
@@ -574,7 +566,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 	}
 	
 	public def restartVar(csp : ModelAS){
-		Logger.info(()=>"ASSolver Permut: Restart");
+		//Logger.info(()=>"ASSolver Permut: Restart");
 		csp.initialize(solverP.baseValue); // Random Permut
 		totalCost = csp.costOfSolution(true);
 		bestOfBest = x10.lang.Int.MAX_VALUE ;

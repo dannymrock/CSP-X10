@@ -1,4 +1,5 @@
 package csp.model;
+import csp.util.Logger;
 
 /** CostasAS is the implementation of Costas Array problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -51,6 +52,7 @@ public class CostasAS extends ModelAS{
 		first =  new Rail[Int] (length2 , 0n);
 		toAdd = new Rail[Int](10);
 		initParameters();
+		Logger.info(()=>{"Starting CAP"});
 	}
 
 	/**
@@ -159,8 +161,8 @@ public class CostasAS extends ModelAS{
 	 * 	@param shouldBeRecorded 0 for no record 1 for record
 	 * 	@return cost of solution
 	 */
-	public def costOfSolution( shouldBeRecorded : Int ) : Int {
-		return cost((shouldBeRecorded != 0n) ? err : null);
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Int {
+		return cost((shouldBeRecorded) ? err : null);
 	}
 	
 	/**
@@ -369,7 +371,7 @@ public class CostasAS extends ModelAS{
 		return -1n; /* -1 because the err[] is not up-to-date */
 	} 
 
-	public  def verified():Boolean {
+	public  def verify():Boolean {
 		var i:Int, j:Int, d:Int;
 		var r:Int = 1n;
 
