@@ -1,3 +1,4 @@
+package csp.model; 
 /** ASSolverParameters
  * 	Encapsulate all the parameters for AS Solver
  * 
@@ -7,45 +8,54 @@
  *  @version 0.1 April 9, 2013 First Version
  */
 
-public class ASSolverParameters { 
+public class ASSolverParameters{
+    
 	/** perform an exhausitve search */ 
-	var exhaustive : Boolean;
+	public var exhaustive : Boolean;
 	/** stop as soon as a better swap is found */
-	var firstBest : Boolean;
+	public var firstBest : Boolean;
 	/** % to select local min instead of staying on a plateau (or >100 to not use)*/
-	var probSelectLocMin : Int;	
-	/** nb swaps to freeze a (local min) var */
-	var freezeLocMin : Int;
-	/** nb swaps to freeze 2 swapped vars */
-	var freezeSwap : Int;
-	/** nb of frozen vars before reset */
-	var resetLimit : Int;
-	/** nb variables to reset */
-	var nbVarToReset : Int;
+	public var probSelectLocMin : Int;	
+	/** nb swaps to freeze a (local min) public var */
+	public var freezeLocMin : Int;
+	/** nb swaps to freeze 2 swapped public vars */
+	public var freezeSwap : Int;
+	/** nb of frozen public vars before reset */
+	public var resetLimit : Int;
+	/** nb public variables to reset */
+	public var nbVarToReset : Int;
 	/** nb of iterations before restart */
-	var restartLimit : Int;	
+	public var restartLimit : Int;	
 	/** max nb of times to restart (to retry) */
-	var restartMax : Int;
+	public var restartMax : Int;
 	/** true if Cost_Of_Solution must be called twice */
-	var reinitAfterIfSwap : Int;	
-	/** percentage of variables to reset */
-	var resetPercent : Int;		
+	public var reinitAfterIfSwap : Int;	
+	/** percentage of public variables to reset */
+	public var resetPercent : Int;		
 
-	var baseValue : Int; 
+	public var baseValue : Int;
+	/** Probability to change variables vector for a vector in the pool (Comm Enable) */
+	public var probChangeVector : Int;
+	
+	/** minimum permisible distance between places */
+	public var minDistance : Double;
+	
 	
 	/**
 	 * 	Constructor
 	 */
 	public def this(){
 		firstBest = false; //revisar val por default
-		nbVarToReset = -1;
+		nbVarToReset = -1n;
+		probChangeVector = 100n;
+		minDistance = 0.3;
 	}
 	
 	/**
 	 *  set the values of the parameters to the solver
 	 * 	@param toSet parameters to set
 	 */
-	public def setValues(val toSet: ASSolverParameters){
+	public def setValues(toSet: ASSolverParameters):void{
 		this.exhaustive = toSet.exhaustive;
 		this.firstBest = toSet.firstBest;
 		this.probSelectLocMin = toSet.probSelectLocMin;
@@ -58,5 +68,7 @@ public class ASSolverParameters {
 		this.reinitAfterIfSwap = toSet.reinitAfterIfSwap;	
 		this.resetPercent = toSet.resetPercent;
 		this.baseValue = toSet.baseValue;
+		this.probChangeVector = toSet.probChangeVector;
+		this.minDistance = toSet.minDistance;
 	}	
 }
