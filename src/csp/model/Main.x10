@@ -257,16 +257,16 @@ public class Main {
 		// Clear sample accumulator
 		solvers().clearSample();
 		
-		val avgld = totalLdTimes/(samplesNb as Double); 
-		val avgclear = totalClearTimes/(samplesNb*testNo as Double); 
-		val avgext=totalExTimes/(samplesNb*testNo as Double);
+		val avgld = totalLdTimes/(testNo as Double); 
+		val avgclear = totalClearTimes/(testNo as Double); 
+		val avgext=totalExTimes/(testNo as Double);
 		totalTime += System.nanoTime();
 		if(outFormat == 0n){
 			Console.OUT.println("Total_Files,Repetition_per_File,Total_Time,AVG_Loading_Time,AVG_external_solving_Time,AVG_clear_Time");
 			Console.OUT.println(samplesNb+","+testNo+","+(totalTime/1e9)+","+(avgld/1e9)+","+(avgext/1e9)+","+(avgclear/1e9));
 		}
 		else if (outFormat == 1n)
-			Console.OUT.println("AVG Loading Time= "+(avgld/1e9)+" AVG external solving Time= "+(avgext/1e9)+" AVG clear Time= "+(avgclear/1e9));
+			Console.OUT.println("Total Time= "+(totalTime/1e9)+" AVG external solving Time= "+(avgext/1e9)+" AVG clear Time= "+(avgclear/1e9));
 		
 		return;
 	}	
