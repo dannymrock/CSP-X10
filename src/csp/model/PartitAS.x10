@@ -171,6 +171,12 @@ public class PartitAS extends ModelAS{
 	public def nextJ(i:Int, j:Int, exhaustive:Boolean) : Int {
 		return (j < 0n) ? size2 : j + 1n;
 	}
+	
+	
+	public def nextI(i:Int) : Int {
+		var vari:Int = i + 1n;
+		return vari < size2 ? vari : length;
+	}
 
 	
 }

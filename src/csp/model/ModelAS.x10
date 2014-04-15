@@ -147,13 +147,19 @@ public class ModelAS(sz:Long, seed:Long) {
 		return variables;
 	}
 	
-	public def nextJ(i:Int, j:Int, exhaustive:Boolean) : Int {
+	public def nextJ(i:Int, j:Int, exhaustive:Int) : Int {
 		///Console.OUT.println("i= "+i+"  j= "+j+"  bp-i= "+bpi(i));
 		var newj:Int = j;
-		if (j < 0 && exhaustive)
+		if (j < 0 && exhaustive != 0n)
 			newj = i;
 
 		return newj + 1n;
 	}
+
+    public def nextI(i:Int) : Int{
+        return i + 1n;
+    }
+
+
 }
 public type ModelAS(s:Long)=ModelAS{self.sz==s};

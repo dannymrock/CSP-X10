@@ -337,7 +337,8 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 		listInb = 0n; //Number of elements
 		nbVarMarked = 0n; 
 		//Console.OUT.println("Aqui");
-		while(++i < size)  {
+		//while(++i < size)  {
+		while((i = csp_.nextI(i)) as UInt < size as UInt) { //False if i < 0
 			if (nbSwap < mark(i)) {
 				nbVarMarked++;
 				continue;
@@ -386,7 +387,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 			
 			j = -1n;
 			
-			while((j = csp.nextJ(maxI, j, false)) as UInt < size as UInt) // false if j < 0 //solverP.exhaustive???
+			while((j = csp.nextJ(maxI, j, 0n)) as UInt < size as UInt) // false if j < 0 //solverP.exhaustive???
 			{	
 				if (nbSwap < mark(j)) {
 					continue;
@@ -492,10 +493,20 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 		//Console.OUT.println("TC =>"+totalCost);
 		
 		i = -1n;
-		while(++i < size) { // false if i < 0
-			if ( nbSwap < mark(i) ) nbVarMarked++;
-			j = i; //j = -1;
-			while(++j < size) { //while((unsigned) (j = Next_J(i, j, i + 1)) < (unsigned) ad.size) // false if j < 0
+		//while(++i < size) { // false if i < 0
+		while((i = csp.nextI(i))as UInt < size as UInt) {
+			if ( nbSwap < mark(i) ) {
+				nbVarMarked++;
+				continue;
+			}
+			//j = i; 
+			j = -1n;
+			//while(++j < size) {
+			while((j = csp.nextJ(i, j, i + 1n ))as UInt < size as UInt ){
+				//while((unsigned) (j = Next_J(i, j, i + 1)) < (unsigned) ad.size) // false if j < 0
+				if ( nbSwap < mark(j) ) {
+					continue;
+				}
 				//Console.OUT.println("SWAP "+i+" <-> "+j);
 				x = csp.costIfSwap(totalCost, i, j);
 				//Console.OUT.println("cost = "+x);
@@ -570,7 +581,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 		csp.initialize(solverP.baseValue); // Random Permut
 		totalCost = csp.costOfSolution(true);
 		bestOfBest = x10.lang.Int.MAX_VALUE ;
-		Rail.copy(csp.getVariables(),bestConf as Valuation(sz));
+		Rail.copy(csp.getVariables() as Valuation(sz),bestConf as Valuation(sz));
 		bestCost = totalCost;
 		bestSent = false;
 		nbInPlateau = 0n;
