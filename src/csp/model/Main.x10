@@ -189,8 +189,10 @@ public class Main {
 		for (j=1n ; j<=testNo; j++){
 			val problem=param;
 			var extTime:Long = -System.nanoTime();
-			val cspGen=():ModelAS(vectorSz)=> CSPProblem(problem).make(size as Long, vectorSz, seed);
-			val modelSeed = random.nextLong();
+
+            val modelSeed = random.nextLong();
+			val cspGen=():ModelAS(vectorSz)=> CSPProblem(problem).make(size as Long, vectorSz, modelSeed);
+			
 			//cspGen=():ModelAS(vectorSz)=> new ModelAS(sizeF as Long, modelSeed, mPref, wPref,restLimit) as ModelAS(vectorSz);
 			if (solverMode == 0n){
 				finish for (p in Place.places()) {

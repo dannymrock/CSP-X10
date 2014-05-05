@@ -136,6 +136,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	
     	
     	csp_ = cspGen(); // use the supplied generator to generate the problem
+    	csp_.setSeed(random.nextLong());
     	    	
     	Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
     	
@@ -158,7 +159,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     			interTeamKill = true;
     			setStats_(solvers);
     			//Console.OUT.println("\nerrors "+ err);
-    			Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
+    			Console.OUT.println("Solution is " + (csp_.verify()? "ok" : "WRONG"));
+    			//Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
     			//Utils.show("Solution is ? ", csp_.getVariables());
     			
     			//csp_.displaySolution2(solver.bestConf as Valuation(sz));
