@@ -1,4 +1,5 @@
 package csp.model;
+import csp.solver.Valuation;
 
 /** MagicSquareAS is the implementation of Magic Square problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -37,18 +38,18 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	public def this(length:Int, vectorSize:Long/*{self==length*length}*/, seed:Long){
+	public def this(length:Int, vectorSize:Long/*{self==length*length}*/, seed:Long, rLimit:Int){
 		super(vectorSize, seed);
 		property(length);
 		assert length*length==(vectorSize as Int);
-		initParameters();
+		initParameters(rLimit);
 	}
 	
 	/**
 	 * 	initParameters() 
 	 *  Set Initial values for the problem
 	 */
-	private def initParameters(){
+	private def initParameters(rLimit:Int){
 		avg = (squareLength * (length + 1n) / 2n);		/* sum to reach for each l/c/d */
 		
 		solverParams.probSelectLocMin = 6n;
@@ -57,14 +58,13 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 		//solverParam.resetLimit = squareLength / 2n;
 		solverParams.resetLimit = squareLength as Int;
 		solverParams.resetPercent = 10n;
-		solverParams.restartLimit = 10000000n;
+		solverParams.restartLimit = rLimit;
 		solverParams.restartMax = 0n;
 		//solverParams.restartLimit = 2n * length;
 		//solverParams.restartMax = 20n;
 		solverParams.baseValue = 1n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
-		solverParams.probChangeVector = 50n; //Works with 50 and 75%
 		
 		for( k in 0n..((length-1) as Int))	
 			xref(k)= new XRef(squareLength, k /squareLength, k % squareLength);
@@ -230,9 +230,23 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 		}
 	}
 	
-	public  def verify():Boolean {
+	public  def verify(conf:Valuation(sz)):Boolean { //check
 		val soln = Array_2.makeView(variables, squareLength as Long, squareLength as Long);
 		val I=soln.numElems_1, J=soln.numElems_2;
+		
+		
+		//Check Permutation
+		val permutV = new Rail[Int](sz, 0n);
+		val baseV = solverParams.baseValue;
+		for (mi in conf.range()){
+			val value = conf(mi);
+			permutV(value-baseV)++;
+			if (permutV(value-baseV)>1){
+				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+			}
+		}
+		
+		
 		if (I != J) return false;
 		var sum:Int=0n;
 		for (j in 0..(J-1)) sum += soln(0, j);

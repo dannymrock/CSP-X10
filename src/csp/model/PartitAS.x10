@@ -1,4 +1,5 @@
 package csp.model;
+import csp.solver.Valuation;
 
 public class PartitAS extends ModelAS{
 	
@@ -12,7 +13,7 @@ public class PartitAS extends ModelAS{
 	val sumMidX2 : Long;
 	var curMidX2 : Long;
 	
-	def this(length:Long, seed:Long): PartitAS(length) {
+	def this(length:Long, seed:Long, rLimit:Int): PartitAS(length) {
 		super(length, seed);
 		size2 = (length / 2) as Int;
 		
@@ -25,26 +26,24 @@ public class PartitAS extends ModelAS{
 		sumMidX = ((length * (length + 1n)) / 4n) as Int;
 		sumMidX2 = (sumMidX as Long * (2n * length + 1n)) / 3L;
 		coeff = ( sumMidX2 / sumMidX ) as Int;
-		initParameters();
+		initParameters(rLimit);
 	}
 	
 	/**
 	 * 	initParameters() 
 	 *  Set Initial values for the problem
 	 */
-	private def initParameters(){
+	private def initParameters(rLimit:Int){
 		solverParams.probSelectLocMin = 80n;
 		solverParams.freezeLocMin = 1n;
 		solverParams.freezeSwap = 0n;
 		solverParams.resetLimit = 1n;
 		solverParams.resetPercent = 1n;
-		solverParams.restartLimit = 100n;//(length < 100) ? 10 : (length < 1000) ? 150 : length / 10;
+		solverParams.restartLimit = rLimit;//(length < 100) ? 10 : (length < 1000) ? 150 : length / 10;
 		solverParams.restartMax = 100000n;
 		solverParams.baseValue = 1n;
 		solverParams.exhaustive = true;
 		solverParams.firstBest = false;
-		
-		solverParams.probChangeVector = 100n; //seems to be the best (no tested yet)
 	} 
 	
 	/**
@@ -129,28 +128,33 @@ public class PartitAS extends ModelAS{
 	 *  Checks if the solution is valid.
 	 */
 
-	public  def verify():Boolean {
+	public  def verify(conf:Valuation(sz)):Boolean {
 		var sumA:Int = 0n, sumB:Int = 0n;
 		var sumA2:Long = 0, sumB2:Long = 0;
 
-		// 		int i = Random_Permut_Check(p_ad->sol, p_ad->size, p_ad->actual_value, p_ad->base_value);
-		// 		if (i >= 0)
-		// 		{
-		// 			printf("ERROR: not a valid permutation, error at [%d] = %d\n", i, p_ad->sol[i]);
-		// 			return 0;
-		// 		}
+		//Check Permutation
+		val permutV = new Rail[Int](sz, 0n);
+		val baseV = solverParams.baseValue;
+		for (mi in conf.range()){
+			val value = conf(mi);
+			permutV(value-baseV)++;
+			if (permutV(value-baseV)>1){
+				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+			}
+		}
+		
 
 		var i:Int;
 		for(i = 0n; i < size2; i++)
 		{
-			sumA += variables(i);
-			sumA2 += variables(i) * variables(i);
+			sumA += conf(i);
+			sumA2 += conf(i) * conf(i);
 		}
 		
 		for(; i < length; i++)
 		{
-			sumB += variables(i);
-			sumB2 += variables(i) * variables(i);
+			sumB += conf(i);
+			sumB2 += conf(i) * conf(i);
 		}
 		
 		if (sumA != sumB)

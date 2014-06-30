@@ -1,5 +1,6 @@
 package csp.model;
 import csp.util.Logger;
+import csp.solver.Valuation;
 
 /** CostasAS is the implementation of Costas Array problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -41,7 +42,7 @@ public class CostasAS extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of the problem
 	 */
-	def this (lengthProblem : Long, seed : Long) : CostasAS(lengthProblem) {
+	def this (lengthProblem : Long, seed : Long, rLimit:Int) : CostasAS(lengthProblem) {
 		super(lengthProblem, seed);
 		size2 = (lengthProblem - 1n) / 2n;		
 		sizeSq = lengthProblem * lengthProblem;
@@ -51,7 +52,7 @@ public class CostasAS extends ModelAS{
 		nbOcc = new Rail[Int] (length2 , 0n);
 		first =  new Rail[Int] (length2 , 0n);
 		toAdd = new Rail[Int](10);
-		initParameters();
+		initParameters(rLimit);
 		Logger.info(()=>{"Starting CAP"});
 	}
 
@@ -59,23 +60,20 @@ public class CostasAS extends ModelAS{
 	 * 	initParameters() 
 	 *  Set Initial values for the problem
 	 */
-	private def initParameters(){
+	private def initParameters(rLimit:Int){
 		solverParams.probSelectLocMin = 50n;
 		solverParams.freezeLocMin = 1n;
 		solverParams.freezeSwap = 0n;
 		solverParams.resetLimit = 1n;
 		//solverParams.resetLimit = 2n;
 		solverParams.resetPercent = 5n;
-		solverParams.restartLimit = 1000000000n;
+		solverParams.restartLimit = rLimit;
 		solverParams.restartMax = 0n;
 		solverParams.baseValue = 1n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
 		
-		solverParams.probChangeVector = 1n; // 2 also works fine
-		
 		toAdd(0) = 1n; toAdd(1) = 2n; toAdd(2) = length - 2n; toAdd(3) = length - 3n;
-		
 	} 
 	
 	/**
@@ -371,24 +369,28 @@ public class CostasAS extends ModelAS{
 		return -1n; /* -1 because the err[] is not up-to-date */
 	} 
 
-	public  def verify():Boolean {
+	public  def verify(conf:Valuation(sz)):Boolean {
 		var i:Int, j:Int, d:Int;
 		var r:Int = 1n;
 
-		// 		i = Random_Permut_Check(p_ad->sol, p_ad->size, p_ad->actual_value, p_ad->base_value);
+		//Check Permutation
+		val permutV = new Rail[Int](sz, 0n);
+		val baseV = solverParams.baseValue;
+		for (mi in conf.range()){
+			val value = conf(mi);
+			permutV(value-baseV)++;
+			if (permutV(value-baseV)>1){
+				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+			}
+		}
 		
-		// 		if (i >= 0)
-		// 		{
-		// 			printf("ERROR: not a valid permutation, error at [%d] = %d\n", i, p_ad->sol[i]);
-		// 			return 0;
-		// 		}
 		
 		for(i = 1n; i < length; i++)
 		{
 			nbOcc.clear();
 			for(j = i; j < length; j++)
 			{
-				d = variables(j - i) - variables(j);
+				d = conf(j - i) - conf(j);
 				nbOcc(d + length) = nbOcc(d + length) + 1n;
 			}
 			

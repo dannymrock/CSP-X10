@@ -1,22 +1,21 @@
+/** PlaceMultiWalk is the parallel implementation of Random Walk Adaptive Search solver
+ *  in the X10 language. This implementation use distributed isolated instances
+ *  of the solver, each one with a diferent seeds in order to have differents 
+ *  scanning walks in the search space.
+ * 
+ *  This implementation distribute the solver instances across places.
+ * 
+ *  @author Danny Munera
+ *  @version 0.1    9 April, 2013  -> First Version
+ *                  10 April, 2013 -> Changes queens by costas problem
+ *                  12 April, 2013 -> TLP support
+ */
 
 package csp.solver;
 import csp.util.Logger;
 import csp.util.Utils;
 import csp.model.ModelAS;
-/** PlaceMultiWalk is the parallel implementation of Random Walk Adaptive Search solver
- * 	in the X10 language. This implementation use distributed isolated instances
- * 	of the solver, each one with a diferent seeds in order to have differents 
- * 	scanning walks in the search space.
- * 
- *  This implementation distribute the solver instances across places.
- * 
- * 	@author Danny Munera
- *  @version 0.1 	9 April, 2013  -> First Version
- * 					10 April, 2013 -> Changes queens by costas problem
- * 					12 April, 2013 -> TLP support
- */
 import x10.util.Random;
-
 import x10.array.*;
 import x10.compiler.Inline;
 import x10.util.concurrent.AtomicBoolean; 
@@ -40,8 +39,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     // Shared state, accessible from any place, via at(
     var csp_:ModelAS(sz);
     var solver:ASSolverPermut(sz);
-    var time:Long;
-	
+    var time:Long;	
     val intraTIRecv : Int;
     val intraTISend : Int;
     //val commOption : Int;
@@ -67,11 +65,16 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     var interTeamKill:Boolean = false;
     val interTeamInterval:Long;
     val minDistance:Double;
+    
+    val target:Int;
+    val beat:Boolean;
+    val maxTime:Long;
+    
     /**
      * 	Constructor of the class
      */
     public def this(vectorSize:Long, intraTIRecv : Int, intraTISend : Int, interTI : Long, ps : Int,
-    		npT : Int, changeProb:Int, minDistance:Double){
+    		npT : Int, changeProb:Int, minDistance:Double, target:Int, maxTime:Long){
     	property(vectorSize,ps);
     	this.intraTIRecv = intraTIRecv;
     	this.intraTISend = intraTISend;
@@ -81,20 +84,26 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	this.changeProb = changeProb;
     	interTeamInterval = interTI;
     	this.minDistance = minDistance;
+    	
+    	this.maxTime = maxTime;
+    	
+    	if(target < 0n){ //when target is negative means: beat the specified target
+    		beat = true;
+    		this.target = target * -1n; 
+    	}else{ // To be equal to the specified target
+    		beat = false;
+            this.target = target;
+    	}
+    	
     }
-    //var solvers:PlaceLocalHandle[ParallelSolverI(sz)];
     
-    
-    
-    public def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)]):void{
-   
+    public def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)]):void{ 
     	Logger.debug(()=>{"Installing solver"});
- 
     	val ss = st() as ParallelSolverI(sz);
     	val size = sz as Int;
     	var nsize:Int = size;
-    	solver = new ASSolverPermut(sz, nsize, /*seed,*/ ss);
-    	commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, nTeams, changeProb);
+    	solver = new ASSolverPermut(sz, nsize, /*seed,*/ ss, target, beat, maxTime);
+    	commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, nTeams, changeProb); // check parameteres 
     }
     	
     
@@ -122,21 +131,22 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	
     	
     	
-    	//Logger.info(()=>{"   Seed in solver:"+seed});
+    	Logger.info(()=>{"   Seed in solver:"+seed});
     	
     	// verify if inter team comm is able, if the number of teams is greater than 1 and 
     	//        if place(here) is a head node 
     	if (interTeamInterval > 0 && nTeams > 1n && here.id < nTeams){
-    	// 	val delay = random.nextLong(interTeamInterval);
+    		//val delay = random.nextLong(interTeamInterval);
+    		Logger.debug(()=>{" creating Inter-Team Activity"});
     	 	async{
-    	// 		System.sleep(delay);
+    	 		//System.sleep(delay);
     	 		interTeamActivity(st, random.nextLong());
     	 	} 
     	 }
     	
     	
     	csp_ = cspGen(); // use the supplied generator to generate the problem
-    	csp_.setSeed(random.nextLong());
+    	//csp_.setSeed(random.nextLong());
     	    	
     	Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
     	
@@ -145,7 +155,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	time += System.nanoTime();
     	
     	// Logger.debug(()=>"  PlacesMultiWalks: end solve process: solver.solve() function ");
-    	if (cost == 0n){ //TODO: Define a new condition (It's possible to finish without cost=0)
+    	//if (cost == 0n){ //TODO: Define a new condition (It's possible to finish without cost=0)
+        if ((beat && cost < target)||(!beat && cost <= target)){ //TODO: Define a new condition (It's possible to finish without cost=0)
     		// A solution has been found! Huzzah! 
     		// Light the candles! Kill the blighters!
     		val home = here.id;
@@ -159,13 +170,13 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     			interTeamKill = true;
     			setStats_(solvers);
     			//Console.OUT.println("\nerrors "+ err);
-    			Console.OUT.println("Solution is " + (csp_.verify()? "ok" : "WRONG"));
+    			//Console.OUT.println("Solution is " + (csp_.verify()? "ok" : "WRONG"));
     			//Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
     			//Utils.show("Solution is ? ", csp_.getVariables());
     			
     			//csp_.displaySolution2(solver.bestConf as Valuation(sz));
     			//Console.OUT.println("Solution is " + (csp_.verified(solver.bestConf as Valuation(sz))? "perfect" : "not perfect"));
-    			//csp_.verify(solver.bestConf as Valuation(sz));
+    			csp_.verify(solver.bestConf as Valuation(sz));
     		}
     	}
     }

@@ -19,8 +19,11 @@ import csp.model.ModelAS;
  * 	
  */
 
-public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
+public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int, b:Boolean, mTime:Long) {
 
+    val target = t;
+	val beat = b;
+	
 	val mark = new Rail[Int] (size, 0n); 
 	val solverP = new ASSolverParameters();
 
@@ -90,6 +93,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 	// 	//kill=false;
 	// }
 	
+	val maxTime = mTime;
 	
 	public def setSeed(seed:Long){
 		this.seed = seed;
@@ -103,7 +107,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 	 * 	@param csp The model of the problem to solve
 	 *  @return the final total cost after solving process (If success returns 0)
 	 */ 
-	public def solve( csp_ : ModelAS{self.sz==this.sz} ) : Int { //
+	public def solve( csp_ : ModelAS{self.sz==this.sz} ) : Int { 
 		
 		csp_.setParameters(solverP);
 		
@@ -151,6 +155,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 		//Console.OUT.println("initial bestCost="+bestCost);
 		
 		bestSent = false;
+		var initialTime:Long = System.nanoTime();
 		
 		while( totalCost != 0n ){
 			// if (bestCost < bestOfBest)
@@ -180,7 +185,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 				selectVarsToSwap( csp_ );
 				//Console.OUT.println("maxI= "+maxI+"  minJ= "+minJ);
 			}
-			
+			Logger.debug(()=>{"----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap});
 			//Console.OUT.println("----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap);
 			
 			if (totalCost != newCost) {
@@ -261,7 +266,24 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 				Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
 				bestCost = totalCost;
 				bestSent = false;
+				
+				// Compare cost and break if target is accomplished
+	 			if ((beat && bestCost < target)||(!beat && bestCost <= target)){
+	 				break;
+	 			}
 			}
+			
+			/**
+	         *  Time out
+	         */
+	       
+	        if(maxTime > 0){
+	           val eTime = System.nanoTime() - initialTime; 
+	           if(eTime/1e6 >= maxTime){ //comparison in miliseconds
+	              Console.OUT.println(here+": Time Out");
+	              break;
+	           }
+	        }
 			
 			if( solver.intraTISend() != 0n && nbIter % solver.intraTISend() == 0n){        //here.id as Int ){
 				if(!bestSent){ 
@@ -301,10 +323,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz)) {
 		nbLocalMinTot += nbLocalMin; 
 		
 		//csp_.displaySolution();
-		Logger.info(()=>{"   ASSolverPermut: Finish search with cost: "+bestCost+" kill="+kill });
+		Logger.info(()=>{"   ASSolverPermut: Finish search with best cost: "+bestCost+" kill="+kill });
 		
 		if (bestCost == 0n){
-			Logger.debug(()=>{"perfect solution found "});
+			Logger.info(()=>{"perfect solution found "});
 			//csp_.displaySolution(bestConf as Valuation(sz));
 		}
 		// else{

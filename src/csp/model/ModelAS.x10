@@ -27,7 +27,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	 */
 	public def this( lengthProblem : Long, seed : Long ){
 		property(lengthProblem, seed);
-		this.initParameters();
+		this.initParameters(1000n);
 	}
 	
 	/**
@@ -40,7 +40,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	/**
 	 *  Initialize the default solver parameters for the model 
 	 */
-	private def initParameters(){
+	private def initParameters(rLimit:Int){
 		
 		//Default values
 		solverParams.probSelectLocMin = 0n;
@@ -48,7 +48,7 @@ public class ModelAS(sz:Long, seed:Long) {
 		solverParams.freezeSwap = 0n;
 		solverParams.resetLimit = length;
 		solverParams.resetPercent = 10n;
-		solverParams.restartLimit = 1000n; // 10000000n;
+		solverParams.restartLimit = rLimit;
 		solverParams.restartMax = 0n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false;
@@ -141,7 +141,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	public def displaySolution() {
 		Utils.show("final",variables);
 	}
-	public def verify():Boolean=false;
+	public def verify(conf:Valuation(sz)):Boolean=false;
 	
 	public def getVariables():Valuation(sz){
 		return variables;

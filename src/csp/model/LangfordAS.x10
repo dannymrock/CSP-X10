@@ -1,4 +1,5 @@
 package csp.model;
+import csp.solver.Valuation;
 
 /** LangfordAS is the implementation of Langford pairing problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -12,30 +13,28 @@ package csp.model;
 
 public class LangfordAS(order:Long) extends ModelAS{ 
 
-	def this (order : Long, vectorSize: Long/*{self==2*order}*/, seed : Long) : LangfordAS(vectorSize){
+	def this (order : Long, vectorSize: Long/*{self==2*order}*/, seed : Long, rLimit:Int) : LangfordAS(vectorSize){
 		super(vectorSize, seed);
 		property(order);
-		initParameters();
+		initParameters(rLimit);
 	}
 
 	/**
 	 * 	initParameters() 
 	 *  Set Initial values for the problem
 	 */
-	private def initParameters(){ 
+	private def initParameters(rLimit:Int){ 
 		solverParams.probSelectLocMin = 3n;
 		solverParams.freezeLocMin = 1n;
 		solverParams.freezeSwap = 0n;
 		solverParams.resetLimit = (order < 12n) ? 4n : 10n;
 		//solverParams.resetPercent = 1;      //var to reset
 		solverParams.nbVarToReset = 1n;
-		solverParams.restartLimit = 100000n;
+		solverParams.restartLimit = rLimit;
 		solverParams.restartMax = 100n;
 		solverParams.baseValue = 0n;
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false; 
-		
-		solverParams.probChangeVector = 100n; //best 
 		
 		if (order % 4 != 0 && order % 4 != 3)
 		{
@@ -142,22 +141,25 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 * 
 	 *  Checks if the solution is valid.
 	 */
-	public  def verify():Boolean {
+	public  def verify(conf:Valuation(sz)):Boolean {
 		var order:Int = length / 2n;
 		var i:Int, x:Int, y:Int, between:Int;
 		
-		// 		int i = Random_Permut_Check(p_ad->sol, p_ad->size, p_ad->actual_value, p_ad->base_value);
-		
-		// 		if (i >= 0)
-		// 		{
-		// 			printf("ERROR: not a valid permutation, error at [%d] = %d\n", i, p_ad->sol[i]);
-		// 			return 0;
-		// 		}
+		//Check Permutation
+		val permutV = new Rail[Int](sz, 0n);
+		val baseV = solverParams.baseValue;
+		for (mi in conf.range()){
+			val value = conf(mi);
+			permutV(value-baseV)++;
+			if (permutV(value-baseV)>1){
+				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+			}
+		}
 		
 		for(i = 0n; i < order; i++)
 		{
-			x = variables(i);
-			y = variables(order + i);
+			x = conf(i);
+			y = conf(order + i);
 			between = Math.abs(x - y) - 1n;
 			
 			if (between != i + 1n)

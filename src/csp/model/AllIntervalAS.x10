@@ -1,4 +1,5 @@
 package csp.model;
+import csp.solver.Valuation;
 
 /** AllIntervalAS is the implementation of All-Intervals problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -20,23 +21,23 @@ public class AllIntervalAS extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	def this (lengthProblem : Long , seed : Long, exahustive:Boolean ):AllIntervalAS(lengthProblem){
+	def this (lengthProblem : Long , seed : Long, exahustive:Boolean, restLimit:Int ):AllIntervalAS(lengthProblem){
 		super( lengthProblem, seed );
 		nbOcc = new Rail[Int] (length , 0n);
 		exh = exahustive;
-		initParameters();
+		initParameters(restLimit);
 		
 	}
 	
 	
-	private def initParameters(){
+	private def initParameters(rLimit:Int){
 		if (exh){
 			solverParams.probSelectLocMin = 66n;
 			solverParams.freezeLocMin = 1n;
 			solverParams.freezeSwap = 0n;
 			solverParams.resetLimit = 1n;
 			solverParams.resetPercent = 25n;
-			solverParams.restartLimit = 10000000n;
+			solverParams.restartLimit = rLimit;
 			solverParams.restartMax = 0n;
 			solverParams.baseValue = 0n;
 			solverParams.exhaustive = true;
@@ -47,13 +48,12 @@ public class AllIntervalAS extends ModelAS{
 			solverParams.freezeSwap = 0n;
 			solverParams.resetLimit = length / 6n;
 			solverParams.resetPercent = 10n;
-			solverParams.restartLimit = 10000000n;
+			solverParams.restartLimit = rLimit;
 			solverParams.restartMax = 0n;
 			solverParams.baseValue = 0n;
 			solverParams.exhaustive = false;
 			solverParams.firstBest = false;
 		}
-		solverParams.probChangeVector = 1n; //not deeply tested 
 	} 
 	
 	/**
@@ -331,20 +331,25 @@ public class AllIntervalAS extends ModelAS{
 	 * 
 	 *  Checks if the solution is valid.
 	 */
-	public  def verify():Boolean {
+	public  def verify(conf:Valuation(sz)):Boolean {
  		var r:Int = 1n;
-// 		int i = Random_Permut_Check(p_ad->sol, p_ad->size, p_ad->actual_value, p_ad->base_value);
-
-// 		if (i >= 0)
-// 		{
-// 			printf("ERROR: not a valid permutation, error at [%d] = %d\n", i, p_ad->sol[i]);
-// 			return 0;
-// 		}
+ 		
+ 		//Check Permutation
+ 		val permutV = new Rail[Int](sz, 0n);
+ 		val baseV = solverParams.baseValue;
+ 		for (mi in conf.range()){
+ 			val value = conf(mi);
+ 			permutV(value-baseV)++;
+ 			if (permutV(value-baseV)>1){
+ 				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+ 			}
+ 		}
+ 
  		
  		nbOcc.clear();
  		var i:Int;
  		for(i = 0n; i < length - 1n; i++)
- 			nbOcc(Math.abs(variables(i) - variables(i + 1)))++;
+ 			nbOcc(Math.abs(conf(i) - conf(i + 1)))++;
  
  		for(i = 1n; i < length; i++)
  			if (nbOcc(i) > 1)

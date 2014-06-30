@@ -34,8 +34,6 @@ public class ASSolverParameters{
 	public var resetPercent : Int;		
 
 	public var baseValue : Int;
-	/** Probability to change variables vector for a vector in the pool (Comm Enable) */
-	public var probChangeVector : Int;
 	
 	/** minimum permisible distance between places */
 	public var minDistance : Double;
@@ -47,7 +45,6 @@ public class ASSolverParameters{
 	public def this(){
 		firstBest = false; //revisar val por default
 		nbVarToReset = -1n;
-		probChangeVector = 100n;
 		minDistance = 0.3;
 	}
 	
@@ -68,7 +65,6 @@ public class ASSolverParameters{
 		this.reinitAfterIfSwap = toSet.reinitAfterIfSwap;	
 		this.resetPercent = toSet.resetPercent;
 		this.baseValue = toSet.baseValue;
-		this.probChangeVector = toSet.probChangeVector;
 		this.minDistance = toSet.minDistance;
 	}	
 }
