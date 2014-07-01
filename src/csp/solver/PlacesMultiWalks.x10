@@ -174,7 +174,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     			//Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
     			//Utils.show("Solution is ? ", csp_.getVariables());
     			
-    			//csp_.displaySolution2(solver.bestConf as Valuation(sz));
+    			csp_.displaySolution2(solver.bestConf as Valuation(sz));
+    			//csp_.displaySolution();
     			//Console.OUT.println("Solution is " + (csp_.verified(solver.bestConf as Valuation(sz))? "perfect" : "not perfect"));
     			csp_.verify(solver.bestConf as Valuation(sz));
     		}

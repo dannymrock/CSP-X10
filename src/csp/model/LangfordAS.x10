@@ -1,5 +1,6 @@
 package csp.model;
 import csp.solver.Valuation;
+import csp.util.Logger;
 
 /** LangfordAS is the implementation of Langford pairing problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -8,14 +9,45 @@ import csp.solver.Valuation;
  * 	by Daniel Diaz
  * 
  * 	@author Danny Munera
- *  @version 0.1 April 22, 2013 First Version
+ *  @version 0.2 July 2013 Order 3 implementation (based in langford3.c in the adaptive search code)
+ */
+
+/*                                                                                                                                            
+ *  MODELING (Langford3.c Adaptive Search C implementation)                                                                                                                                 
+ *                                                                                                                                            
+ *  order = n of the problem                                                                                                                  
+ *  size  = order * K (we solve Langford(K, order) for K = 2 or 3)                                                                            
+ *  sol[] = values: sol[i] = j (j in 0..size-1) encodes one position of a given value v:                                                      
+ *                                                                                                                                            
+ *          value v = i % order + 1                                                                                                           
+ *                                                                                                                                            
+ *          if i < order   the 1st occurrence of v appears in position j                                                                      
+ *          if i < 2*order the 2nd occurrence of v appears in position j                                                                      
+ *                    else the 3rd occurrence of v appears in position j                                                                      
+ *                                                                                                                                            
+ *          for instance, a solution for L(2,3) is:                                                                                           
+ *                                                                                                                                            
+ *              i  : 0 1 2 3 4 5                                                                                                              
+ *              v  : 1 2 3 1 2 3                                                                                                              
+ *          sol[i] : 2 0 5 4 3 1 which represents the following sequence                                                                      
+ *          sequen.: 2 3 1 2 1 3                                                                                                              
+ *                                                                                                                                            
+ *  In the rest of the code we use x = v - 1 (x in 0..order-1).                                                                               
+ *  The error on a value x is stored in err[x].                                                                                               
+ *  err[x] = 1 iff the distance between both occurrences of x is invalid                                                                      
+ *  (i.e. the distance between indices are != x + 2)     
  */
 
 public class LangfordAS(order:Long) extends ModelAS{ 
+	
+	val paramK:Long; // Should be an input parameter
+	val err:Rail[Int];
 
 	def this (order : Long, vectorSize: Long/*{self==2*order}*/, seed : Long, rLimit:Int) : LangfordAS(vectorSize){
 		super(vectorSize, seed);
 		property(order);
+		paramK = vectorSize /order;
+		err = new Rail[Int](order,0n);
 		initParameters(rLimit);
 	}
 
@@ -36,11 +68,13 @@ public class LangfordAS(order:Long) extends ModelAS{
 		solverParams.exhaustive = false;
 		solverParams.firstBest = false; 
 		
-		if (order % 4 != 0 && order % 4 != 3)
-		{
+		if ((paramK == 2 && order % 4 != 0 && order % 4 != 3) ||
+				(paramK == 3 && (order < 9 || (order % 9 != 0 && order % 9 != 1 && order % 9 != 8)))){
 			Console.OUT.printf("no solution with size = %d\n", order);
 			//exit(1);
 		}
+
+		
 	} 
 	
 	public def costVar(i : Int) : Int {
@@ -73,8 +107,11 @@ public class LangfordAS(order:Long) extends ModelAS{
 		var i : Int;
 		var r : Int = 0n;
 
-		for(i = 0n; i < order; i++)
-			r += costVar(i);
+		for(i = 0n; i < order; i++){
+			val c = computeError(i);
+			err(i) = c as Int;
+			r += c;
+		}
 		return r;
 	}
 	
@@ -85,10 +122,8 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 */
 	public def costOnVariable( var i : Int ) : Int
 	{
-		if (i >= order)
-			i -= order;
-
-		return costVar(i);
+		val x = i % order;
+		return err(x);
 	}
 	
 	/**
@@ -100,20 +135,44 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 */
 	public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
 	{
-		var x : Int;
-		var r : Int;
-
-		x = variables(i1);
+		var r : Int = currentCost;
+		
+		val x = i1 % order;           /* value to exchange (in 0..order - 1) */
+		val y = i2 % order;
+		// 		int tmp;
+		// 
+		// 		#ifdef CHECK
+		// 		if (current_cost != Cost_Of_Solution(0))
+		// 			printf("SEEMS 111 AN ERROR %d <=> %d: %d should be %d\n", i1, i2, current_cost, Cost_Of_Solution(0));
+		// 		#endif
+		// 
+		// 		#if 1
+		if (x == y)                   /* exchange the same value ? */
+			return r;
+		// 		#endif
+		// 
+		var tmp:Int = variables(i1);
 		variables(i1) = variables(i2);
-		variables(i2) = x;
-
-		r = costOfSolution(false);
-
+		variables(i2) = tmp;
+		
+		r -= err(x);
+		r -= err(y);
+		
+		r += computeError(x);
+		r += computeError(y);
+		
+		// 		#ifdef CHECK
+		// 		if (current_cost !=  Cost_Of_Solution(0))
+		// 			printf("SEEMS 222 AN ERROR %d <=> %d: %d should be %d\n", i1, i2, current_cost, Cost_Of_Solution(0));
+		// 		#endif
+		
 		variables(i2) = variables(i1);
-		variables(i1) = x;
-
-		//if (ad_reinit_after_if_swap)
-		//Cost_Of_Solution(0);
+		variables(i1) = tmp;
+		
+		// 		#ifdef CHECK
+		// 		Cost_Of_Solution(0);
+		// 		#endif
+		// 		 return current_cost;	
 		return r;
 	}
 
@@ -122,19 +181,31 @@ public class LangfordAS(order:Long) extends ModelAS{
 	{
 		var i : Int;
 		var j : Int;
+		Console.OUT.printf("\n");
 		
-		//  Ad_Display(p_ad->sol, p_ad, NULL); // to see actual values
-		for(i = 0n; i < length; i++)
-		{
+		for(i = 0n; i < length; i++){
 			for(j = 0n; variables(j) != i; j++)
 				;
-			if (j >= order)
-				j -= order;
+			j %= order;
 			Console.OUT.printf("%d ", j + 1);
 		}
 		Console.OUT.printf("\n");
 	}
 	
+	
+	public def displaySolution2(conf:Valuation(sz)){
+		var i : Int;
+		var j : Int;
+		Console.OUT.printf("\n");
+		
+		for(i = 0n; i < length; i++){
+			for(j = 0n; conf(j) != i; j++)
+				;
+			j %= order;
+			Console.OUT.printf("%d ", j + 1);
+		}
+		Console.OUT.printf("\n");
+	}
 	
 	/**
 	 *  CHECK_SOLUTION
@@ -142,8 +213,8 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 *  Checks if the solution is valid.
 	 */
 	public  def verify(conf:Valuation(sz)):Boolean {
-		var order:Int = length / 2n;
-		var i:Int, x:Int, y:Int, between:Int;
+		var order:Long = length / paramK;
+		var r:Long = 0;
 		
 		//Check Permutation
 		val permutV = new Rail[Int](sz, 0n);
@@ -152,24 +223,113 @@ public class LangfordAS(order:Long) extends ModelAS{
 			val value = conf(mi);
 			permutV(value-baseV)++;
 			if (permutV(value-baseV)>1){
-				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+				Console.OUT.println("Error: Not valid permutation, value "+ value +" is repeted");
 			}
 		}
 		
-		for(i = 0n; i < order; i++)
-		{
-			x = conf(i);
-			y = conf(order + i);
-			between = Math.abs(x - y) - 1n;
+		val vSort = new Rail[Int](paramK,0n);
+		var j:Long;
+		for(var x:Long = 0; x < order; x++){
+			var i:Long = x;
+			r = 0;
 			
-			if (between != i + 1n)
-			{
-				Console.OUT.println("ERROR: between the two "+i+1n+" there are "+between+" values !");
+			//Console.OUT.println("value x "+(x+1));
+			
+			for(c in vSort.range()){
+				val ind = conf(i);
+				//Console.OUT.println(" "+ind);
+				i += order;
+				for(j = c - 1; j >= 0 && ind < vSort(j); j--)
+					;
+				j++;
+				for(var k:Long = c; k > j; k--)
+					vSort(k) = vSort(k - 1);
+				vSort(j) = ind;
+			}
+			
+			// Console.OUT.print("\nSORTED: ");
+			// for(c in vSort.range()){
+			// 	val ind = vSort(c);
+			// 	Console.OUT.print(" "+ind);
+			// }
+			
+			
+			for(var c:Long = 1; c < paramK; c++){
+				val ind1 = vSort(c - 1);           /* index of the 1st occurrence */
+				val ind2 = vSort(c);               /* index of the 2nd occurrence */
+
+				val between = ind2 - ind1;
+				r += (between - 2 != x)? 1:0;
+			}
+			
+			//Console.OUT.println("r= "+r);			
+			if (r != 0){
+				Console.OUT.println("ERROR: the "+(x+1n)+" values  are missplaced!");
 				return false;
 			}
 		}
 		
 		return true;
-	}	
+	}
+	
+	
+	
+	
+	public def	computeError(x:Long):Long{            /* here x < order */
+		var r:Long = 0n, i:Long = x;
+ 		val sort = new Rail[Int](paramK, 0n);
+		
+		Logger.info(()=>{"FOR: "+x});
+		Logger.info(()=>{"VALUES: "});
+
+		var j:Long, c:Long;
+		for(c = 0; c < paramK; c++){
+ 			val ind = variables(i);
+ 			Logger.info(()=>{" "+ind});
+ 			i += order;
+ 			for(j = c - 1; j >= 0 && ind < sort(j); j--)
+ 				;
+ 			j++;
+ 			for(var k:Long = c; k > j; k--)
+ 				sort(k) = sort(k - 1);
+ 			sort(j) = ind;
+ 		}
+		
+		
+		Logger.info("\nSORTED: ");
+ 		for(c = 0; c < paramK; c++){
+ 			val ind = sort(c);
+ 			Logger.info(()=>{" "+ind});
+ 		}
+ 		
+ 		
+ 		for(c = 1; c < paramK; c++){
+ 			val ind1 = sort(c - 1);           /* index of the 1st occurrence */
+ 			val ind2 = sort(c);               /* index of the 2nd occurrence */
+
+ 			val between = ind2 - ind1;
+ 			r += (between - 2 != x)? 1:0;
+ 		}
+ 
+ 		val valr=r;
+ 		Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
+ 		return r;
+	}
+
+	/**
+	 *  executedSwap( i1 : Int, i2 : Int)
+	 *  This function updates the values of the object data structures for the problem due to the 
+	 *  completion of a swap between two variables
+	 *  @param i1 First variable already swapped
+	 *  @param i2 Second variable already swapped
+	 */
+	public def executedSwap(var i1 : Int, var i2 : Int) {
+		val x = i1 % order;
+		val y = i2 % order;
+
+		err(x) = computeError(x) as Int;
+		err(y) = computeError(y) as Int;
+	}
+	
 }
 public type LangfordAS(s:Long)=LangfordAS{self.sz==s};

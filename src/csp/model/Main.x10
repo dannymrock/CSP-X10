@@ -65,7 +65,7 @@ public class Main {
 				                       Option("N", "", "nodes_per_team parameter. Default 4."),
 				                       Option("D", "", "minimum permisible distance."),
 				                       Option("y", "", "seed. Default 0"),
-				                       Option("o", "", "output format: machine 0, info 1")
+				                       Option("o", "", "output format: csv 0, info 1")
 				                       ]);
 		
 		val problem        = opts("-p", "MSP");
@@ -119,7 +119,8 @@ public class Main {
 		} else if(problem.equals("LNP")){
 			Logger.debug(()=>{"Langford Pairing Problem"});
 			param = LANGFORD_PROBLEM;
-			vectorSize=2*size;
+			val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets
+			vectorSize= eNumber*size;
 		} else if(problem.equals("NPP")){
 			Logger.debug(()=>{"Number Partition Problem"});
 			param = PARTIT_PROBLEM;

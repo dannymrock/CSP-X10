@@ -280,7 +280,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	        if(maxTime > 0){
 	           val eTime = System.nanoTime() - initialTime; 
 	           if(eTime/1e6 >= maxTime){ //comparison in miliseconds
-	              Console.OUT.println(here+": Time Out");
+	              Logger.info(()=>{" Time Out"});
 	              break;
 	           }
 	        }
@@ -339,6 +339,9 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		//csp_.swapVariables(1n,150n);
 		//csp_.swapVariables(1n,2n);
 		//bestConf(2)=2n;
+		//val tmp = bestConf(2);
+		//bestConf(2)=bestConf(3);
+		//bestConf(3)=tmp;
 		
 		return bestCost;
 	}

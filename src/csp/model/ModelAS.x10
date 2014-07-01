@@ -141,6 +141,11 @@ public class ModelAS(sz:Long, seed:Long) {
 	public def displaySolution() {
 		Utils.show("final",variables);
 	}
+	
+	public def displaySolution2(conf:Valuation(sz)) {
+		Utils.show("final",conf);
+	}
+	
 	public def verify(conf:Valuation(sz)):Boolean=false;
 	
 	public def getVariables():Valuation(sz){
