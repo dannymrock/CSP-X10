@@ -287,7 +287,6 @@ public class Main {
 			// Clear sample accumulator for repetitions
 			solvers().clearSample();
 			
-			
 			for(mline in mPref) mline.clear();
 			for(wline in wPref) wline.clear();
 		}//End 1st Loop
@@ -298,8 +297,7 @@ public class Main {
 		if(outFormat == 0n){
 			Console.OUT.print("TOTAL,");
 			solvers().printGenAVG(insNb*testNb,outFormat);
-		}
-		else if (outFormat == 1n){
+		}else if (outFormat == 1n){
 			Console.OUT.println("|-------------------------------------------------------------------------------------------------------------------|");
 			Console.OUT.println("\n   General Statistics for "+insNb+" problems, each one solved "+testNb+" times ");
 			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
@@ -310,26 +308,22 @@ public class Main {
 			Console.OUT.printf("\n");
 		}
 		
-		
 		val avgWall = totalWallT/(insNb*testNb as Double);
 		totalTime += System.nanoTime();
 		if(outFormat == 0n)
 			Console.OUT.println("TotalInstances,"+insNb+",,Repetitions,"+testNb+",,Total_Time,"+(totalTime/1e9)+
-				",,AVG_wall_Time,"+(avgWall/1e9));
+					",,AVG_wall_Time,"+(avgWall/1e9));
 		else if (outFormat == 1n)
 			Console.OUT.println("TotalInstances: "+insNb+" Repetitions: "+testNb+" Total_Time: "+(totalTime/1e9)+
-					" AVG_wall_Time: "+(avgWall/1e9));
-		
+					" AVG_wall_Time: "+(avgWall/1e9));	
 		
 		return;
 	}	
 	
-	
 	static def printHeader(outF : Int){
-		if (outF == 0n){
+		if(outF == 0n){
 			Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,force_restart,solution,walltime");
-		}
-		else if(outF == 1n){
+		}else if(outF == 1n){
 			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  |  FR |  PS | walltime");
 			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
 		}

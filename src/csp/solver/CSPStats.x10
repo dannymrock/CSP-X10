@@ -25,7 +25,7 @@ public class CSPStats{
 	/** Number of local minimum */
 	var locmin : Int=0n;
 	/** Number of swaps */
-	var swaps : Int=0n;
+	var swaps : Long=0;
 	/** Number of resets */
 	var reset : Int=0n;
 	/** number of same variables */
