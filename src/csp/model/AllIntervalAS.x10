@@ -130,13 +130,13 @@ public class AllIntervalAS extends ModelAS{
 				(i2 == 0n && (variables(i1) == 0n || variables(i1) == length - 1n)))
 			return length;
 		
-		if(i2 < i1){
-			val aux = i1;
-			i1 = i2;
-			i2 = aux;
-		}else if(i1==i2){
-			return cost();
-		}
+		// if(i2 < i1){
+		// 	val aux = i1;
+		// 	i1 = i2;
+		// 	i2 = aux;
+		// }else if(i1==i2){
+		// 	return cost();
+		// }
 			
 
 		s1 = variables(i1);
@@ -219,11 +219,15 @@ public class AllIntervalAS extends ModelAS{
 			//return;
 		//}
 		
-		if(i2 < i1){
-			val aux = i1;
-			i1 = i2;
-			i2 = aux;
-		}
+		//we know i1 < i2 due to ad.exhaustive */
+		// else uncomment this
+		// if(i2 < i1){
+		// 	val aux = i1;
+		// 	i1 = i2;
+		// 	i2 = aux;
+		// }
+		
+		
 		//else if(i1==i2){
 			//return cost();
 		//}

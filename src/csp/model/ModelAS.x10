@@ -139,11 +139,11 @@ public class ModelAS(sz:Long, seed:Long) {
 	}
 	
 	public def displaySolution() {
-		Utils.show("final",variables);
+		Utils.show("Solution",variables);
 	}
 	
 	public def displaySolution2(conf:Valuation(sz)) {
-		Utils.show("final",conf);
+		Utils.show("Solution",conf);
 	}
 	
 	public def verify(conf:Valuation(sz)):Boolean=false;

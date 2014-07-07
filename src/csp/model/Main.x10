@@ -65,6 +65,7 @@ public class Main {
 				                       Option("N", "", "nodes_per_team parameter. Default 4."),
 				                       Option("D", "", "minimum permisible distance."),
 				                       Option("y", "", "seed. Default 0"),
+				                       Option("v", "", "verify and print solution. Default 0"),
 				                       Option("o", "", "output format: csv 0, info 1")
 				                       ]);
 		
@@ -84,6 +85,7 @@ public class Main {
 		val interTI        = opts("-I", 0);
 		val minDistance    = opts("-D", 0.3);
 		val inSeed         = opts("-y", 0);
+		val verify         = opts("-v", 0);
 		val outFormat	   = opts("-o", 1n);
 				
 		/**
@@ -105,28 +107,28 @@ public class Main {
 		
 		var vectorSize:Long = size; //?
 		if (problem.equalsIgnoreCase("MSP")) {
-			Logger.debug(()=>{"Magic Square Problem"});
+			//Logger.debug(()=>{"Magic Square Problem"});
 			param = MAGIC_SQUARE_PROBLEM;
 			vectorSize= size*size;
 		} else if(problem.equals("CAP")){
-			Logger.debug(()=>{"Costas Array Problem"});
+			//Logger.debug(()=>{"Costas Array Problem"});
 			param = COSTAS_PROBLEM;
 			vectorSize= size;
 		} else if(problem.equals("AIP")){
-			Logger.debug(()=>{"All-Interval Array Problem"});
+			//Logger.debug(()=>{"All-Interval Array Problem"});
 			param = ALL_INTERVAL_PROBLEM;
 			vectorSize=size;
 		} else if(problem.equals("LNP")){
-			Logger.debug(()=>{"Langford Pairing Problem"});
+			//Logger.debug(()=>{"Langford Pairing Problem"});
 			param = LANGFORD_PROBLEM;
 			val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets
 			vectorSize= eNumber*size;
 		} else if(problem.equals("NPP")){
-			Logger.debug(()=>{"Number Partition Problem"});
+			//Logger.debug(()=>{"Number Partition Problem"});
 			param = PARTIT_PROBLEM;
 			vectorSize=size;
 		} else if(problem.equals("SMP")){
-			Logger.debug(()=>{"Stable Marriage Problem"});
+			//Logger.debug(()=>{"Stable Marriage Problem"});
 			param = STABLE_MARRIAGE_PROBLEM;
 			vectorSize=size;
 		} else{
@@ -148,7 +150,7 @@ public class Main {
 		val solvers:PlaceLocalHandle[ParallelSolverI(vectorSz)];    
 		solvers = PlaceLocalHandle.make[ParallelSolverI(vectorSz)](PlaceGroup.WORLD, 
 				()=>new PlacesMultiWalks(vectorSz, updateI, reportI, interTI, poolSize, nodesPTeam,
-						changeProb, minDistance, targetCost, maxTime) as ParallelSolverI(vectorSz));
+						changeProb, minDistance, targetCost, maxTime, (verify!=0) ) as ParallelSolverI(vectorSz));
 		
 		var insNb:Int = 0n; //counter of instances
 		var iList : Rail[String];
@@ -168,7 +170,7 @@ public class Main {
 		if (param == STABLE_MARRIAGE_PROBLEM){
 			//Load Files enable doble double loop
 			iList = SMTIAS.loadDir(filePath,nPath);
-			Logger.info(()=>{"nPath "+nPath});
+			//Logger.info(()=>{"nPath "+nPath});
 		}else{
 			//disable double loop
 			iList = ["noFile" as String];
@@ -190,7 +192,7 @@ public class Main {
 				
 				
 				val cT= loadTime += System.nanoTime();
-				Logger.debug(()=>{"Time to load the problem="+cT/1e9});
+				//Logger.debug(()=>{"Time to load the problem="+cT/1e9});
 				
 			}
 			
@@ -238,7 +240,7 @@ public class Main {
 				wallTime += System.nanoTime();
 				val wtime = wallTime;
 				totalWallT += wallTime;
-				Logger.debug(()=>{"wall time="+wtime/1e9});
+				//Logger.debug(()=>{"wall time="+wtime/1e9});
 				
 				/**
 				 *  Print stats for the current instance and sample

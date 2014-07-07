@@ -116,7 +116,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			solverP.nbVarToReset = (((size * solverP.resetPercent) + (100n) - 1n) / (100n));
 			if (solverP.nbVarToReset < 2n){
 				solverP.nbVarToReset = 2n;
-				Logger.debug(()=>{"increasing nb var to reset since too small, now = "+ solverP.nbVarToReset});
+				//Loger.debug(()=>{"increasing nb var to reset since too small, now = "+ solverP.nbVarToReset});
 			}
 		}
 		
@@ -166,7 +166,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			if (nbIter >= solverP.restartLimit){
 				if(nbRestart < solverP.restartMax){
 					//restart
-					Logger.debug(()=>"ASSolver:Restart");
+					//Loger.debug(()=>"ASSolver:Restart");
 					forceRestart = false;
 					nbRestart++;
 					restartVar(csp_);
@@ -185,7 +185,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				selectVarsToSwap( csp_ );
 				//Console.OUT.println("maxI= "+maxI+"  minJ= "+minJ);
 			}
-			Logger.debug(()=>{"----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap});
+			//Logger.debug(()=>{"----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap});
 			//Console.OUT.println("----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap);
 			
 			if (totalCost != newCost) {
@@ -268,9 +268,9 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				bestSent = false;
 				
 				// Compare cost and break if target is accomplished
-	 			if ((beat && bestCost < target)||(!beat && bestCost <= target)){
-	 				break;
-	 			}
+				if ((beat && bestCost < target)||(!beat && bestCost <= target)){
+					break;
+				}
 			}
 			
 			/**
@@ -280,7 +280,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	        if(maxTime > 0){
 	           val eTime = System.nanoTime() - initialTime; 
 	           if(eTime/1e6 >= maxTime){ //comparison in miliseconds
-	              Logger.info(()=>{" Time Out"});
+	              //Loger.info(()=>{" Time Out"});
 	              break;
 	           }
 	        }
@@ -307,7 +307,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			
 			if (forceRestart){
 				//restart
-				Logger.debug(()=>"   ASSolverPermut : force Restart");
+				//Loger.debug(()=>"   ASSolverPermut : force Restart");
 				forceRestart = false;
 				nbForceRestart++;
 				restartVar(csp_);
@@ -323,10 +323,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		nbLocalMinTot += nbLocalMin; 
 		
 		//csp_.displaySolution();
-		Logger.info(()=>{"   ASSolverPermut: Finish search with best cost: "+bestCost+" kill="+kill });
+		//Loger.info(()=>{"   ASSolverPermut: Finish search with best cost: "+bestCost+" kill="+kill });
 		
 		if (bestCost == 0n){
-			Logger.info(()=>{"perfect solution found "});
+			//Loger.info(()=>{"perfect solution found "});
 			//csp_.displaySolution(bestConf as Valuation(sz));
 		}
 		// else{
@@ -342,6 +342,9 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		//val tmp = bestConf(2);
 		//bestConf(2)=bestConf(3);
 		//bestConf(3)=tmp;
+		
+		
+		//Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
 		
 		return bestCost;
 	}
@@ -468,7 +471,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		var cost : Int = -1n;		//reset(n, csp);
 		
 		cost = csp_.reset( n, totalCost );
-		nbSwap += n ; //I don't know what happened here with costas reset
+		//nbSwap += n ; //I don't know what happened here with costas reset
 		
 		mark.clear();
 		nbReset++;
@@ -597,7 +600,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	}
 	
 	public def forceRestart(){
-		Logger.info(()=>"ASSolverPermut: Force Restart True");
+		//Loger.info(()=>"ASSolverPermut: Force Restart True");
 		forceRestart = true;
 	}
 	

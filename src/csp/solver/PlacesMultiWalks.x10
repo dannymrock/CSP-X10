@@ -70,11 +70,13 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     val beat:Boolean;
     val maxTime:Long;
     
+    val verify:Boolean;
+    
     /**
      * 	Constructor of the class
      */
     public def this(vectorSize:Long, intraTIRecv : Int, intraTISend : Int, interTI : Long, ps : Int,
-    		npT : Int, changeProb:Int, minDistance:Double, target:Int, maxTime:Long){
+    		npT : Int, changeProb:Int, minDistance:Double, target:Int, maxTime:Long, verify : Boolean){
     	property(vectorSize,ps);
     	this.intraTIRecv = intraTIRecv;
     	this.intraTISend = intraTISend;
@@ -87,6 +89,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	
     	this.maxTime = maxTime;
     	
+    	this.verify = verify;
+    	
     	if(target < 0n){ //when target is negative means: beat the specified target
     		beat = true;
     		this.target = target * -1n; 
@@ -98,7 +102,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     }
     
     public def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)]):void{ 
-    	Logger.debug(()=>{"Installing solver"});
+    	//Logger.debug(()=>{"Installing solver"});
     	val ss = st() as ParallelSolverI(sz);
     	val size = sz as Int;
     	var nsize:Int = size;
@@ -131,13 +135,15 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	
     	
     	
-    	Logger.info(()=>{"   Seed in solver:"+seed});
-    	
+    	//Logger.info(()=>{"   Seed in solver:"+seed});
+    	//Console.OUT.println("   Seed in solver:"+seed);
+    
+    
     	// verify if inter team comm is able, if the number of teams is greater than 1 and 
     	//        if place(here) is a head node 
     	if (interTeamInterval > 0 && nTeams > 1n && here.id < nTeams){
     		//val delay = random.nextLong(interTeamInterval);
-    		Logger.debug(()=>{" creating Inter-Team Activity"});
+    		//Logger.debug(()=>{" creating Inter-Team Activity"});
     	 	async{
     	 		//System.sleep(delay);
     	 		interTeamActivity(st, random.nextLong());
@@ -148,7 +154,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	csp_ = cspGen(); // use the supplied generator to generate the problem
     	//csp_.setSeed(random.nextLong());
     	    	
-    	Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
+    	//Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
     	
     	time = -System.nanoTime();
     	cost = solver.solve(csp_);
@@ -169,15 +175,15 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     		if (winner) {
     			interTeamKill = true;
     			setStats_(solvers);
-    			//Console.OUT.println("\nerrors "+ err);
-    			//Console.OUT.println("Solution is " + (csp_.verify()? "ok" : "WRONG"));
-    			//Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
-    			//Utils.show("Solution is ? ", csp_.getVariables());
-    			
-    			csp_.displaySolution2(solver.bestConf as Valuation(sz));
-    			//csp_.displaySolution();
-    			//Console.OUT.println("Solution is " + (csp_.verified(solver.bestConf as Valuation(sz))? "perfect" : "not perfect"));
-    			csp_.verify(solver.bestConf as Valuation(sz));
+    			if (verify){
+    				csp_.displaySolution2(solver.bestConf as Valuation(sz));
+    				Console.OUT.println("   Solution is " + (csp_.verify(solver.bestConf as Valuation(sz))? "ok" : "WRONG"));
+    				//csp_.verify(solver.bestConf as Valuation(sz));
+    				//csp_.displaySolution();
+    				//Console.OUT.println("Solution is " + (csp_.verified(solver.bestConf as Valuation(sz))? "perfect" : "not perfect"));
+    				//Utils.show("Solution is " + (csp_.verify()? "ok" : "WRONG") , csp_.getVariables());
+    				//Utils.show("Solution is ? ", csp_.getVariables());
+    			}
     		}
     	}
     }
@@ -196,7 +202,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		if (solver != null) {
 			solver.kill = true; //solver.kill.set(true); //
 			interTeamKill = true;
-			Logger.debug(()=>{"Kill=true"});
+			//Logger.debug(()=>{"Kill=true"});
 		}else{
 			Logger.debug(()=>{"Solver is not yet started. Kill is not set"});
 			
@@ -207,13 +213,13 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	//Logger.debug(()=> "  PlacesMultiWalks: announceWinner " );
     	val result = winnerLatch.compareAndSet(false, true);
     	
-    	Logger.debug(()=> "  PlacesMultiWalks: announceWinner result=" + result + " for " + p + " this=" + this );
+    	//Logger.debug(()=> "  PlacesMultiWalks: announceWinner result=" + result + " for " + p + " this=" + this );
     	if (result) {
     		for (k in Place.places()) 
     			if (p != k.id) 
     				at(k) ss().kill(); // at(k) async ss().kill();  // Testing the use of this async v1
     	}
-    	Logger.debug(()=> "  PlacesMultiWalks: announceWinner all kill messages are sent" );
+    	//Logger.debug(()=> "  PlacesMultiWalks: announceWinner all kill messages are sent" );
     	
     	return result;
     }
@@ -299,7 +305,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		var bestPlace:Place = here; 
 		
 		if (stats.explorer == -1n){
-			Logger.info(()=>"No winner found");
+			//Logger.info(()=>"No winner found");
 			
 			for (k in Place.places()){
 				//val cBP = at(k) ss().getBP();
@@ -337,7 +343,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 			
 			//Runtime.probe();		// Give a chance to the other activities
 			// woken up
-			Logger.info(()=>{" interTeamActivity - run : woken up (every "+interTeamInterval+" ms)"});
+			//Logger.info(()=>{" interTeamActivity - run : woken up (every "+interTeamInterval+" ms)"});
 			//val random = new Random(seed);
 			//if (random.nextInt(100n) < 16) 
 			interTeamComm(st, seed);
@@ -345,7 +351,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	}
 	
 	public def interTeamComm(ss:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long){
-		Logger.debug(()=>{"MW - interTeamComm : entering..."+nTeams});
+		//Logger.debug(()=>{"MW - interTeamComm : entering..."+nTeams});
 
 		val r = new Random(seed);
 		//Compare against a random team  (head node)
@@ -357,7 +363,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 
 		val vremote = remote;
 	
-		Logger.info(()=>"MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
+		//Logger.info(()=>"MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
 		// get current configuration and cost from local and  remote Team
 		//if(interTeamKill) return;
 		
@@ -366,15 +372,15 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 
 		//compute distance between Teams
 		if( localConf==null || remoteConf==null) {
-			Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
+			//Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
 			return;
 		}
 		val dis = distance(localConf().vector, remoteConf().vector);
 		val rem = remote;
-		Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis});
+		//Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis});
 
 		if (dis < minDistance){ //put parameter
-			Logger.info(()=>"MW - interTeamComm : force Restart");
+			//Logger.info(()=>"MW - interTeamComm : force Restart");
 			val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
 			for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){
 				//Restart the members of the team "res"

@@ -56,12 +56,12 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 *  Set Initial values for the problem
 	 */
 	private def initParameters(rLimit:Int){ 
-		solverParams.probSelectLocMin = 3n;
-		solverParams.freezeLocMin = 1n;
+		solverParams.probSelectLocMin = 15n;
+		solverParams.freezeLocMin = 4n;
 		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = (order < 12n) ? 4n : 10n;
-		//solverParams.resetPercent = 1;      //var to reset
-		solverParams.nbVarToReset = 1n;
+		solverParams.resetLimit = 3n; //(order < 12n) ? 4n : 10n;
+		solverParams.resetPercent = 1n;      //var to reset
+		//solverParams.nbVarToReset = 1n;
 		solverParams.restartLimit = rLimit;
 		solverParams.restartMax = 100n;
 		solverParams.baseValue = 0n;
@@ -77,23 +77,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 		
 	} 
 	
-	public def costVar(i : Int) : Int {
-		/* here i < order */
-		var r : Int = 0n;
-		var x : Int;
-		var y : Int;
-		var between : Int;
-
-		x = variables(i);
-		y = variables(order + i);
-
-		between = Math.abs(x - y) - 1n;
-
-		//#ifndef SLOW			/* the best !!! simply count 1 for an error */
-		r = (between != i + 1n) ? 1n : 0n; //(between != i + 1);
-
-		return r;
-	}
+	
 	
 	
 	/**
@@ -223,7 +207,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 			val value = conf(mi);
 			permutV(value-baseV)++;
 			if (permutV(value-baseV)>1){
-				Console.OUT.println("Error: Not valid permutation, value "+ value +" is repeted");
+				Console.OUT.println("Error: Not valid permutation, value "+ value +" is repeated");
 			}
 		}
 		
@@ -277,43 +261,78 @@ public class LangfordAS(order:Long) extends ModelAS{
 	
 	public def	computeError(x:Long):Long{            /* here x < order */
 		var r:Long = 0n, i:Long = x;
- 		val sort = new Rail[Int](paramK, 0n);
+ 		//val sort = new Rail[Int](paramK, 0n);
 		
-		Logger.info(()=>{"FOR: "+x});
-		Logger.info(()=>{"VALUES: "});
+		// Logger.info(()=>{"FOR: "+x});
+		// Logger.info(()=>{"VALUES: "});
 
 		var j:Long, c:Long;
-		for(c = 0; c < paramK; c++){
- 			val ind = variables(i);
- 			Logger.info(()=>{" "+ind});
- 			i += order;
- 			for(j = c - 1; j >= 0 && ind < sort(j); j--)
- 				;
- 			j++;
- 			for(var k:Long = c; k > j; k--)
- 				sort(k) = sort(k - 1);
- 			sort(j) = ind;
- 		}
+		
+		//Sort variables
+		var ind1:Int = variables(i);
+		var ind2:Int = variables(i+order);
+		var ind3:Int = variables(i+order*2);
+		var tmp:Int;
+		if (ind1 < ind2) {
+			if (ind3 < ind1){
+				tmp = ind1;
+				ind1 = ind3;
+				ind3 = tmp;
+			}
+		} else {
+			if (ind2 < ind3){
+				tmp = ind1;
+				ind1 = ind2;
+				ind2 = tmp;
+			} 
+			else{
+				tmp = ind1;
+				ind1 = ind3;
+				ind3 = tmp;
+			} 
+		} 
+		if(ind3<ind2) {
+			tmp = ind2;
+			ind2 = ind3;
+			ind3 = tmp;
+		}
+		
+		// for(c = 0; c < paramK; c++){
+		// 		val ind = variables(i);
+		// 		//Logger.info(()=>{" "+ind});
+		// 		i += order;
+		// 		for(j = c - 1; j >= 0 && ind < sort(j); j--)
+		// 			;
+		// 		j++;
+		// 		for(var k:Long = c; k > j; k--)
+		// 			sort(k) = sort(k - 1);
+		// 		sort(j) = ind;
+		// 	}
 		
 		
-		Logger.info("\nSORTED: ");
- 		for(c = 0; c < paramK; c++){
- 			val ind = sort(c);
- 			Logger.info(()=>{" "+ind});
- 		}
- 		
- 		
- 		for(c = 1; c < paramK; c++){
- 			val ind1 = sort(c - 1);           /* index of the 1st occurrence */
- 			val ind2 = sort(c);               /* index of the 2nd occurrence */
-
- 			val between = ind2 - ind1;
- 			r += (between - 2 != x)? 1:0;
- 		}
- 
- 		val valr=r;
- 		Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
- 		return r;
+		// Logger.info("\nSORTED: ");
+		// 	for(c = 0; c < paramK; c++){
+		// 		val ind = sort(c);
+		// 		Logger.info(()=>{" "+ind});
+		// 	}
+		// 	
+		
+		val between1 = ind2 - ind1;
+		val between2 = ind3 - ind2;
+		
+		r = ((between1 - 2 != x)? 1:0)+((between2 - 2 != x)? 1:0);
+		
+		//  		for(c = 1; c < paramK; c++){
+		//  			val ind1 = sort(c - 1);           /* index of the 1st occurrence */
+		//  			val ind2 = sort(c);               /* index of the 2nd occurrence */
+		// 
+		//  			val between = ind2 - ind1;
+		//  			r += (between - 2 != x)? 1:0;
+		//  		}
+		//  
+		//  		val valr=r;
+		//Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
+		return r;
 	}
 
 	/**
