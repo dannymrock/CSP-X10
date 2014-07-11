@@ -69,7 +69,7 @@ public interface ParallelSolverI {
     def announceWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)], p:Long):Boolean;
 
     def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int,
-            fr : Int, bp:Int, sg:Int):void;
+            fr : Int, bp:Int, sg:Int, gr:Int):void;
 
     def getRandomConf():Maybe[CSPSharedUnit(sz)];
     
@@ -94,7 +94,10 @@ public interface ParallelSolverI {
  	def forceRestart():void;
  	//def interTeamComm(ss:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long):void;
  	//def interTeamActivity(st:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long):void;
+ 	
+ 	def getGroupReset():Int;
 
+ 	def incGroupReset():void;
  	
 }
 public type ParallelSolverI(s:Long)=ParallelSolverI{self.sz==s};

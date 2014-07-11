@@ -260,13 +260,11 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			/**
 			 *  optimization
 			 */
-			
-			
-			if(totalCost <= bestCost){
+			if(totalCost < bestCost){ //(totalCost <= bestCost)
 				Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
 				bestCost = totalCost;
 				bestSent = false;
-				
+				//Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished
 				if ((beat && bestCost < target)||(!beat && bestCost <= target)){
 					break;
@@ -276,7 +274,6 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			/**
 	         *  Time out
 	         */
-	       
 	        if(maxTime > 0){
 	           val eTime = System.nanoTime() - initialTime; 
 	           if(eTime/1e6 >= maxTime){ //comparison in miliseconds
@@ -284,7 +281,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	              break;
 	           }
 	        }
-			
+	        
+	        /**
+	         *  Interaction with other places
+	         */
 			if( solver.intraTISend() != 0n && nbIter % solver.intraTISend() == 0n){        //here.id as Int ){
 				if(!bestSent){ 
 					solver.communicate( bestCost, bestConf as Valuation(sz));
@@ -293,7 +293,6 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 					solver.communicate( totalCost, csp_.getVariables());
 				}
 			}
-			
 			if(solver.intraTIRecv() != 0n && nbIter % solver.intraTIRecv() == 0n){        //here.id as Int ){
 				val result = solver.getIPVector(csp_, totalCost );
 				if (result){
@@ -305,9 +304,12 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				}
 			}
 			
+			/**
+			 *  Force Restart: Inter Team Communication
+			 */
 			if (forceRestart){
 				//restart
-				//Loger.debug(()=>"   ASSolverPermut : force Restart");
+				//Logger.info(()=>{"   ASSolverPermut : force Restart"});
 				forceRestart = false;
 				nbForceRestart++;
 				restartVar(csp_);
@@ -613,7 +615,12 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		bestCost = totalCost;
 		bestSent = false;
 		nbInPlateau = 0n;
-		solver.clear();
+		
+		
+		
+		//solver.clear();//??? Restart only the pool
+		
+		
 		
 		
 		mark.clear();

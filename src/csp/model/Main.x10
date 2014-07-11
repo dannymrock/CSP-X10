@@ -99,6 +99,7 @@ public class Main {
 		Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
 		Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum permissible distance: "+minDistance);
 		Console.OUT.println("Input seed "+inSeed);
+		Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );
 		
 		/**
 		 *   Define basic values for each type of problem
@@ -277,9 +278,9 @@ public class Main {
 			}
 			else if (outFormat == 1n){
 				Console.OUT.printf("\r");
-				Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
-				Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  |  FR |  PS |");
-				Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
+				Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
+				Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS |");
+				Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
 				solvers().printAVG(testNb,outFormat);
 				//accStats.printAVG(testNo);
 				Console.OUT.printf("\n");
@@ -298,11 +299,11 @@ public class Main {
 			Console.OUT.print("TOTAL,");
 			solvers().printGenAVG(insNb*testNb,outFormat);
 		}else if (outFormat == 1n){
-			Console.OUT.println("|-------------------------------------------------------------------------------------------------------------------|");
+			Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
 			Console.OUT.println("\n   General Statistics for "+insNb+" problems, each one solved "+testNb+" times ");
-			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
-			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  |  FR |  PS |");
-			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
+			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
+			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS |");
+			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
 			solvers().printGenAVG(insNb*testNb,outFormat);
 			//accStats.printAVG(testNo);
 			Console.OUT.printf("\n");
@@ -322,10 +323,11 @@ public class Main {
 	
 	static def printHeader(outF : Int){
 		if(outF == 0n){
-			Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,force_restart,solution,walltime");
+			Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,solution,walltime");
 		}else if(outF == 1n){
-			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  |  FR |  PS | walltime");
-			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|-----|-----|");
+			Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
+			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS | walltime");
+			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
 		}
 	}
 }

@@ -177,7 +177,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	}
 	
 	
-	public def displaySolution2(conf:Valuation(sz)){
+	public def displaySolution(conf:Valuation(sz)){
 		var i : Int;
 		var j : Int;
 		Console.OUT.printf("\n");
@@ -259,82 +259,106 @@ public class LangfordAS(order:Long) extends ModelAS{
 	
 	
 	
-	public def	computeError(x:Long):Long{            /* here x < order */
-		var r:Long = 0n, i:Long = x;
- 		//val sort = new Rail[Int](paramK, 0n);
-		
-		// Logger.info(()=>{"FOR: "+x});
-		// Logger.info(()=>{"VALUES: "});
+// 	public def	computeError(x:Long):Long{            /* here x < order */
+// 		var r:Long = 0n, i:Long = x;
+//  		//val sort = new Rail[Int](paramK, 0n);
+// 		
+// 		// Logger.info(()=>{"FOR: "+x});
+// 		// Logger.info(()=>{"VALUES: "});
+// 
+// 		var j:Long, c:Long;
+// 		
+// 		//Sort variables
+// 		var ind1:Int = variables(i);
+// 		var ind2:Int = variables(i+order);
+// 		var ind3:Int = variables(i+order*2);
+// 		var tmp:Int;
+// 		if (ind1 < ind2) {
+// 			if (ind3 < ind1){
+// 				tmp = ind1;
+// 				ind1 = ind3;
+// 				ind3 = ind2;
+// 				ind2 = tmp;
+// 			} else if (ind3 < ind2) {
+// 				tmp = ind2;
+// 				ind2 = ind3;
+// 				ind3 = tmp;				
+// 			} 
+// 		} else {
+// 			if (ind3 < ind2){
+// 				tmp = ind1;
+// 				ind1 = ind3;
+// 				ind3 = tmp;
+// 			} else if (ind3 < ind1) {
+// 				tmp = ind1;
+// 				ind1 = ind2;
+// 				ind2 = ind3;
+// 				ind3 = tmp;
+// 			} else {
+// 				tmp = ind1;
+// 				ind1 = ind2;
+// 				ind2 = tmp;
+// 			}
+// 		} 
+// 		
+// 		// for(c = 0; c < paramK; c++){
+// 		// 		val ind = variables(i);
+// 		// 		//Logger.info(()=>{" "+ind});
+// 		// 		i += order;
+// 		// 		for(j = c - 1; j >= 0 && ind < sort(j); j--)
+// 		// 			;
+// 		// 		j++;
+// 		// 		for(var k:Long = c; k > j; k--)
+// 		// 			sort(k) = sort(k - 1);
+// 		// 		sort(j) = ind;
+// 		// 	}
+// 		
+// 		
+// 		// Logger.info("\nSORTED: ");
+// 		// 	for(c = 0; c < paramK; c++){
+// 		// 		val ind = sort(c);
+// 		// 		Logger.info(()=>{" "+ind});
+// 		// 	}
+// 		// 	
+// 		
+// 		val between1 = ind2 - ind1;
+// 		val between2 = ind3 - ind2;
+// 		
+// 		r = ((between1 - 2 != x)? 1:0)+((between2 - 2 != x)? 1:0);
+// 		
+// 		//  		for(c = 1; c < paramK; c++){
+// 		//  			val ind1 = sort(c - 1);           /* index of the 1st occurrence */
+// 		//  			val ind2 = sort(c);               /* index of the 2nd occurrence */
+// 		// 
+// 		//  			val between = ind2 - ind1;
+// 		//  			r += (between - 2 != x)? 1:0;
+// 		//  		}
+// 		//  
+// 		//  		val valr=r;
+// 		//Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
+// 		return r;
+// 	}
 
-		var j:Long, c:Long;
+	
+	public def	computeError(var x:Long):Long{            /* here x < order */
+		var ind1:Long = variables(x);
+		var ind2:Long = variables(x + order);
+		var ind3:Long = variables(x + order + order);
+		x += 2; /* error if abs(indX - indY) - 2 != x  so we add 2 to x */
+		var r:Long = -1; /* at least 1 distance is wrong */
+		if (Math.abs(ind1 - ind2) != x)
+            r++;
+		if (Math.abs(ind1 - ind3) != x)
+			r++;
+		if (Math.abs(ind2 - ind3) != x)
+			r++;
 		
-		//Sort variables
-		var ind1:Int = variables(i);
-		var ind2:Int = variables(i+order);
-		var ind3:Int = variables(i+order*2);
-		var tmp:Int;
-		if (ind1 < ind2) {
-			if (ind3 < ind1){
-				tmp = ind1;
-				ind1 = ind3;
-				ind3 = tmp;
-			}
-		} else {
-			if (ind2 < ind3){
-				tmp = ind1;
-				ind1 = ind2;
-				ind2 = tmp;
-			} 
-			else{
-				tmp = ind1;
-				ind1 = ind3;
-				ind3 = tmp;
-			} 
-		} 
-		if(ind3<ind2) {
-			tmp = ind2;
-			ind2 = ind3;
-			ind3 = tmp;
-		}
-		
-		// for(c = 0; c < paramK; c++){
-		// 		val ind = variables(i);
-		// 		//Logger.info(()=>{" "+ind});
-		// 		i += order;
-		// 		for(j = c - 1; j >= 0 && ind < sort(j); j--)
-		// 			;
-		// 		j++;
-		// 		for(var k:Long = c; k > j; k--)
-		// 			sort(k) = sort(k - 1);
-		// 		sort(j) = ind;
-		// 	}
-		
-		
-		// Logger.info("\nSORTED: ");
-		// 	for(c = 0; c < paramK; c++){
-		// 		val ind = sort(c);
-		// 		Logger.info(()=>{" "+ind});
-		// 	}
-		// 	
-		
-		val between1 = ind2 - ind1;
-		val between2 = ind3 - ind2;
-		
-		r = ((between1 - 2 != x)? 1:0)+((between2 - 2 != x)? 1:0);
-		
-		//  		for(c = 1; c < paramK; c++){
-		//  			val ind1 = sort(c - 1);           /* index of the 1st occurrence */
-		//  			val ind2 = sort(c);               /* index of the 2nd occurrence */
-		// 
-		//  			val between = ind2 - ind1;
-		//  			r += (between - 2 != x)? 1:0;
-		//  		}
-		//  
-		//  		val valr=r;
 		//Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
 		return r;
 	}
 
+
+	
 	/**
 	 *  executedSwap( i1 : Int, i2 : Int)
 	 *  This function updates the values of the object data structures for the problem due to the 
@@ -348,6 +372,38 @@ public class LangfordAS(order:Long) extends ModelAS{
 
 		err(x) = computeError(x) as Int;
 		err(y) = computeError(y) as Int;
+	}
+	
+	/**
+	 *  Compute distance between 2 configurations according Langford Model
+	 */
+	public def distance(conf1 : Valuation(sz), conf2 : Valuation(sz)) : Double {
+		var eqNb:Int = 0n;
+		
+		for(var v:Int = 0n; v < order; v++){
+			
+			val ind11:Int = conf1(v);
+			val ind12:Int = conf1(v + order);
+			val ind13:Int = conf1(v + order + order);
+			
+			val ind21:Int = conf2(v);
+			val ind22:Int = conf2(v + order);
+			val ind23:Int = conf2(v + order + order);
+			
+			if(ind11 == ind21 || ind11 == ind22 || ind11 == ind23)
+				eqNb++;
+			if(ind12 == ind21 || ind12 == ind22 || ind12 == ind23)
+				eqNb++;
+			if(ind13 == ind21 || ind13 == ind22 || ind13 == ind23)
+				eqNb++;
+		} 
+		//Console.OUT.println("conf1");
+		//displaySolution(conf1);
+		//Console.OUT.println("conf2");
+		//displaySolution(conf2);
+		val dis = 1.0-(eqNb as Double / sz);
+		//Console.OUT.println("number of coincidences "+ eqNb+" distance in LangfordAS = "+dis);
+		return dis;
 	}
 	
 }

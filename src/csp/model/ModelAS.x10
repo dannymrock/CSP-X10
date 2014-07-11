@@ -138,11 +138,7 @@ public class ModelAS(sz:Long, seed:Long) {
 		Rail.copy(array,this.variables);
 	}
 	
-	public def displaySolution() {
-		Utils.show("Solution",variables);
-	}
-	
-	public def displaySolution2(conf:Valuation(sz)) {
+	public def displaySolution(conf:Valuation(sz)) {
 		Utils.show("Solution",conf);
 	}
 	
@@ -157,14 +153,24 @@ public class ModelAS(sz:Long, seed:Long) {
 		var newj:Int = j;
 		if (j < 0 && exhaustive != 0n)
 			newj = i;
-
+		
 		return newj + 1n;
 	}
-
-    public def nextI(i:Int) : Int{
-        return i + 1n;
-    }
-
-
+	
+	public def nextI(i:Int) : Int{
+		return i + 1n;
+	}
+	
+	
+	public def distance(conf1 : Valuation(sz), conf2 : Valuation(sz)) : Double {
+		var count : Int = 0n;
+		for (i in 0n..(sz as Int - 1n)){
+			//Logger.debug("comparing: "+conf1(i)+" - "+conf2(i));
+			if(conf1(i) != conf2(i)) count++; 
+		}
+		val dis = count as Double / sz;
+		//Console.OUT.println("distance in ModelAS = "+dis);
+		return dis;
+	}
 }
 public type ModelAS(s:Long)=ModelAS{self.sz==s};

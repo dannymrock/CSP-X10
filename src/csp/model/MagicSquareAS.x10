@@ -55,7 +55,7 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 		solverParams.probSelectLocMin = 6n;
 		solverParams.freezeLocMin = 5n;
 		solverParams.freezeSwap = 0n;
-		//solverParam.resetLimit = squareLength / 2n;
+		//solverParams.resetLimit = 10n; //squareLength as Int / 2n;
 		solverParams.resetLimit = squareLength as Int;
 		solverParams.resetPercent = 10n;
 		solverParams.restartLimit = rLimit;
