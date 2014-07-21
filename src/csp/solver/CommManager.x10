@@ -25,7 +25,7 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	
 	/**elite pool
 	 */
-	val ep = new ElitePool( sz, poolSize); 
+	val ep = new ElitePool( sz, poolSize); // : ElitePool; 
 	
 	/** Solver use activities or places */
 	var solverMode : Int;
@@ -64,6 +64,7 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	        changeProb:Int){
 		property(sz, poolSize);
 		solvers = ss;
+		//ep = new ElitePool( sz, poolSize, ss); 
 	    solverMode = solverModeIn;
 		this.intraTIRecv = intraTIRecv;
 		this.intraTISend = intraTISend;

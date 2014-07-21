@@ -16,6 +16,11 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 	var random:Random = new Random();
 	val monitor = new Monitor("ElitePool");
 	
+	// val solvers:PlaceLocalHandle[ParallelSolverI(sz)];
+	// def this( sz:Long, poolSize: Int, ss: PlaceLocalHandle[ParallelSolverI(sz)]){
+	// 	property(sz, poolSize);
+	// 	solvers=ss;
+	// }
 	
 	public def setSeed(seed:Long){
 		//monitor.atomicBlock(()=> {

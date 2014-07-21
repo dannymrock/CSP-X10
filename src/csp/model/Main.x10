@@ -57,13 +57,15 @@ public class Main {
 				                       Option("t", "", "(T)ime out default 0"),
 				                       Option("c", "", "target (c)ost. default 0"),
 				                       Option("b", "", "Number of (b)enchmark tests"),
+				                       Option("N", "", "nodes_per_team parameter. Default 4."),
 				                       Option("U", "", "Update Interval Intra-team Communication (iterations) . Default 0 - no communication."),
 				                       Option("R", "", "Report Interval Intra-team Communication (iterations) . Default 0 - no communication."),
 				                       Option("C", "", "Probability to change vector in Intra-Team Communication "),
 				                       Option("P", "", "poolsize."),
-				                       Option("I", "", "Inter-team Communication Interval (tim miliseconds) . Default 0 - no communication."),
-				                       Option("N", "", "nodes_per_team parameter. Default 4."),
+				                       Option("I", "", "Inter-team Communication Interval (miliseconds) . Default 0 - no communication."),
 				                       Option("D", "", "minimum permisible distance."),
+				                       Option("W", "", "initial (W)ait  before start Inter-team Communication (miliseconds). Default 0"),
+				                       Option("A", "", "Inter Team Communicaction Diversification - Percentage of Places (A)ffected . Default 0."),
 				                       Option("y", "", "seed. Default 0"),
 				                       Option("v", "", "verify and print solution. Default 0"),
 				                       Option("o", "", "output format: csv 0, info 1")
@@ -84,6 +86,8 @@ public class Main {
 		val poolSize       = opts("-P", 4n);
 		val interTI        = opts("-I", 0);
 		val minDistance    = opts("-D", 0.3);
+		val delayI         = opts("-W", 0);
+		val affectedP      = opts("-A", 0.0);
 		val inSeed         = opts("-y", 0);
 		val verify         = opts("-v", 0);
 		val outFormat	   = opts("-o", 1n);
@@ -97,7 +101,7 @@ public class Main {
 		Console.OUT.println("Solving "+testNb+" times each instance");
 		Console.OUT.println((nodesPTeam > 1n ? "Using ":"Without ")+"Cooperative Search: "+Place.MAX_PLACES+" places. "+nodesPTeam+" nodes per team "+(Place.MAX_PLACES as Int / nodesPTeam)+" Teams");
 		Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
-		Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum permissible distance: "+minDistance);
+		Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum distance: "+minDistance+" Initial delay "+delayI+" ms. Per. Affected Places "+(affectedP*100)+"%");
 		Console.OUT.println("Input seed "+inSeed);
 		Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );
 		
@@ -151,7 +155,8 @@ public class Main {
 		val solvers:PlaceLocalHandle[ParallelSolverI(vectorSz)];    
 		solvers = PlaceLocalHandle.make[ParallelSolverI(vectorSz)](PlaceGroup.WORLD, 
 				()=>new PlacesMultiWalks(vectorSz, updateI, reportI, interTI, poolSize, nodesPTeam,
-						changeProb, minDistance, targetCost, maxTime, (verify!=0) ) as ParallelSolverI(vectorSz));
+						changeProb, minDistance, targetCost, maxTime, (verify!=0), delayI, 
+						affectedP) as ParallelSolverI(vectorSz));
 		
 		var insNb:Int = 0n; //counter of instances
 		var iList : Rail[String];

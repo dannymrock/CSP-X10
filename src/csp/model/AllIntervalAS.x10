@@ -101,7 +101,7 @@ public class AllIntervalAS extends ModelAS{
 	
 	public def isTrivialSolution(sol : Rail[Int], size : Int) : Boolean
 	{
-		return ( 	sol(0) == 0n || sol(0) == size - 1n || sol(size - 1n) == 0n || sol(size - 1n) == size - 1n);
+		return (sol(0) == 0n || sol(0) == size - 1n || sol(size - 1n) == 0n || sol(size - 1n) == size - 1n);
 	}
 	
 	/**

@@ -39,6 +39,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	
 
 	var forceRestart : Boolean = false;
+	var forceReset : Boolean = false;
 	
 	var listInb : Int;
 	var listJnb : Int;
@@ -315,6 +316,16 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				restartVar(csp_);
 				continue;
 			}
+			
+			if (forceReset){
+				//reset
+				//Logger.info(()=>{"   ASSolverPermut : force Reset"});
+				forceReset = false;
+				nbForceRestart++;
+				doReset(size as Int / 4n , csp_);
+				continue;
+			}
+			
 			// ----- end of interaction with other solvers -----
 		} // while (totalCost != 0n)
 		
@@ -602,8 +613,12 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	}
 	
 	public def forceRestart(){
-		//Loger.info(()=>"ASSolverPermut: Force Restart True");
+		Logger.info(()=>"ASSolverPermut: Force Restart True");
 		forceRestart = true;
+	}
+	public def forceReset(){
+		Logger.info(()=>"ASSolverPermut: Force Reset True");
+		forceReset = true;
 	}
 	
 	public def restartVar(csp : ModelAS){
@@ -616,12 +631,8 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		bestSent = false;
 		nbInPlateau = 0n;
 		
-		
-		
-		//solver.clear();//??? Restart only the pool
-		
-		
-		
+		//Not sure if this is necessary
+		solver.clearPool();//??? Restart only the pool		
 		
 		mark.clear();
 		//nbRestart++;			

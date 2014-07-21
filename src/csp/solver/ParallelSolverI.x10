@@ -91,10 +91,13 @@ public interface ParallelSolverI {
  	def printGenAVG(count:Int, oF:Int):void ;
  	def clearSample():void;
  	
- 	def forceRestart():void;
+ 	//def forceRestart():void;
  	//def interTeamComm(ss:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long):void;
  	//def interTeamActivity(st:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long):void;
  	
+ 	def clearPool():void;
+ 	def diversify():void;
+
  	def getGroupReset():Int;
 
  	def incGroupReset():void;

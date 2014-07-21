@@ -378,7 +378,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 *  Compute distance between 2 configurations according Langford Model
 	 */
 	public def distance(conf1 : Valuation(sz), conf2 : Valuation(sz)) : Double {
-		var eqNb:Int = 0n;
+		var eqNb:Double = 0;
 		
 		for(var v:Int = 0n; v < order; v++){
 			
@@ -389,20 +389,27 @@ public class LangfordAS(order:Long) extends ModelAS{
 			val ind21:Int = conf2(v);
 			val ind22:Int = conf2(v + order);
 			val ind23:Int = conf2(v + order + order);
-			
+	var z:Int = 0n;		
 			if(ind11 == ind21 || ind11 == ind22 || ind11 == ind23)
-				eqNb++;
+				z++;//eqNb++;
 			if(ind12 == ind21 || ind12 == ind22 || ind12 == ind23)
-				eqNb++;
+				z++;//eqNb++;
 			if(ind13 == ind21 || ind13 == ind22 || ind13 == ind23)
-				eqNb++;
+				z++;//eqNb++;
+			if (z == 3n) eqNb++;
+			//if (z == 2n) eqNb+=0.5;
 		} 
 		//Console.OUT.println("conf1");
 		//displaySolution(conf1);
 		//Console.OUT.println("conf2");
 		//displaySolution(conf2);
-		val dis = 1.0-(eqNb as Double / sz);
-		//Console.OUT.println("number of coincidences "+ eqNb+" distance in LangfordAS = "+dis);
+		val dis = 1.0-(eqNb / order);//sz);
+		// Console.OUT.println("number of coincidences "+ eqNb+" distance in LangfordAS = "+dis);
+		// /*if (eqNb >= 4.0)*/ {
+		// 	displaySolution(conf1);
+		// 	displaySolution(conf2);
+		// }
+			
 		return dis;
 	}
 	
