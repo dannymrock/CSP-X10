@@ -37,6 +37,9 @@ public class SMTIAS extends ModelAS{
     
     var singlei:Int = 0n;
     
+    
+    var minSingles:Int = 0n;
+    
 	public def this (lengthProblem : Long , seed : Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
 			restLimit:Int):SMTIAS(lengthProblem){
 		super( lengthProblem, seed );
@@ -168,7 +171,7 @@ public class SMTIAS extends ModelAS{
         	var levelPM:Int = revpM(mi)(pmi); // m's current match level of preference  
         	 
         	if(levelPM == 0n ){ //verify if m is single (pm is not a valid match)
-        		levelPM = length;
+        		levelPM = length + 1n;  //FIX
         		singles++;
         		if (shouldBeRecorded && r.randomInt(singles) == 0n){
         			singlei = mi as Int;
@@ -207,7 +210,29 @@ public class SMTIAS extends ModelAS{
         	nbSingles = singles;
         	///Console.OUT.println("totalCost= "+(bpnumber*weight+singles));
         }
-        return bpnumber * weight + singles;	
+        
+//         val s2 : Int = 2n * singles - length;  // check the case where singles is an odd number, is it correct to use round up, ie. (singles +1) / 2 ?
+// 
+//         if (bpnumber == 0n ) // check if the mariage is stable and if it improves the min number of singles
+//         {
+//         	Console.OUT.println("minSingles= "+minSingles+" Singles= "+singles);
+//         	}
+//         
+//         if (bpnumber == 0n && s2 > minSingles) // check if the mariage is stable and if it improves the min number of singles
+//         	{
+//         	Console.OUT.println("minSingles= "+minSingles+" Singles= "+singles+" New min singles= "+s2);	
+//         	minSingles = s2;
+//         
+//         	}
+// 
+//         // DEBUG: this test is for debug only - should never be true
+//         if (singles < minSingles)
+//         	Console.OUT.println("ERROR "+singles+" <-> "+minSingles);
+// 
+//         return bpnumber * weight + singles - minSingles; // take into account the best min_singles known so far
+        
+        
+       return bpnumber * weight + singles;	
     }
 	
 	/** 

@@ -4,7 +4,8 @@ import csp.util.Logger;
 import csp.model.ASSolverParameters;
 import x10.util.Random;
 import x10.util.concurrent.AtomicBoolean;
-import csp.model.ModelAS; 
+import csp.model.ModelAS;
+import x10.util.StringUtil; 
 
 
 /** ASSolverPermut is the implementation of Adaptive Search solver
@@ -121,6 +122,11 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			}
 		}
 		
+
+		val nStr = System.getenv("N");
+		val nbVarReset = (nStr==null)? 0 : StringUtil.parseLong(nStr);
+
+
 		csp_.initialize(solverP.baseValue); //Set_Init_Configuration Random Permut
 		//Main.show("initial= ",csp.variables);
 		
@@ -322,7 +328,8 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				//Logger.info(()=>{"   ASSolverPermut : force Reset"});
 				forceReset = false;
 				nbForceRestart++;
-				doReset(size as Int / 4n , csp_);
+				//doReset(size as Int / 8n , csp_);
+				doReset(nbVarReset as Int , csp_);
 				continue;
 			}
 			

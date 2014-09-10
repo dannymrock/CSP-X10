@@ -436,7 +436,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				//Restart the members of the team "res"
 				val vali = i;
 				//Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
-				if (r.nextDouble() < affectedPer)
+				if (r.nextDouble() <= affectedPer)
 				    at(Place(i)) ss().diversify();
 			}
 			at(Place(teamToRest)) ss().clearPool();
