@@ -329,7 +329,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				forceReset = false;
 				nbForceRestart++;
 				//doReset(size as Int / 8n , csp_);
-				doReset(nbVarReset as Int , csp_);
+				doReset(nbVarReset as Int , csp_); // This reset should be bigger than the normal reset
 				continue;
 			}
 			

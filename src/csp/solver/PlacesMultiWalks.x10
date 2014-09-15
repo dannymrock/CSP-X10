@@ -424,7 +424,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		//val rem = remote;
 		//Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis});
 
-		if (dis <= minDistance){ //put parameter
+		if (dis <= minDistance){ 
 			//Logger.info(()=>"MW - interTeamComm : force Restart");
 			val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
 			
