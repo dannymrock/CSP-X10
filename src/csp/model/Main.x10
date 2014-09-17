@@ -26,6 +26,7 @@ public class Main {
 			if (kind==ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit);
 			if (kind==LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit);
 			if (kind==STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit);
+			if (kind==HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit);
 			return new PartitAS(vectorSize, seed, restLimit);
 		}
 	}
@@ -37,6 +38,7 @@ public class Main {
 	public static val LANGFORD_PROBLEM = 4n;
 	public static val PARTIT_PROBLEM = 5n;
 	public static val STABLE_MARRIAGE_PROBLEM = 6n;
+	public static val HOSPITAL_RESIDENT_PROBLEM = 7n;
 	
 	var fp  : File;
 	
@@ -136,8 +138,12 @@ public class Main {
 			//Logger.debug(()=>{"Stable Marriage Problem"});
 			param = STABLE_MARRIAGE_PROBLEM;
 			vectorSize=size;
+		} else if(problem.equals("HRP")){
+			//Logger.debug(()=>{"Stable Marriage Problem"});
+			param = HOSPITAL_RESIDENT_PROBLEM;
+			vectorSize=size;
 		} else{
-			Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP o SMP"); 
+			Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP , SMP or HRP"); 
 			return;
 		}
 		
@@ -147,7 +153,7 @@ public class Main {
 		val seed = inSeed;//(inSeed == 0) ? j as Long:inSeed;
 		val random = new Random(seed);	
 		
-		// men and women preferences for the SMTI problem
+		// men and women preferences for the SMTI problem (residents hospitals for HRP - size is n1)
 		val mPref:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
 		val wPref:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
 		
@@ -171,10 +177,10 @@ public class Main {
 			solvers().installSolver(solvers);
 		}
 		
-		val fileMode = (param == STABLE_MARRIAGE_PROBLEM);
+		val fileMode = (param == STABLE_MARRIAGE_PROBLEM || param == HOSPITAL_RESIDENT_PROBLEM );
 		val nPath = new StringBuilder();
-		if (param == STABLE_MARRIAGE_PROBLEM){
-			//Load Files enable doble double loop
+		if (fileMode){
+			//Load Files enable double loop
 			iList = SMTIAS.loadDir(filePath,nPath);
 			//Logger.info(()=>{"nPath "+nPath});
 		}else{
@@ -196,6 +202,16 @@ public class Main {
 				if (!success)
 					continue; //path is a directory
 				
+				val cT= loadTime += System.nanoTime();
+				//Logger.debug(()=>{"Time to load the problem="+cT/1e9});
+				
+			} else if (param == HOSPITAL_RESIDENT_PROBLEM){
+				
+				var loadTime:Long = -System.nanoTime();
+				
+				val success = SMTIAS.loadDataHR(nPath+"/"+instance, mPref, wPref);
+				if (!success)
+					continue; //path is a directory
 				
 				val cT= loadTime += System.nanoTime();
 				//Logger.debug(()=>{"Time to load the problem="+cT/1e9});
