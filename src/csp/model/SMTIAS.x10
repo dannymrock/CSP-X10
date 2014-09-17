@@ -764,11 +764,48 @@ public class SMTIAS extends ModelAS{
 		val hcap = new Rail[Int](n2,0n);  
 		//Load Problem
 		readMatrixHR(fr, n1, n2, mPref, wPref, hcap);
+		
+		//Turn HR data into corresponding SMTI
+		convertRPL(mPref,hcap, n1, n2);
+		
+		
 		fr.close();
 		return true;
 	}
 	
-	
+	static def convertRPL(mP:Rail[Rail[Int]],hcap:Rail[Int], n1 : Int, n2 : Int){
+		 var ri : Int, hi : Int, rep :Int;
+		 var pos : Int = 0n;
+		 
+		 val accCap = new Rail[Int](n2,0n);
+		 var acc:Int=0n;
+		 
+		 for (var k:Int = 1n; k < n2 ;k++){
+			  
+			  acc += hcap(k-1)-1n;
+			  accCap(k) = acc;
+			  Console.OUT.println("accCap "+k+" ="+accCap(k));
+		 }
+		 
+		 for(ri=0n; ri<n1 ; ri++){
+			  val currentList = new Rail[Int](n1,0n);
+			  pos = 0n;
+			  Rail.copy(mP(ri),currentList);
+			  for (h in currentList.range()){
+					val ch = currentList(h);
+					if (ch == 0n) break;
+					//Console.OUT.println("ch="+ch);
+					mP(ri)(pos++) = ch;
+					Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
+					val capCh = hcap(ch-1); // to index
+					//Console.OUT.println("capCh="+capCh);
+					for (rep = 1n ; rep < capCh; rep++){ //create ties for the same hospital
+						 mP(ri)(pos++) = (n2 + accCap(ch-1) + rep)*-1n;
+						 Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
+					}
+			  }
+		 }
+	}
 }
 
 public type SMTIAS(s:Long)=SMTIAS{self.sz==s};
