@@ -593,14 +593,14 @@ public class SMTIAS extends ModelAS{
 				i++;
 				buffer = ""; j = 0n;
 				if (i >= 2n && i < n1 + 3){ // The file has 3 header lines (already read)
-					Console.OUT.println("rp:"+i+" :"+line);
+					// Console.OUT.println("rp:"+i+" :"+line);
 					// Read residents Pref Matrix
 					for(char in line.chars() ){
 						if( char == ' ' || char == '\n' ){
 							if(!buffer.equals("")) {
 								if (j < n2){       // maximum number of entries in hospital pref list
 									rP(rline)(j++) = Int.parse(buffer);
-									Console.OUT.println("resPrefs "+(rline)+","+(j-1)+" = "+(rP(rline)(j-1)));
+									// Console.OUT.println("resPrefs "+(rline)+","+(j-1)+" = "+(rP(rline)(j-1)));
 								}
 							}
 							buffer = "";
@@ -610,7 +610,7 @@ public class SMTIAS extends ModelAS{
 					}
 					rline++; 
 				}else if (i > n1 + 2 && i <= n1 + n2 + 2){
-					Console.OUT.println("hp:"+i+" :"+line);
+					// Console.OUT.println("hp:"+i+" :"+line);
 					// Read hospitals Pref Matrix
 					for(char in line.chars() ){
 						if( char == ' ' || char == '\n' ){
@@ -623,12 +623,13 @@ public class SMTIAS extends ModelAS{
 										}
 									}
 									 hcap(hline) = Int.parse(cap);
-									 Console.OUT.println("capacity of hospital "+ hline+" is "+hcap(hline));
+									 // Console.OUT.println("capacity of hospital "+ hline+" is "+hcap(hline));
 									 j++;
 								}
 								else if (j < n1 + 1){   // maximum number of entries in hospital pref list (n2 + 1 for capacity)
-									hP(hline)(j++)= Int.parse(buffer);
-									Console.OUT.println("hosPref "+(hline)+","+(j-1)+" = "+(hP(hline)(j-1)));
+									hP(hline)(j-1)= Int.parse(buffer);
+									// Console.OUT.println("hosPref "+(hline)+","+(j-1)+" = "+(hP(hline)(j-1)));
+									j++;
 								}
 							}
 							buffer = "";
@@ -767,7 +768,8 @@ public class SMTIAS extends ModelAS{
 		
 		//Turn HR data into corresponding SMTI
 		convertRPL(mPref,hcap, n1, n2);
-		
+		convertHPL(wPref,hcap, n1, n2);
+		//printPreferencesTables();
 		
 		fr.close();
 		return true;
@@ -784,7 +786,7 @@ public class SMTIAS extends ModelAS{
 			  
 			  acc += hcap(k-1)-1n;
 			  accCap(k) = acc;
-			  Console.OUT.println("accCap "+k+" ="+accCap(k));
+			  // Console.OUT.println("accCap "+k+" ="+accCap(k));
 		 }
 		 
 		 for(ri=0n; ri<n1 ; ri++){
@@ -796,13 +798,39 @@ public class SMTIAS extends ModelAS{
 					if (ch == 0n) break;
 					//Console.OUT.println("ch="+ch);
 					mP(ri)(pos++) = ch;
-					Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
+					// Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
 					val capCh = hcap(ch-1); // to index
 					//Console.OUT.println("capCh="+capCh);
 					for (rep = 1n ; rep < capCh; rep++){ //create ties for the same hospital
 						 mP(ri)(pos++) = (n2 + accCap(ch-1) + rep)*-1n;
-						 Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
+						 // Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
 					}
+			  }
+		 }
+	}
+	
+	static def convertHPL(wP:Rail[Rail[Int]],hcap:Rail[Int], n1 : Int, n2 : Int){
+		 var hi : Int, ri : Int, rep :Int;
+		 var pos : Int = 0n;
+		 
+		 val accCap = new Rail[Int](n2,0n);
+		 var acc:Int=0n;
+		 
+		 for (var k:Int = 1n; k < n2 ;k++){
+			  
+			  acc += hcap(k-1)-1n;
+			  accCap(k) = acc;
+	//		  Console.OUT.println("accCap "+k+" ="+accCap(k));
+		 }
+		 
+		 for(hi = 0n; hi<n2 ; hi++){
+			  val currentList = new Rail[Int](n1,0n);
+			  pos = 0n;
+			  Rail.copy(wP(hi),currentList);
+			  for (rep = 1n; rep < hcap(hi); rep++){
+					val index = n2 + accCap(hi) + rep - 1n;
+					// Console.OUT.println("reply list from hospital"+hi +" in line"+index);
+					Rail.copy(currentList,wP(index));
 			  }
 		 }
 	}
