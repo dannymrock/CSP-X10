@@ -150,6 +150,9 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		nbLocalMinTot = 0n; 
 		nbForceRestart = 0n;
 		
+		// rBestCost = x10.lang.Int.MAX_VALUE;
+		// locMinC = 0n;
+		
 		totalCost = csp_.costOfSolution(true);
 		//bestCost = totalCost;
 		bestOfBest = x10.lang.Int.MAX_VALUE ;
@@ -253,15 +256,20 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			}
 			
 			// 	Utils.show("partial sol",csp_.getVariables());
-			//csp_.displaySolution();
+			//csp_.displaySolution();			
 			
-
 			// --- Interaction with other solvers -----
 			Runtime.probe();		// Give a chance to the other activities
 			if (kill){	//if (kill.get()){ 
 				//Logger.debug(()=>" killed!");
 				break;		// Check if other place or activity have finished
 			}
+			
+			
+			// print iter an cost
+			// if (nbIter % 10n == 0n)
+			// 	 Console.OUT.println("i"+nbIter+"i\t"+(bestCost/100n)+"\t"+(bestCost%100n));
+			// Console.OUT.println(nbIter+" "+(totalCost)+" "+(totalCost));
 			
 			
 			/**
@@ -271,7 +279,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
 				bestCost = totalCost;
 				bestSent = false;
-				// Console.OUT.println(here+" best cost= "+bestCost);
+				//Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished
 				if ((beat && bestCost < target)||(!beat && bestCost <= target)){
 					break;
@@ -480,6 +488,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		return lminJ;
 	}
 	
+	
+	// var rBestCost : Int = x10.lang.Int.MAX_VALUE;
+	// var locMinC : Int = 0n;
+	
 	/**
 	 * 	doReset( var n : Int, csp : ModelAS )
 	 * 	Performs the reset over the problem model csp
@@ -489,6 +501,14 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	public def doReset(n:Int, csp_ : ModelAS ) {
 		
 		var cost : Int = -1n;		//reset(n, csp);
+		
+		// if (totalCost < rBestCost){
+		// 	 rBestCost = totalCost;
+		// 	 Console.OUT.println("Loc Min = "+locMinC);
+		// 	 locMinC = 1n;
+		// }else{
+		// 	 locMinC++;
+		// }
 		
 		cost = csp_.reset( n, totalCost );
 		//nbSwap += n ; //I don't know what happened here with costas reset

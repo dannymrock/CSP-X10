@@ -76,10 +76,10 @@ public class Main {
 		val problem        = opts("-p", "MSP");
 		val filePath       = opts("-f", ".");
 		val size           = opts("-s", 10n);
-		val solverMode	   = opts("-m", 0n);
+		val solverMode	    = opts("-m", 0n);
 		val restartLimit   = opts("-l", 1000000000n);
 		val maxTime        = opts("-t", 0);
-		val targetCost	   = opts("-c", 0n);	
+		val targetCost	    = opts("-c", 0n);	
 		val testNb         = opts("-b", 10n);
 		val nodesPTeam     = opts("-N", 1n);		
 		val updateI        = opts("-U", 0n);
@@ -128,7 +128,7 @@ public class Main {
 		} else if(problem.equals("LNP")){
 			//Logger.debug(()=>{"Langford Pairing Problem"});
 			param = LANGFORD_PROBLEM;
-			val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets
+			val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets. Parameter K
 			vectorSize= eNumber*size;
 		} else if(problem.equals("NPP")){
 			//Logger.debug(()=>{"Number Partition Problem"});

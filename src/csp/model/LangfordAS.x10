@@ -1,6 +1,7 @@
 package csp.model;
 import csp.solver.Valuation;
 import csp.util.Logger;
+import csp.util.Utils;
 
 /** LangfordAS is the implementation of Langford pairing problem for the Adaptive Search solver
  * 	in the x10 language.
@@ -35,7 +36,7 @@ import csp.util.Logger;
  *  In the rest of the code we use x = v - 1 (x in 0..order-1).                                                                               
  *  The error on a value x is stored in err[x].                                                                                               
  *  err[x] = 1 iff the distance between both occurrences of x is invalid                                                                      
- *  (i.e. the distance between indices are != x + 2)     
+ *  (i.e. the distance between indices are != x + 2  and x + 1 for Skolem)     
  */
 
 public class LangfordAS(order:Long) extends ModelAS{ 
@@ -56,17 +57,17 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 *  Set Initial values for the problem
 	 */
 	private def initParameters(rLimit:Int){ 
-		solverParams.probSelectLocMin = 15n;
-		solverParams.freezeLocMin = 4n;
+		solverParams.probSelectLocMin = 6n;
+		solverParams.freezeLocMin = 2n;
 		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = 3n; //(order < 12n) ? 4n : 10n;
+		solverParams.resetLimit = 2n; //(order < 12n) ? 4n : 10n;
 		solverParams.resetPercent = 1n;      //var to reset
 		//solverParams.nbVarToReset = 1n;
 		solverParams.restartLimit = rLimit;
-		solverParams.restartMax = 100n;
+		solverParams.restartMax = 1000n;
 		solverParams.baseValue = 0n;
 		solverParams.exhaustive = false;
-		solverParams.firstBest = false; 
+		solverParams.firstBest = true; 
 		
 		if ((paramK == 2 && order % 4 != 0 && order % 4 != 3) ||
 				(paramK == 3 && (order < 9 || (order % 9 != 0 && order % 9 != 1 && order % 9 != 8)))){
@@ -77,9 +78,56 @@ public class LangfordAS(order:Long) extends ModelAS{
 		
 	} 
 	
-	
-	
-	
+	public def	computeError(x:Long):Long{            /* here x < order */
+		 var r:Long = 0n;
+		 
+		 // Sort variables
+		 var ind1 : Int, ind2 : Int, ind3 : Int;
+		 
+		 // indexes
+		 var i1 : Long = x;
+		 var i2 : Long = i1 + order;
+		 var i3 : Long = i2 + order;
+		 //Utils.show("vector in compError",variables);	 
+		 //Console.OUT.println("i1 "+i1+" i2 "+i2+" i3 "+i3);
+		 
+		 if (variables(i1) < variables(i2)) {
+			  if (variables(i3) < variables(i1)){
+					ind1 = variables(i3);
+					ind2 = variables(i1);
+					ind3 = variables(i2);
+			  } else if (variables(i3) < variables(i2)) {
+					ind1 = variables(i1);
+					ind2 = variables(i3);
+					ind3 = variables(i2);
+			  } else{
+					ind1 = variables(i1);
+					ind2 = variables(i2);
+					ind3 = variables(i3);
+			  }
+		 } else {
+			  if (variables(i3) < variables(i2)){
+					ind1 = variables(i3);
+					ind2 = variables(i2);
+					ind3 = variables(i1);
+			  } else if (variables(i3) < variables(i1)) {
+					ind1 = variables(i2);
+					ind2 = variables(i3);
+					ind3 = variables(i1);
+			  } else {
+					ind1 = variables(i2);
+					ind2 = variables(i1);
+					ind3 = variables(i3);			
+			  }
+		 } 
+		 
+		 if ((ind2 - ind1) != ( x as Int + 2n)) r++;   // x as Int + 1n for Skolem
+		 if ((ind3 - ind2) != ( x as Int + 2n)) r++;
+		 
+		 //Console.OUT.println("ind1 "+ind1+" ind2 "+ind2+" ind3 "+ind3+ " r "+r);
+		 return r;
+	}
+		
 	/**
 	 * 	Returns the total cost of the current solution.
 	 * 	Also computes errors on constraints for subsequent calls to
@@ -91,11 +139,15 @@ public class LangfordAS(order:Long) extends ModelAS{
 		var i : Int;
 		var r : Int = 0n;
 
+		//Utils.show("vector ",variables);
+		
 		for(i = 0n; i < order; i++){
-			val c = computeError(i);
-			err(i) = c as Int;
-			r += c;
+			val e = computeError(i);
+			err(i) = e as Int;
+			r += e;
 		}
+
+		//Console.OUT.println("error "+r);
 		return r;
 	}
 	
@@ -107,7 +159,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	public def costOnVariable( var i : Int ) : Int
 	{
 		val x = i % order;
-		return err(x);
+		return (err(x) != 0n ? 1n : 0n); /* for K == 3 return if the variable is in error (i.e. 1 or 2 errors are the same) */
 	}
 	
 	/**
@@ -123,18 +175,10 @@ public class LangfordAS(order:Long) extends ModelAS{
 		
 		val x = i1 % order;           /* value to exchange (in 0..order - 1) */
 		val y = i2 % order;
-		// 		int tmp;
-		// 
-		// 		#ifdef CHECK
-		// 		if (current_cost != Cost_Of_Solution(0))
-		// 			printf("SEEMS 111 AN ERROR %d <=> %d: %d should be %d\n", i1, i2, current_cost, Cost_Of_Solution(0));
-		// 		#endif
-		// 
-		// 		#if 1
-		if (x == y)                   /* exchange the same value ? */
-			return r;
-		// 		#endif
-		// 
+
+		if (x == y)        /* exchange the same value ? */
+			return r + 1n;  /* for K == 3 don't return current_cost to avoid "false" plateau */
+
 		var tmp:Int = variables(i1);
 		variables(i1) = variables(i2);
 		variables(i2) = tmp;
@@ -145,18 +189,9 @@ public class LangfordAS(order:Long) extends ModelAS{
 		r += computeError(x);
 		r += computeError(y);
 		
-		// 		#ifdef CHECK
-		// 		if (current_cost !=  Cost_Of_Solution(0))
-		// 			printf("SEEMS 222 AN ERROR %d <=> %d: %d should be %d\n", i1, i2, current_cost, Cost_Of_Solution(0));
-		// 		#endif
-		
 		variables(i2) = variables(i1);
 		variables(i1) = tmp;
 		
-		// 		#ifdef CHECK
-		// 		Cost_Of_Solution(0);
-		// 		#endif
-		// 		 return current_cost;	
 		return r;
 	}
 
@@ -191,173 +226,6 @@ public class LangfordAS(order:Long) extends ModelAS{
 		Console.OUT.printf("\n");
 	}
 	
-	/**
-	 *  CHECK_SOLUTION
-	 * 
-	 *  Checks if the solution is valid.
-	 */
-	public  def verify(conf:Valuation(sz)):Boolean {
-		var order:Long = length / paramK;
-		var r:Long = 0;
-		
-		//Check Permutation
-		val permutV = new Rail[Int](sz, 0n);
-		val baseV = solverParams.baseValue;
-		for (mi in conf.range()){
-			val value = conf(mi);
-			permutV(value-baseV)++;
-			if (permutV(value-baseV)>1){
-				Console.OUT.println("Error: Not valid permutation, value "+ value +" is repeated");
-			}
-		}
-		
-		val vSort = new Rail[Int](paramK,0n);
-		var j:Long;
-		for(var x:Long = 0; x < order; x++){
-			var i:Long = x;
-			r = 0;
-			
-			//Console.OUT.println("value x "+(x+1));
-			
-			for(c in vSort.range()){
-				val ind = conf(i);
-				//Console.OUT.println(" "+ind);
-				i += order;
-				for(j = c - 1; j >= 0 && ind < vSort(j); j--)
-					;
-				j++;
-				for(var k:Long = c; k > j; k--)
-					vSort(k) = vSort(k - 1);
-				vSort(j) = ind;
-			}
-			
-			// Console.OUT.print("\nSORTED: ");
-			// for(c in vSort.range()){
-			// 	val ind = vSort(c);
-			// 	Console.OUT.print(" "+ind);
-			// }
-			
-			
-			for(var c:Long = 1; c < paramK; c++){
-				val ind1 = vSort(c - 1);           /* index of the 1st occurrence */
-				val ind2 = vSort(c);               /* index of the 2nd occurrence */
-
-				val between = ind2 - ind1;
-				r += (between - 2 != x)? 1:0;
-			}
-			
-			//Console.OUT.println("r= "+r);			
-			if (r != 0){
-				Console.OUT.println("ERROR: the "+(x+1n)+" values  are missplaced!");
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	
-	
-	
-// 	public def	computeError(x:Long):Long{            /* here x < order */
-// 		var r:Long = 0n, i:Long = x;
-//  		//val sort = new Rail[Int](paramK, 0n);
-// 		
-// 		// Logger.info(()=>{"FOR: "+x});
-// 		// Logger.info(()=>{"VALUES: "});
-// 
-// 		var j:Long, c:Long;
-// 		
-// 		//Sort variables
-// 		var ind1:Int = variables(i);
-// 		var ind2:Int = variables(i+order);
-// 		var ind3:Int = variables(i+order*2);
-// 		var tmp:Int;
-// 		if (ind1 < ind2) {
-// 			if (ind3 < ind1){
-// 				tmp = ind1;
-// 				ind1 = ind3;
-// 				ind3 = ind2;
-// 				ind2 = tmp;
-// 			} else if (ind3 < ind2) {
-// 				tmp = ind2;
-// 				ind2 = ind3;
-// 				ind3 = tmp;				
-// 			} 
-// 		} else {
-// 			if (ind3 < ind2){
-// 				tmp = ind1;
-// 				ind1 = ind3;
-// 				ind3 = tmp;
-// 			} else if (ind3 < ind1) {
-// 				tmp = ind1;
-// 				ind1 = ind2;
-// 				ind2 = ind3;
-// 				ind3 = tmp;
-// 			} else {
-// 				tmp = ind1;
-// 				ind1 = ind2;
-// 				ind2 = tmp;
-// 			}
-// 		} 
-// 		
-// 		// for(c = 0; c < paramK; c++){
-// 		// 		val ind = variables(i);
-// 		// 		//Logger.info(()=>{" "+ind});
-// 		// 		i += order;
-// 		// 		for(j = c - 1; j >= 0 && ind < sort(j); j--)
-// 		// 			;
-// 		// 		j++;
-// 		// 		for(var k:Long = c; k > j; k--)
-// 		// 			sort(k) = sort(k - 1);
-// 		// 		sort(j) = ind;
-// 		// 	}
-// 		
-// 		
-// 		// Logger.info("\nSORTED: ");
-// 		// 	for(c = 0; c < paramK; c++){
-// 		// 		val ind = sort(c);
-// 		// 		Logger.info(()=>{" "+ind});
-// 		// 	}
-// 		// 	
-// 		
-// 		val between1 = ind2 - ind1;
-// 		val between2 = ind3 - ind2;
-// 		
-// 		r = ((between1 - 2 != x)? 1:0)+((between2 - 2 != x)? 1:0);
-// 		
-// 		//  		for(c = 1; c < paramK; c++){
-// 		//  			val ind1 = sort(c - 1);           /* index of the 1st occurrence */
-// 		//  			val ind2 = sort(c);               /* index of the 2nd occurrence */
-// 		// 
-// 		//  			val between = ind2 - ind1;
-// 		//  			r += (between - 2 != x)? 1:0;
-// 		//  		}
-// 		//  
-// 		//  		val valr=r;
-// 		//Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
-// 		return r;
-// 	}
-
-	
-	public def	computeError(var x:Long):Long{            /* here x < order */
-		var ind1:Long = variables(x);
-		var ind2:Long = variables(x + order);
-		var ind3:Long = variables(x + order + order);
-		x += 2; /* error if abs(indX - indY) - 2 != x  so we add 2 to x */
-		var r:Long = -1; /* at least 1 distance is wrong */
-		if (Math.abs(ind1 - ind2) != x)
-            r++;
-		if (Math.abs(ind1 - ind3) != x)
-			r++;
-		if (Math.abs(ind2 - ind3) != x)
-			r++;
-		
-		//Logger.info(()=>{"\nCOST = "+valr+"\n\n"});
-		return r;
-	}
-
-
 	
 	/**
 	 *  executedSwap( i1 : Int, i2 : Int)
@@ -374,6 +242,71 @@ public class LangfordAS(order:Long) extends ModelAS{
 		err(y) = computeError(y) as Int;
 	}
 	
+	/**
+	 *  CHECK_SOLUTION
+	 * 
+	 *  Checks if the solution is valid.
+	 */
+	public  def verify(conf:Valuation(sz)):Boolean {
+		 var order:Long = length / paramK;
+		 var r:Long = 0;
+		 
+		 //Check Permutation
+		 val permutV = new Rail[Int](sz, 0n);
+		 val baseV = solverParams.baseValue;
+		 for (mi in conf.range()){
+			  val value = conf(mi);
+			  permutV(value-baseV)++;
+			  if (permutV(value-baseV)>1){
+					Console.OUT.println("Error: Not valid permutation, value "+ value +" is repeated");
+			  }
+		 }
+		 
+		 val vSort = new Rail[Int](paramK,0n);
+		 var j:Long;
+		 for(var x:Long = 0; x < order; x++){
+			  var i:Long = x;
+			  r = 0;
+			  
+			  //Console.OUT.println("value x "+(x+1));
+			  
+			  for(c in vSort.range()){
+					val ind = conf(i);
+					//Console.OUT.println(" "+ind);
+					i += order;
+					for(j = c - 1; j >= 0 && ind < vSort(j); j--)
+						 ;
+					j++;
+					for(var k:Long = c; k > j; k--)
+						 vSort(k) = vSort(k - 1);
+					vSort(j) = ind;
+			  }
+			  
+			  // Console.OUT.print("\nSORTED: ");
+			  // for(c in vSort.range()){
+			  // 	val ind = vSort(c);
+			  // 	Console.OUT.print(" "+ind);
+			  // }
+			  
+			  
+			  for(var c:Long = 1; c < paramK; c++){
+					val ind1 = vSort(c - 1);           /* index of the 1st occurrence */
+					val ind2 = vSort(c);               /* index of the 2nd occurrence */
+
+					val between = ind2 - ind1;
+					r += (between - 2 != x)? 1:0;
+			  }
+			  
+			  //Console.OUT.println("r= "+r);			
+			  if (r != 0){
+					Console.OUT.println("ERROR: the "+(x+1n)+" values  are missplaced!");
+					return false;
+			  }
+		 }
+		 
+		 return true;
+	}
+		
 	/**
 	 *  Compute distance between 2 configurations according Langford Model
 	 */
