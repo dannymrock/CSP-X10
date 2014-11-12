@@ -263,16 +263,16 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
     	val same = solver.nbSameVarTot;
     	val restart = solver.nbRestart;
     	val change = solver.nbChangeV;
-        val singles = solver.bestCost % sz;
-        val bp = (solver.bestCost-singles)/sz;
-        val fr = solver.nbForceRestart;
-        
-        val head = here.id % nTeams;
-        val gR = at(Place(head)) ss().getGroupReset();
-        //Console.OUT.println("\n\nGroup "+head+" Reset "+gReset);
+    	val singles = solver.bestCost % sz;
+    	val bp = (solver.bestCost-singles)/sz;
+    	val fr = solver.nbForceRestart;
     	
-        val gReset = (fr > gR)?fr:gR;
-        
+    	val head = here.id % nTeams;
+    	val gR = at(Place(head)) ss().getGroupReset();
+    	//Console.OUT.println("\n\nGroup "+head+" Reset "+gReset);
+    	
+    	val gReset = (fr > gR)?fr:gR;
+    	
     	at (Place.FIRST_PLACE) /*async*/ 
     	ss().setStats(0n, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
     			bp as Int, singles as Int, gReset);

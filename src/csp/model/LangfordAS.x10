@@ -322,7 +322,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 			val ind21:Int = conf2(v);
 			val ind22:Int = conf2(v + order);
 			val ind23:Int = conf2(v + order + order);
-	var z:Int = 0n;		
+			var z:Int = 0n;		
 			if(ind11 == ind21 || ind11 == ind22 || ind11 == ind23)
 				z++;//eqNb++;
 			if(ind12 == ind21 || ind12 == ind22 || ind12 == ind23)

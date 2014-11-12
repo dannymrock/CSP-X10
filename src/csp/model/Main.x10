@@ -92,7 +92,7 @@ public class Main {
 		val affectedP      = opts("-A", 0.0);
 		val inSeed         = opts("-y", 0);
 		val verify         = opts("-v", 0);
-		val outFormat	   = opts("-o", 1n);
+		val outFormat	    = opts("-o", 1n);
 				
 		/**
 		 *   Print Parameters

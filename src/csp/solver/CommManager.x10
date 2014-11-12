@@ -2,6 +2,7 @@ package csp.solver;
 import csp.util.Logger;
 import csp.model.ModelAS;
 import x10.util.Random;
+import x10.util.StringUtil;
 /**	This class containts all the basic CommManager configuration info, for the
  * 	Adaptive search solver x10 implementation ASSolverPermut
  * 	
@@ -53,7 +54,7 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	var random :Random = new Random();
 	
 	val changeProb:Int;
-	
+	var deltaFact : Double = 1.0;
 	/**
 	 * The reference to all team members, for communication.
 	 */
@@ -78,6 +79,13 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 		Logger.debug(()=>{(s==0n ? ("My team is: " + m):("My team is:"+here.id))});
 		//Console.OUT.println(s==0n ? ("My team is: " + m):("My team is:"+here.id));
 		this.changeProb = changeProb;
+		
+		
+		val str = System.getenv("D");
+		if (str != null)
+			 deltaFact = StringUtil.parseInt(str)/ 100.0;
+		
+		
 		
 		//ep.setSolvers(ss);
 	}
@@ -159,7 +167,8 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 			a= null;
 			Console.OUT.println("ERROR: Unknown solver mode");
 		}
-		if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < changeProb ){
+//		if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < changeProb ){
+	   if ( a!=null && myCost  > a().cost * deltaFact &&  random.nextInt(100n) < changeProb ){
 			//if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < 95){					 
 			csp_.setVariables(a().vector);
 			return true; 
