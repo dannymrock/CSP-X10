@@ -44,8 +44,8 @@ public class LangfordAS(order:Long) extends ModelAS{
 	val paramK:Long; // Should be an input parameter
 	val err:Rail[Int];
 
-	def this (order : Long, vectorSize: Long/*{self==2*order}*/, seed : Long, rLimit:Int) : LangfordAS(vectorSize){
-		super(vectorSize, seed);
+	def this (order : Long, vectorSize: Long/*{self==2*order}*/, seed : Long, rLimit:Int, inv:String) : LangfordAS(vectorSize){
+		super(vectorSize, seed, inv);
 		property(order);
 		paramK = vectorSize /order;
 		err = new Rail[Int](order,0n);
@@ -60,8 +60,8 @@ public class LangfordAS(order:Long) extends ModelAS{
 		solverParams.probSelectLocMin = 6n;
 		solverParams.freezeLocMin = 2n;
 		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = 2n; //(order < 12n) ? 4n : 10n;
-		solverParams.resetPercent = 1n;      //var to reset
+		solverParams.resetLimit = 2n;//2n; //(order < 12n) ? 4n : 10n;
+		solverParams.resetPercent = 1n; //1n;      //var to reset
 		//solverParams.nbVarToReset = 1n;
 		solverParams.restartLimit = rLimit;
 		solverParams.restartMax = 1000n;

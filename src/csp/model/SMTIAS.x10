@@ -6,7 +6,7 @@ import x10.array.Array_2;
 //import x10.io.File;
 import x10.io.FileReader;
 import x10.io.File;
-//import x10.io.FileWriter;
+import x10.io.FileWriter;
 import x10.util.StringBuilder;
 
 import x10.util.RailUtils;
@@ -40,14 +40,23 @@ public class SMTIAS extends ModelAS{
 	
 	var minSingles:Int = 0n;
 	
+	val isHRT:Boolean;
+	
+	val mapTable:Rail[Int];
+	
 	public def this (lengthProblem : Long , seed : Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
-			restLimit:Int):SMTIAS(lengthProblem){
-		super( lengthProblem, seed );
+			restLimit:Int, mapTable:Rail[Int], isHRT:Boolean, inv:String):SMTIAS(lengthProblem){
+		super( lengthProblem, seed, inv);
 		this.initParameters(restLimit);
 		
 		val l = length as Int;
 		menPref = mPrefs;
 		womenPref = wPrefs;
+		
+		this.isHRT = isHRT;
+		
+		this.mapTable = mapTable;
+		
 		revpM = new Rail[Rail[Int]](l, (Long) => new Rail[Int](l,0n));
 		revpW = new Rail[Rail[Int]](l, (Long) => new Rail[Int](l,0n));
 		// Creating Reverse Matrixes
@@ -80,7 +89,8 @@ public class SMTIAS extends ModelAS{
 				revpM(mw)(woman - 1) = level;
 			}
 		}
-		/// printPreferencesTables();
+		///printPreferencesTables();
+		//writeSMTIFile("outSMTI.smp");
 	}
 	
 	/** initParameters
@@ -341,7 +351,8 @@ public class SMTIAS extends ModelAS{
 	 *  Checks if the solution is valid.
 	 */
 	
-	public def verify(match:Valuation(sz)):Boolean {
+	public def verify(match:Valuation(sz)):Boolean
+	{
 		var w:Int;
 		var pmi:Int = 0n;
 		var pwi:Int = 0n; //w_of_m, m_of_w;
@@ -350,49 +361,64 @@ public class SMTIAS extends ModelAS{
 		
 		val permutV = new Rail[Int](sz, 0n);
 		val variablesWv = new Rail[Int](length,0n);
-		for (mi in match.range()){
+		for (mi in match.range())
+		{
 			val value = match(mi);
 			permutV(value-1)++;
-			if (permutV(value-1)>1){
-				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
+			if (permutV(value-1)>1)
+			{
+				Console.OUT.println("ERROR: Not valid permutation, value "+ value +" is repeted");
 			}
-			if (value==0n)	Console.OUT.println("not valid Zero in solution");
+			if (value==0n)
+				 Console.OUT.println("ERROR: not valid Zero in solution");
 			variablesWv(value-1) = mi as Int + 1n;
 		}
 		
 		// verify existence of undomminated BP's for each man 
-		for (mi in match.range()){  // mi -> man index (man number = mi + 1)
+		for (mi in match.range())  // mi -> man index (man number = mi + 1)
+		{  
 			pmi = match(mi)-1n; // pm current match of mi 
 			var e:Int = 0n; 	 	
 			var bF:Int = 0n;
 			var levelPM:Int = -1n; //m's current match level of preference  
 			
-			if( revpM(mi)(pmi)==0n ){
+			if( revpM(mi)(pmi)==0n )
+			{
 				levelPM = length; //put some value
 				singles++;
-				Console.OUT.println("Error m="+ (mi+1n) +" w="+(pmi+1n)+" is not a valid match (single)");
-			} else{ // m has a valid assignment pm
+				// Console.OUT.println("m "+ (mi+1n) +" is SINGLE (not a valid match with w "+(pmi+1n)+")");
+				val hos = mapTable(pmi);
+				Console.OUT.println("r "+ (mi+1n) +" is SINGLE (not a valid match with h "+(hos+1n)+")");
+			} 
+			else
+			{ // m has a valid assignment pm
 				levelPM = revpM(mi)(pmi);
 			}
 			
 			var levelW:Int = 0n;
-			for(li in menPref(mi).range()){ //li level of preference index
-				
+			for(li in menPref(mi).range()) //li level of preference index
+			{ 
 				w = menPref(mi)(li);
-				if (w == 0n) continue;	// entry deleted
+				if (w == 0n)
+					 continue;	// entry deleted
+				
 				if(w > 0n)			// new level of preference
 					levelW++;
 				else						// if w < 0 -> same level of preference (tie) 
 					w = -w;
-				if (levelW >= levelPM) break; //stop if cuerrent level of pref is bigger or equal 
+				
+				if (levelW >= levelPM)
+					 break; //stop if cuerrent level of pref is bigger or equal 
+				
 				// than the level of pref of pm (current match) "stop condition"
 				pwi = variablesWv(w-1)-1n; //pw current match of the current
 				// 	// Verify if w prefers m to pw
 				e = verifyBlockingPairError(w-1n, pwi, mi as Int);
 				
-				if (e > 0n){
+				if (e > 0n)
+				{
 					r++;
-					Console.OUT.println("Error: blocking pair m="+(mi+1n)+" w="+w+" pw= "+(pwi+1n) +" with error= "+e);
+					Console.OUT.println("ERROR: blocking pair m="+(mi+1n)+" w="+w+" pw= "+(pwi+1n) +" with error= "+e);
 					/* count the errors (number of BP) */
 					break; 			//only consider undominated BP
 				}
@@ -429,16 +455,16 @@ public class SMTIAS extends ModelAS{
 		solverParameters.setValues(solverParams);
 	}
 	
-	public def initialize( baseValue : Int ) {
-		for(k in variables.range()){
-			variables(k) = baseValue + k as Int;
-		}
-		//Main.show("before ini",variables);
-		for( var i:Int = length - 1n ; i >	0n ; i-- ) {
-			val j = r.randomInt( i + 1n );
-			swapVariables(i,j);
-		}
-	}
+	// public def initialize( baseValue : Int ) {
+	// 	for(k in variables.range()){
+	// 		variables(k) = baseValue + k as Int;
+	// 	}
+	// 	//Main.show("before ini",variables);
+	// 	for( var i:Int = length - 1n ; i >	0n ; i-- ) {
+	// 		val j = r.randomInt( i + 1n );
+	// 		swapVariables(i,j);
+	// 	}
+	// }
 	
 	public def swapVariables(i:Int, j:Int):void{
 		//Console.OUT.println("swap func i: "+i+" j: "+j);
@@ -471,15 +497,47 @@ public class SMTIAS extends ModelAS{
 		Console.OUT.print("\n");
 	}
 	
-	public def displaySolution(match:Valuation(sz)){		
-		Console.OUT.println("\nMatching  m->w:");
-		for (i in match.range()){
-			if(revpM(i)(match(i)-1n)==0n){
-				Console.OUT.printf("%4d->%-4d",(i+1),0n);
-			}else
-				Console.OUT.printf("%4d->%-4d",(i+1),variables(i));
-		}
-		Console.OUT.print("\n");
+	public def displaySolution(match:Valuation(sz)){	
+		 if(isHRT)
+		 {
+			  Console.OUT.println("\nMatching  r->h:");
+			  for (i in match.range())
+			  {
+					if(revpM(i)(match(i)-1n)==0n)
+					{
+						 Console.OUT.printf("%4d->%-4d",(i+1),0n);
+					}else
+					{
+						 val hos = mapTable(match(i)-1);
+						 Console.OUT.printf("%4d->%-4d",(i+1),(hos+1));
+					}
+			  }
+			  Console.OUT.print("\n");
+		 }
+		 else 
+		 {
+			  Console.OUT.println("\n Solution Vector:");
+			  for (i in match.range())
+			  {
+					if(revpM(i)(match(i)-1n) == 0n)
+						 Console.OUT.print(0+" ");
+					else
+						 Console.OUT.print(match(i)+" ");
+			  }
+			  Console.OUT.print("\n");
+			  
+			  // Console.OUT.println("\nMatching  m->w:");
+			  // for (i in match.range())
+			  // {
+					// if(revpM(i)(match(i)-1n)==0n)
+					// {
+					// 	 Console.OUT.printf("%4d->%-4d",(i+1),0n);
+					// }
+					// else
+					// 	 Console.OUT.printf("%4d->%-4d",(i+1),match(i));
+			  // }
+			  // Console.OUT.print("\n");
+		 }
 	}
 	
 	public def displaySolution2 (match:Valuation(sz)){	
@@ -493,38 +551,63 @@ public class SMTIAS extends ModelAS{
 		Console.OUT.print("\n");
 	}
 	
+	private def writeSMTIFile(fileName:String){
+		 
+		 //Write file
+		 val oFile = new File(fileName);
+		 val p = oFile.printer();
+		 p.println(length);		
+		 p.println(" ");		
+		 
+		 
+		 var i:Int = 0n;
+		 for (i=0n; i<length; i++){
+			  //Console.OUT.print(i+1+": ");
+			  for(j in menPref(i))
+					if (j != 0n) p.print(j+" ");
+			  p.println("");
+		 }
+		 p.println(" ");
+		 for (i=0n; i<length; i++){
+			  for(j in womenPref(i))
+					if (j != 0n) p.print(j+" ");
+			  p.println("");
+		 }
+	}
+		 
 	private def printPreferencesTables(){
-		Console.OUT.println("\nMen Preferences");
-		var i:Int = 0n;
-		for (i=0n; i<length; i++){
-			Console.OUT.print(i+1+": ");
-			for(j in menPref(i))
-				Console.OUT.print(j+" ");
-			Console.OUT.println("");
-		}
-		Console.OUT.println("Women Preferences");
-		for (i=0n; i<length; i++){
-			Console.OUT.print(i+1+": ");
-			for(j in womenPref(i))
-				Console.OUT.print(j+" ");
-			Console.OUT.println("");
-		}
+		 
+		 Console.OUT.println("\nMen Preferences");
+		 var i:Int = 0n;
+		 for (i=0n; i<length; i++){
+			  Console.OUT.print(i+1+": ");
+			  for(j in menPref(i))
+					Console.OUT.print(j+" ");
+			  Console.OUT.println("");
+		 }
+		 Console.OUT.println("Women Preferences");
+		 for (i=0n; i<length; i++){
+			  Console.OUT.print(i+1+": ");
+			  for(j in womenPref(i))
+					Console.OUT.print(j+" ");
+			  Console.OUT.println("");
+		  }
 		
-		Console.OUT.println("Men rev Preferences");
-		for (i=0n; i<length; i++){
-			Console.OUT.print(i+1+": ");
-			for(j in revpM(i))
-				Console.OUT.print(j+" ");
-			Console.OUT.println("");
-		}
-		
-		Console.OUT.println("Women rev Preferences");
-		for (i=0n; i<length; i++){
-			Console.OUT.print(i+1+": ");
-			for(j in revpW(i))
-				Console.OUT.print(j+" ");
-			Console.OUT.println("");
-		}
+		// Console.OUT.println("Men rev Preferences");
+		// for (i=0n; i<length; i++){
+		// 	Console.OUT.print(i+1+": ");
+		// 	for(j in revpM(i))
+		// 		Console.OUT.print(j+" ");
+		// 	Console.OUT.println("");
+		// }
+		// 
+		// Console.OUT.println("Women rev Preferences");
+		// for (i=0n; i<length; i++){
+		// 	Console.OUT.print(i+1+": ");
+		// 	for(j in revpW(i))
+		// 		Console.OUT.print(j+" ");
+		// 	Console.OUT.println("");
+		// }
 	}
 	
 	static def readMatrix(fr:FileReader, sizeF:Int,  mP:Rail[Rail[Int]], wP:Rail[Rail[Int]]){
@@ -739,6 +822,7 @@ public class SMTIAS extends ModelAS{
 		return true;
 	}
 	
+	
 	/** load data customized for HRP
 	 *  load the data in filePath to the data structures mPref and w Pref 
 	 *  @param filePath path of the data file to be loaded
@@ -746,7 +830,8 @@ public class SMTIAS extends ModelAS{
 	 *  @param wPref men prefernce list (parameter by reference)
 	 *  @return true if success, false if filePath is a directory
 	 */
-	static def loadDataHR(filePath : String, mPref:Rail[Rail[Int]],wPref:Rail[Rail[Int]]):Boolean{
+	static def loadDataHR(filePath : String, mPref:Rail[Rail[Int]],wPref:Rail[Rail[Int]],
+			  mapTable:Rail[Int]):Boolean{
 		var loadTime:Long = -System.nanoTime();
 		//Load first line wtith headers size p1 p2
 		val filep = new File(filePath);//new File(file);//
@@ -765,6 +850,27 @@ public class SMTIAS extends ModelAS{
 		val hcap = new Rail[Int](n2,0n);  
 		//Load Problem
 		readMatrixHR(fr, n1, n2, mPref, wPref, hcap);
+		
+		
+		// Create mapTable from hcap
+		// var pos:Int=0n;
+		// for(var hi:Int=0n; hi<n2; hi++){
+		// 	 for(var rep:Int = hcap(hi); rep>0n;rep--){
+		// 		  mapTable(pos++) = hi;
+		// 		  Console.OUT.println("maptable "+(pos-1n)+" = "+hi);
+		// 	 }
+		// }
+		var pos:Int = n2;
+		for(var hi:Int=0n; hi<n2; hi++){
+			 for(var rep:Int = hcap(hi) - 1n ; rep > 0n; rep--){
+			 //Console.OUT.println("rep "+rep+" hi "+hi);	  
+			 mapTable(pos++) = hi;
+				//  Console.OUT.println("maptable "+(pos-1n)+" = "+hi);
+			 }
+		}
+		
+		// for(index in mapTable.range())
+		// 	 Console.OUT.println("maptable "+index+" = "+mapTable(index));
 		
 		//Turn HR data into corresponding SMTI
 		convertRPL(mPref,hcap, n1, n2);

@@ -38,8 +38,8 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	public def this(length:Int, vectorSize:Long/*{self==length*length}*/, seed:Long, rLimit:Int){
-		super(vectorSize, seed);
+	public def this(length:Int, vectorSize:Long/*{self==length*length}*/, seed:Long, rLimit:Int, inv:String){
+		super(vectorSize, seed, inv);
 		property(length);
 		assert length*length==(vectorSize as Int);
 		initParameters(rLimit);

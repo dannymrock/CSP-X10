@@ -42,8 +42,8 @@ public class CostasAS extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of the problem
 	 */
-	def this (lengthProblem : Long, seed : Long, rLimit:Int) : CostasAS(lengthProblem) {
-		super(lengthProblem, seed);
+	def this (lengthProblem : Long, seed : Long, rLimit:Int, inv:String) : CostasAS(lengthProblem) {
+		super(lengthProblem, seed, inv);
 		size2 = (lengthProblem - 1n) / 2n;		
 		sizeSq = lengthProblem * lengthProblem;
 		//length2reg = 0..((length * 2)-1);

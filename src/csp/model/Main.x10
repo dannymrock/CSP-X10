@@ -20,14 +20,14 @@ import x10.util.StringBuilder;
 public class Main {
 	public static struct CSPProblem(kind:Int) {
 		public def make(size:Long, vectorSize:Long, seed:Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
-				restLimit:Int):ModelAS(vectorSize) {
-			if (kind==MAGIC_SQUARE_PROBLEM) return new MagicSquareAS(size as Int, vectorSize, seed, restLimit);
-			if (kind==COSTAS_PROBLEM) return new CostasAS(vectorSize, seed, restLimit);
-			if (kind==ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit);
-			if (kind==LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit);
-			if (kind==STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit);
-			if (kind==HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit);
-			return new PartitAS(vectorSize, seed, restLimit);
+				restLimit:Int, mapTable:Rail[Int], inVector:String):ModelAS(vectorSize) {
+			if (kind==MAGIC_SQUARE_PROBLEM) return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
+			if (kind==COSTAS_PROBLEM) return new CostasAS(vectorSize, seed, restLimit, inVector);
+			if (kind==ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit, inVector);
+			if (kind==LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit, inVector);
+			if (kind==STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, false, inVector);
+			if (kind==HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, true, inVector);
+			return new PartitAS(vectorSize, seed, restLimit, inVector);
 		}
 	}
 	
@@ -70,6 +70,7 @@ public class Main {
 				                       Option("A", "", "Inter Team Communicaction Diversification - Percentage of Places (A)ffected . Default 0."),
 				                       Option("y", "", "seed. Default 0"),
 				                       Option("v", "", "verify and print solution. Default 0"),
+				                       Option("i", "", "file path for input vector . Default ."),
 				                       Option("o", "", "output format: csv 0, info 1")
 				                       ]);
 		
@@ -92,6 +93,7 @@ public class Main {
 		val affectedP      = opts("-A", 0.0);
 		val inSeed         = opts("-y", 0);
 		val verify         = opts("-v", 0);
+		val inputPath      = opts("-i", ".");
 		val outFormat	    = opts("-o", 1n);
 				
 		/**
@@ -104,7 +106,7 @@ public class Main {
 		Console.OUT.println((nodesPTeam > 1n ? "Using ":"Without ")+"Cooperative Search: "+Place.MAX_PLACES+" places. "+nodesPTeam+" nodes per team "+(Place.MAX_PLACES as Int / nodesPTeam)+" Teams");
 		Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
 		Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum distance: "+minDistance+" Initial delay "+delayI+" ms. Per. Affected Places "+(affectedP*100)+"%");
-		Console.OUT.println("Input seed "+inSeed);
+		Console.OUT.println("Input seed "+inSeed+ "Input vector "+(inputPath.equals(".")?"not used":inputPath));
 		Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );
 		
 		/**
@@ -156,6 +158,10 @@ public class Main {
 		// men and women preferences for the SMTI problem (residents hospitals for HRP - size is n1)
 		val mPref:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
 		val wPref:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
+		
+		//maping table for HRT problems "cloning"
+		val mapTable = new Rail[Int](size, (i:long)=>i as Int);
+		//val mapTable = new Rail[Int](size, 0n);
 		
 		val vectorSz = vectorSize;
 		val solvers:PlaceLocalHandle[ParallelSolverI(vectorSz)];    
@@ -209,7 +215,7 @@ public class Main {
 				
 				var loadTime:Long = -System.nanoTime();
 				
-				val success = SMTIAS.loadDataHR(nPath+"/"+instance, mPref, wPref);
+				val success = SMTIAS.loadDataHR(nPath+"/"+instance, mPref, wPref, mapTable);
 				if (!success)
 					continue; //path is a directory
 				
@@ -232,7 +238,7 @@ public class Main {
 				val modelSeed = random.nextLong();
 				val prob = param;
 				val cspGen=():ModelAS(vectorSz)=>CSPProblem(prob).make(size as Long,vectorSz,
-						modelSeed,mPref,wPref,restartLimit);
+						modelSeed,mPref,wPref,restartLimit, mapTable, inputPath);
 				
 				/**
 				 *   Start remote solver processes

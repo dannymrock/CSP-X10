@@ -13,8 +13,8 @@ public class PartitAS extends ModelAS{
 	val sumMidX2 : Long;
 	var curMidX2 : Long;
 	
-	def this(length:Long, seed:Long, rLimit:Int): PartitAS(length) {
-		super(length, seed);
+	def this(length:Long, seed:Long, rLimit:Int, inv:String): PartitAS(length) {
+		super(length, seed, inv);
 		size2 = (length / 2) as Int;
 		
 		if (length < 8 || length % 4 != 0)

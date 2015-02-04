@@ -21,8 +21,8 @@ public class AllIntervalAS extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	def this (lengthProblem : Long , seed : Long, exahustive:Boolean, restLimit:Int ):AllIntervalAS(lengthProblem){
-		super( lengthProblem, seed );
+	def this (lengthProblem : Long , seed : Long, exahustive:Boolean, restLimit:Int, inv:String ):AllIntervalAS(lengthProblem){
+		super( lengthProblem, seed, inv );
 		nbOcc = new Rail[Int] (length , 0n);
 		exh = exahustive;
 		initParameters(restLimit);

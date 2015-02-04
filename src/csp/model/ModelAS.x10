@@ -6,6 +6,9 @@ import csp.util.Logger;
 import csp.solver.Valuation;
 
 import x10.util.Random;
+import x10.io.FileReader;
+import x10.io.File;
+
 
 
 /** ModelAS is the Base Model implementation of a CSP problem for the Adaptive Search solver
@@ -22,12 +25,17 @@ public class ModelAS(sz:Long, seed:Long) {
 	protected val r  = new RandomTools(seed);
 	protected val solverParams = new ASSolverParameters();
 	
+	val inVector:Boolean;
+	val inPath:String;
+	
 	/**
 	 * 	Constructor of the class
 	 */
-	public def this( lengthProblem : Long, seed : Long ){
+	public def this( lengthProblem : Long, seed : Long, inPath:String ){
 		property(lengthProblem, seed);
 		this.initParameters(1000n);
+		inVector = inPath.equals(".")?false:true;
+		this.inPath = inPath;
 	}
 	
 	/**
@@ -106,16 +114,57 @@ public class ModelAS(sz:Long, seed:Long) {
 	}
 	
 	public def initialize( baseValue : Int ) {
-		
-		for(k in variables.range()){
-			variables(k) = baseValue + k as Int;
-		}
-		//Main.show("before ini",variables);
-		for( var i:Int = length - 1n ; i >	0n ; i-- ) {
-			val j = r.randomInt( i + 1n );
-			swapVariables(i,j);
-		}
-		//Main.show("after ini",variables);
+		 if (inVector)
+		 {
+			  //initialize from inVector
+			  val fin = new FileReader(new File(inPath));
+			  val inLine = fin.readLine();
+			  var i : Int;
+			  var j : Int = 0n;
+			  var buffer:String =  "";
+			  val x = new Rail[Int](3,0n);
+			  for(i = 0n ; i < inLine.length() ; i++){
+					if( inLine(i) == ' ' || inLine(i) == '\n' ){
+						 variables(j++) = Int.parse(buffer);
+						 Console.OUT.println("var "+(j-1)+" = "+variables(j-1));
+						 buffer = "";
+					}else{
+						 buffer += inLine(i);
+					}
+			  }
+			  
+			  if(j < length)
+					Console.OUT.println("ERROR: The input vector is shorter than the variables array");
+			  
+			  // check permutation
+			  val permutV = new Rail[Int](length, 0n);
+			  for (mi in variables.range())
+			  {
+					val value = variables(mi);
+					permutV(value-1)++;
+					if (permutV(value-1)>1)
+					{
+						 Console.OUT.println("ERROR: Not valid permutation, value "+ value +" is repeted");
+					}
+			  }
+			  
+			  
+			  
+		 }
+		 else
+		 {
+			  for(k in variables.range())
+			  {
+					variables(k) = baseValue + k as Int;
+			  }
+			  //Main.show("before ini",variables);
+			  for( var i:Int = length - 1n ; i >	0n ; i-- )
+			  {
+					val j = r.randomInt( i + 1n );
+					swapVariables(i,j);
+			  }
+		 }
+		 //Utils.show("after ini",variables);
 	}
 	
 	/**
