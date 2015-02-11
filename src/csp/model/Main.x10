@@ -20,13 +20,14 @@ import x10.util.StringBuilder;
 public class Main {
 	public static struct CSPProblem(kind:Int) {
 		public def make(size:Long, vectorSize:Long, seed:Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
-				restLimit:Int, mapTable:Rail[Int], inVector:String):ModelAS(vectorSize) {
-			if (kind==MAGIC_SQUARE_PROBLEM) return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
-			if (kind==COSTAS_PROBLEM) return new CostasAS(vectorSize, seed, restLimit, inVector);
-			if (kind==ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit, inVector);
-			if (kind==LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit, inVector);
-			if (kind==STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, false, inVector);
-			if (kind==HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, true, inVector);
+				restLimit:Int, mapTable:Rail[Int], inVector:String, inFile:String):ModelAS(vectorSize) {
+			if (kind == MAGIC_SQUARE_PROBLEM) return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
+			if (kind == COSTAS_PROBLEM) return new CostasAS(vectorSize, seed, restLimit, inVector);
+			if (kind == ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit, inVector);
+			if (kind == LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit, inVector);
+			if (kind == STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, false, inVector);
+			if (kind == HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, true, inVector);
+			if (kind == QA_PROBLEM) return new QAPAS(vectorSize, seed, inFile, restLimit, inVector);
 			return new PartitAS(vectorSize, seed, restLimit, inVector);
 		}
 	}
@@ -39,6 +40,8 @@ public class Main {
 	public static val PARTIT_PROBLEM = 5n;
 	public static val STABLE_MARRIAGE_PROBLEM = 6n;
 	public static val HOSPITAL_RESIDENT_PROBLEM = 7n;
+	public static val QA_PROBLEM = 8n;
+
 	
 	var fp  : File;
 	
@@ -115,38 +118,59 @@ public class Main {
 		var param : Int = UNKNOWN_PROBLEM;
 		
 		var vectorSize:Long = size; //?
-		if (problem.equalsIgnoreCase("MSP")) {
-			//Logger.debug(()=>{"Magic Square Problem"});
-			param = MAGIC_SQUARE_PROBLEM;
-			vectorSize= size*size;
-		} else if(problem.equals("CAP")){
-			//Logger.debug(()=>{"Costas Array Problem"});
-			param = COSTAS_PROBLEM;
-			vectorSize= size;
-		} else if(problem.equals("AIP")){
-			//Logger.debug(()=>{"All-Interval Array Problem"});
-			param = ALL_INTERVAL_PROBLEM;
-			vectorSize=size;
-		} else if(problem.equals("LNP")){
-			//Logger.debug(()=>{"Langford Pairing Problem"});
-			param = LANGFORD_PROBLEM;
-			val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets. Parameter K
-			vectorSize= eNumber*size;
-		} else if(problem.equals("NPP")){
-			//Logger.debug(()=>{"Number Partition Problem"});
-			param = PARTIT_PROBLEM;
-			vectorSize=size;
-		} else if(problem.equals("SMP")){
-			//Logger.debug(()=>{"Stable Marriage Problem"});
-			param = STABLE_MARRIAGE_PROBLEM;
-			vectorSize=size;
-		} else if(problem.equals("HRP")){
-			//Logger.debug(()=>{"Stable Marriage Problem"});
-			param = HOSPITAL_RESIDENT_PROBLEM;
-			vectorSize=size;
-		} else{
-			Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP , SMP or HRP"); 
-			return;
+		if (problem.equalsIgnoreCase("MSP"))
+		{
+			 //Logger.debug(()=>{"Magic Square Problem"});
+			 param = MAGIC_SQUARE_PROBLEM;
+			 vectorSize = size*size;
+		} 
+		else if(problem.equals("CAP"))
+		{
+			 //Logger.debug(()=>{"Costas Array Problem"});
+			 param = COSTAS_PROBLEM;
+			 vectorSize = size;
+		}
+		else if(problem.equals("AIP"))
+		{
+			 //Logger.debug(()=>{"All-Interval Array Problem"});
+			 param = ALL_INTERVAL_PROBLEM;
+			 vectorSize = size;
+		}
+		else if(problem.equals("LNP"))
+		{
+			 //Logger.debug(()=>{"Langford Pairing Problem"});
+			 param = LANGFORD_PROBLEM;
+			 val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets. Parameter K
+			 vectorSize = eNumber*size;
+		}
+		else if(problem.equals("NPP"))
+		{
+			 //Logger.debug(()=>{"Number Partition Problem"});
+			 param = PARTIT_PROBLEM;
+			 vectorSize = size;
+		}
+		else if(problem.equals("SMP"))
+		{
+			 //Logger.debug(()=>{"Stable Marriage Problem"});
+			 param = STABLE_MARRIAGE_PROBLEM;
+			 vectorSize = size;
+		}
+		else if(problem.equals("HRP"))
+		{
+			 //Logger.debug(()=>{"Stable Marriage Problem"});
+			 param = HOSPITAL_RESIDENT_PROBLEM;
+			 vectorSize = size;
+		}
+		else if(problem.equals("QAP"))
+		{
+			 //Logger.debug(()=>{"Stable Marriage Problem"});
+			 param = QA_PROBLEM;
+			 vectorSize = size;
+		}
+		else
+		{
+			 Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP , SMP or HRP"); 
+			 return;
 		}
 		
 		/**
@@ -238,7 +262,7 @@ public class Main {
 				val modelSeed = random.nextLong();
 				val prob = param;
 				val cspGen=():ModelAS(vectorSz)=>CSPProblem(prob).make(size as Long,vectorSz,
-						modelSeed,mPref,wPref,restartLimit, mapTable, inputPath);
+						modelSeed,mPref,wPref,restartLimit, mapTable, inputPath, filePath);
 				
 				/**
 				 *   Start remote solver processes

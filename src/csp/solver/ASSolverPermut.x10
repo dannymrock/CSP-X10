@@ -282,7 +282,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				 bestCost = totalCost;
 				 bestSent = false;
 				 
-				 // Console.OUT.println(here+" best cost= "+bestCost);
+				  Console.OUT.println(here+" best cost= "+bestCost);
 				 // Compare cost and break if target is accomplished
 				 if ((beat && bestCost < target)||(!beat && bestCost <= target)){
 					  break;
