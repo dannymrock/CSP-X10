@@ -20,14 +20,14 @@ import x10.util.StringBuilder;
 public class Main {
 	public static struct CSPProblem(kind:Int) {
 		public def make(size:Long, vectorSize:Long, seed:Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
-				restLimit:Int, mapTable:Rail[Int], inVector:String, inFile:String):ModelAS(vectorSize) {
+				restLimit:Int, mapTable:Rail[Int], inVector:String):ModelAS(vectorSize) {
 			if (kind == MAGIC_SQUARE_PROBLEM) return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
 			if (kind == COSTAS_PROBLEM) return new CostasAS(vectorSize, seed, restLimit, inVector);
 			if (kind == ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit, inVector);
 			if (kind == LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit, inVector);
 			if (kind == STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, false, inVector);
 			if (kind == HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, true, inVector);
-			if (kind == QA_PROBLEM) return new QAPAS(vectorSize, seed, inFile, restLimit, inVector);
+			if (kind == QA_PROBLEM) return new QAPAS(vectorSize, seed, mPrefs, wPrefs, restLimit, inVector);
 			return new PartitAS(vectorSize, seed, restLimit, inVector);
 		}
 	}
@@ -104,12 +104,12 @@ public class Main {
 		 */
 		Console.OUT.println("Problem "+problem+" size "+size+" File Path (SMTI):"+filePath); 
 		Console.OUT.println("Solver: Mode "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
-		Console.OUT.println("Target "+(targetCost >= 0n ? "to get equal":"to exceed")+" cost "+ Math.abs(targetCost));
+		Console.OUT.println("Target cost: "+(targetCost >= 0n ? "lower or equal than ":"lower than ")+ Math.abs(targetCost));
 		Console.OUT.println("Solving "+testNb+" times each instance");
 		Console.OUT.println((nodesPTeam > 1n ? "Using ":"Without ")+"Cooperative Search: "+Place.MAX_PLACES+" places. "+nodesPTeam+" nodes per team "+(Place.MAX_PLACES as Int / nodesPTeam)+" Teams");
 		Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
 		Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum distance: "+minDistance+" Initial delay "+delayI+" ms. Per. Affected Places "+(affectedP*100)+"%");
-		Console.OUT.println("Input seed "+inSeed+ "Input vector "+(inputPath.equals(".")?"not used":inputPath));
+		Console.OUT.println("Input seed "+inSeed+ " Input vector "+(inputPath.equals(".")?"not used":inputPath));
 		Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );
 		
 		/**
@@ -179,9 +179,9 @@ public class Main {
 		val seed = inSeed;//(inSeed == 0) ? j as Long:inSeed;
 		val random = new Random(seed);	
 		
-		// men and women preferences for the SMTI problem (residents hospitals for HRP - size is n1)
-		val mPref:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
-		val wPref:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
+		// generic matrices to load data from files
+		val matrix1:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
+		val matrix2:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
 		
 		//maping table for HRT problems "cloning"
 		val mapTable = new Rail[Int](size, (i:long)=>i as Int);
@@ -207,7 +207,8 @@ public class Main {
 			solvers().installSolver(solvers);
 		}
 		
-		val fileMode = (param == STABLE_MARRIAGE_PROBLEM || param == HOSPITAL_RESIDENT_PROBLEM );
+		val fileMode = (param == STABLE_MARRIAGE_PROBLEM || param == HOSPITAL_RESIDENT_PROBLEM 
+				  || param == QA_PROBLEM );
 		val nPath = new StringBuilder();
 		if (fileMode){
 			//Load Files enable double loop
@@ -227,8 +228,8 @@ public class Main {
 			if (param == STABLE_MARRIAGE_PROBLEM){
 				
 				var loadTime:Long = -System.nanoTime();
-				
-				val success = SMTIAS.loadData(nPath+"/"+instance, mPref, wPref);
+				// load men and women preferences for the SMTI problem 
+				val success = SMTIAS.loadData(nPath+"/"+instance, matrix1, matrix2);
 				if (!success)
 					continue; //path is a directory
 				
@@ -236,16 +237,29 @@ public class Main {
 				//Logger.debug(()=>{"Time to load the problem="+cT/1e9});
 				
 			} else if (param == HOSPITAL_RESIDENT_PROBLEM){
-				
-				var loadTime:Long = -System.nanoTime();
-				
-				val success = SMTIAS.loadDataHR(nPath+"/"+instance, mPref, wPref, mapTable);
-				if (!success)
-					continue; //path is a directory
-				
-				val cT= loadTime += System.nanoTime();
-				//Logger.debug(()=>{"Time to load the problem="+cT/1e9});
-				
+				 
+				 var loadTime:Long = -System.nanoTime();
+				 
+				 // load residents hospitals preference lists for HRTP - size is n1
+				 val success = SMTIAS.loadDataHR(nPath+"/"+instance, matrix1, matrix2, mapTable);
+				 if (!success)
+					  continue; //path is a directory
+				 
+				 val cT= loadTime += System.nanoTime();
+				 //Logger.debug(()=>{"Time to load the problem="+cT/1e9});
+				 
+			} else if (param == QA_PROBLEM){
+				 
+				 var loadTime:Long = -System.nanoTime();
+				 
+				 // load flow and distance matrices for QAP 
+				 val success = QAPAS.loadData(nPath+"/"+instance, matrix1, matrix2);
+				 if (!success)
+					  continue; //path is a directory
+				 
+				 val cT= loadTime += System.nanoTime();
+				 //Logger.debug(()=>{"Time to load the problem="+cT/1e9});
+				 
 			}
 			
 			insNb++;
@@ -262,7 +276,7 @@ public class Main {
 				val modelSeed = random.nextLong();
 				val prob = param;
 				val cspGen=():ModelAS(vectorSz)=>CSPProblem(prob).make(size as Long,vectorSz,
-						modelSeed,mPref,wPref,restartLimit, mapTable, inputPath, filePath);
+						modelSeed,matrix1, matrix2,restartLimit, mapTable, inputPath);
 				
 				/**
 				 *   Start remote solver processes
@@ -339,8 +353,8 @@ public class Main {
 			// Clear sample accumulator for repetitions
 			solvers().clearSample();
 			
-			for(mline in mPref) mline.clear();
-			for(wline in wPref) wline.clear();
+			for(mline in matrix1) mline.clear();
+			for(mline in matrix2) mline.clear();
 		}//End 1st Loop
 		
 		/**

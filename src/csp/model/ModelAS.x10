@@ -134,7 +134,7 @@ public class ModelAS(sz:Long, seed:Long) {
 			  }
 			  
 			  if(j < length)
-					Console.OUT.println("ERROR: The input vector is shorter than the variables array");
+					Console.OUT.println("ModelAS ERROR: The input vector is shorter than the variables array");
 			  
 			  // check permutation
 			  val permutV = new Rail[Int](length, 0n);

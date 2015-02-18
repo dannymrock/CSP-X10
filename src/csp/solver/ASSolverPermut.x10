@@ -278,7 +278,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			 *  optimization
 			 */
 			if(totalCost < bestCost){ //(totalCost <= bestCost)
-				 Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
+				 Rail.copy(csp_.getVariables(), bestConf as Valuation(sz));
 				 bestCost = totalCost;
 				 bestSent = false;
 				 

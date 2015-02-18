@@ -107,10 +107,10 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  this.affectedPer = affectedP;
 		  
 		  
-		  if(target < 0n){ //when target is negative means: beat the specified target
+		  if(target < 0n){ //when target is negative, the aim is obtain a cost lower than the specified target
 				beat = true;
 				this.target = target * -1n; 
-		  }else{ // To be equal to the specified target
+		  }else{ // Lower or equal than the specified target
 				beat = false;
 				this.target = target;
 		  }
@@ -363,8 +363,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				}
 				//val s = minCost % sz; val bp = (minCost-s)/sz;
 				//Console.OUT.println("Cost = "+minCost+" Singles= "+s+ "BP= "+bp);
-				val place = bestPlace;
-				Logger.info(()=>"winner "+ place);
+				val place = bestPlace; val mC = minCost;
+				Logger.info(()=>"winner "+ place + " final cost "+ mC);
 				at (bestPlace){
 					 ss().setStats_(ss);
 				}
