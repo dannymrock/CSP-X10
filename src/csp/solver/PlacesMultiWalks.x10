@@ -84,6 +84,10 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 var minDis:Double = 1.0;
 	 var maxDis:Double = 0.0;
 	 
+	 val bestSolHere : Rail[Int];
+	 
+	 var solString : String =  new String();
+	 
 	 
 	 /**
 	  * 	Constructor of the class
@@ -105,6 +109,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  this.verify = verify;
 		  this.iniDelay = delay;
 		  this.affectedPer = affectedP;
+		  
+		  this.bestSolHere = new Rail[Int](vectorSize, 0n);
 		  
 		  
 		  if(target < 0n){ //when target is negative, the aim is obtain a cost lower than the specified target
@@ -199,22 +205,28 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				//winPlace = here;
 				bcost = cost;
 				
-				if (winner) {
+				if (winner) 
+				{ 
 					 interTeamKill = true;
 					 setStats_(solvers);
-					 // if (verify){
-					 //   csp_.displaySolution(solver.bestConf as Valuation(sz));
-					 //   Console.OUT.println("   Solution is " + 
-					 // 			 (csp_.verify(solver.bestConf as Valuation(sz))? "ok" : "WRONG"));
-					 // }
+					 if (verify){
+					   csp_.displaySolution(solver.bestConf as Valuation(sz));
+					   Console.OUT.println("   Solution is " + 
+					 			 (csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect, maybe wrong ..."));
+					 }
 				}
+		  } else
+		  {
+				solString = "Solution "+here+ " is "+(csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect, maybe wrong ...");
+				Rail.copy(solver.bestConf as Valuation(sz),bestSolHere as Valuation(sz));
 		  }
+				
 		  
-		  if (verify){
-				csp_.displaySolution(solver.bestConf as Valuation(sz));
-				Console.OUT.println("   Solution is " + 
-						  (csp_.verify(solver.bestConf as Valuation(sz))? "ok" : "WRONG"));
-		  }
+		  // if (verify){
+				// csp_.displaySolution(solver.bestConf as Valuation(sz));
+				// Console.OUT.println("   Solution is " + 
+				// 		  (csp_.verify(solver.bestConf as Valuation(sz))? "ok" : "WRONG"));
+		  // }
 		  
 		  
 		  //Distance Statistics
@@ -227,7 +239,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 
 	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Int):Boolean 
 	 = commM.getIPVector(csp_, myCost);
-	 public def communicate(totalCost:Int, variables:Rail[Int]{self.size==sz}){
+	 public def communicate(totalCost:Int, variables:Rail[Int]{self.size==sz})
+	 {
 		  commM.communicate(totalCost, variables);
 	 }
 	 
@@ -235,23 +248,29 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 @Inline public def intraTISend():Int = commM.intraTISend;
 	 
 	 //val monitor = new Monitor("PlacesMultiWalks"); 
-	 public def kill(){
-		  if (solver != null) {
+	 public def kill()
+	 {
+		  if (solver != null) 
+		  {
 				solver.kill = true; //solver.kill.set(true); //
 				interTeamKill = true;
 				//Logger.debug(()=>{"Kill=true"});
-		  }else{
-				Logger.debug(()=>{"Solver is not yet started. Kill is not set"});
-				
+		  }else
+		  {
+				Logger.debug(()=>{"Solver is not yet started. Kill is not set"});	
 		  }
 	 }
+	 
 	 val winnerLatch = new AtomicBoolean(false);
-	 public def announceWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)], p:Long):Boolean {
+	 
+	 public def announceWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)], p:Long):Boolean 
+	 {
 		  //Logger.debug(()=> "  PlacesMultiWalks: announceWinner " );
 		  val result = winnerLatch.compareAndSet(false, true);
 		  
 		  //Logger.debug(()=> "  PlacesMultiWalks: announceWinner result=" + result + " for " + p + " this=" + this );
-		  if (result) {
+		  if (result) 
+		  {
 				for (k in Place.places()) 
 					 if (p != k.id) 
 						  at(k) ss().kill(); // at(k) async ss().kill();  // Testing the use of this async v1
@@ -260,11 +279,24 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  
 		  return result;
 	 }
+	 
+	 /**
+	  * Called by verifyWinmner to print the verification info for the best place
+	  */
+	 public def verify_(ss:PlaceLocalHandle[ParallelSolverI(sz)])
+	 {
+		 
+		  Utils.show("Solution",bestSolHere);
+		  Console.OUT.println(solString);
+		  
+	 }
+	 
 	 /**
 	  * Called by winning place to set the stats at place zero so they
 	  * can be printed out.
 	  */
-	 public def setStats_(ss:PlaceLocalHandle[ParallelSolverI(sz)]  ){
+	 public def setStats_(ss:PlaceLocalHandle[ParallelSolverI(sz)])
+	 {
 		  val winPlace = here.id;
 		  val time = time/1e9;
 		  val iters = solver.nbIterTot;
@@ -282,38 +314,56 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  val gR = at(Place(head)) ss().getGroupReset();
 		  //Console.OUT.println("\n\nGroup "+head+" Reset "+gReset);
 		  
-		  val gReset = (fr > gR)?fr:gR;
+		  val gReset = (fr > gR)? fr : gR;
+		  
+		  // try to verify solution here
+		  //Utils.show("Solution",bestSolHere);
+		  //Console.OUT.println(solString);
+		  
+		  // end try
+		  
+		  
+		  
 		  
 		  at (Place.FIRST_PLACE) /*async*/ 
 		  ss().setStats(0n, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
 					 bp as Int, singles as Int, gReset);
 	 }
+	 
 	 public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-				fr : Int, bp:Int, sg:Int, gr:Int) {
+				fr : Int, bp:Int, sg:Int, gr:Int)
+	 {
 		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr);
 		  accStats(stats);
 	 }
 	 
-	 public def printStats(count:Int, oF:Int):void {
+	 public def printStats(count:Int, oF:Int):void
+	 {
 		  stats.print(count,oF);
 	 }
-	 public def printAVG(count:Int, oF:Int):void {
+	 
+	 public def printAVG(count:Int, oF:Int):void
+	 {
 		  sampleAccStats.printAVG(count,oF);
 	 }
 	 
 	 
-	 public def printGenAVG(count:Int, oF:Int):void {
+	 public def printGenAVG(count:Int, oF:Int):void 
+	 {
 		  genAccStats.printAVG(count,oF);
 	 }
 	 
-	 public def tryInsertVector(cost:Int, variables:Rail[Int]{self.size==sz}, place:Int) {
+	 public def tryInsertVector(cost:Int, variables:Rail[Int]{self.size==sz}, place:Int) 
+	 {
 		  commM.ep.tryInsertVector(cost, variables, place);
 	 }
+	 
 	 public def getRandomConf():Maybe[CSPSharedUnit(sz)]=commM.ep.getRandomConf();
 	 
 	 public def getBestConf():Maybe[CSPSharedUnit(sz)]=commM.ep.getBestConf();
 	 
-	 public def clear(){
+	 public def clear()
+	 {
 		  winnerLatch.set(false);
 		  commM.restartPool();
 		  stats.clear();
@@ -324,10 +374,13 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  //Console.OUT.println(here+" clear");
 	 }
 	 
-	 public def clearSample(){
+	 public def clearSample()
+	 {
 		  sampleAccStats.clear();
 	 }
-	 public def accStats(c:CSPStats):void {
+	 
+	 public def accStats(c:CSPStats):void 
+	 {
 		  genAccStats.accStats(c);
 		  sampleAccStats.accStats(c);
 	 }
@@ -338,25 +391,30 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 // 	return new Maybe(sol);
 	 // }
 	 
-	 public def getCost():Int{
+	 public def getCost():Int
+	 {
 		  return solver.bestCost;
 	 }
 	 
-	 public def verifyWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void{
+	 public def verifyWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void
+	 {
 		  // detect if no winner has been found
 		  // search best solution in all places
 		  // set stats objects
 		  var minCost:Int = x10.lang.Int.MAX_VALUE;
 		  var bestPlace:Place = here; 
 		  
-		  if (stats.explorer == -1n){
+		  if (stats.explorer == -1n)
+		  {
 				Logger.info(()=>"No winner found");
 				
-				for (k in Place.places()){
+				for (k in Place.places())
+				{
 					 //val cBP = at(k) ss().getBP();
 					 val cCost = at(k) ss().getCost();
 					 
-					 if(cCost < minCost){
+					 if(cCost < minCost)
+					 {
 						  minCost = cCost;
 						  bestPlace = k;
 					 }
@@ -365,8 +423,15 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				//Console.OUT.println("Cost = "+minCost+" Singles= "+s+ "BP= "+bp);
 				val place = bestPlace; val mC = minCost;
 				Logger.info(()=>"winner "+ place + " final cost "+ mC);
-				at (bestPlace){
+				
+				val ver = this.verify;
+				at (bestPlace)
+				{
 					 ss().setStats_(ss);
+					 if (ver)
+					 {
+						  ss().verify_(ss);
+					 }
 				}
 		  }
 	 }

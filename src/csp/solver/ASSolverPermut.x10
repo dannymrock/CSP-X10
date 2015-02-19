@@ -161,7 +161,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		
 		// Copy the first match to bestConf vector
 		Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
-		bestCost =x10.lang.Int.MAX_VALUE;
+		if (totalCost == 0n)
+			 bestCost = totalCost;
+		else
+			 bestCost =x10.lang.Int.MAX_VALUE;
 		//Console.OUT.println("initial bestCost="+bestCost);
 		
 		bestSent = false;
@@ -282,7 +285,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				 bestCost = totalCost;
 				 bestSent = false;
 				 
-				  Console.OUT.println(here+" best cost= "+bestCost);
+				 // Console.OUT.println(here+" best cost= "+bestCost);
 				 // Compare cost and break if target is accomplished
 				 if ((beat && bestCost < target)||(!beat && bestCost <= target)){
 					  break;

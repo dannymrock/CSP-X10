@@ -85,6 +85,8 @@ public interface ParallelSolverI {
     def setStats_(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
     
     def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), seed :Long ):void;
+        
+    def verify_(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
     	
  	def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)] ):void;
 

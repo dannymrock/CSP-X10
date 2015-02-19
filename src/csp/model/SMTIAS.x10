@@ -162,6 +162,10 @@ public class SMTIAS extends ModelAS{
 		var bpnumber:Int = 0n;
 		var singles:Int = 0n;
 		
+		
+		var flagBP:Boolean = false; // true when the first undominated BP is found
+		var levelBP:Int = 0n;        // It saves the level in which the first uBP is found 
+		
 		/// if(shouldBeRecorded){
 		///  Console.OUT.println("cost of Sol");
 		///  Utils.show("conf:",variables);
@@ -177,6 +181,7 @@ public class SMTIAS extends ModelAS{
 			pmi = variables(mi) - 1n; // pm current match of mi (if pm is not valid, mi is single)
 			
 			var bpMi:Int = -1n;		//NB: -1 to avoid false positive in the test of costIfSwap
+			var uBPn:Int = 0n;      // number of undominated BP per man
 			var e:Int = 0n; 	 	
 			var levelPM:Int = revpM(mi)(pmi); // m's current match level of preference  
 			
@@ -192,28 +197,75 @@ public class SMTIAS extends ModelAS{
 			var li:Long=0;
 			for(li=0;(w=menPref(mi)(li))!=0n;li++){
 				if(w > 0n)
+				{
 					levelW++;			// new level of preference
-				else					 
+					 if (flagBP)
+					 {
+					 	 bpnumber++; // only count the men involved in BP not the number of BPs
+					 	 break;  // Only consider undominated BP
+					 }
+				}
+				else
+				{
+					 //if (flagBP) break; // break when find the first uBP
 					w = -w;             // if w < 0 -> same level of preference (tie), "restore" w
-				
+				}
 				if (levelW >= levelPM) // stop if cuerrent level of pref is bigger or equal 
 					break;             // than the level of pref of pm (current match) "stop condition"  
 				
 				pwi = variablesW(w-1)-1n; // pwi index of the current match of the woman w
 				
-				e = blockingPairError(w-1n, pwi, mi as int);  // check if w prefers m to pw 
-				if (e > 0n){	
-					bpMi = pwi; 
-					bpnumber++;     // count the errors (number of BP)
-					break; 			// only consider undominated BP
+				val cError = blockingPairError(w-1n, pwi, mi as int);  // check if w prefers m to pw 
+				if (cError > 0n){	
+					 			// only consider undominated BP
+					 if (!flagBP) // first uBP
+					 {
+						 //Console.OUT.println("first uBP ("+(mi+1)+","+w+")");
+						 flagBP = true;
+						 //levelBP = levelW;
+						 bpMi = pwi;
+						 e = cError;     // count the errors (number of BP)
+						 //uBPn = 1n;
+						 
+						 if (r.randomDouble() <= 1.0) 
+						 {
+							  bpnumber++;
+							  break; // the 98% of the time select the first
+						 }
+					 } 
+					 else
+					{
+						 //Console.OUT.println("other uBP ("+(mi+1)+","+w+")");
+						 if (r.randomInt(++uBPn) == 0n)  // random selection if there are more than one uBP
+						 {
+							  e = cError;
+							  bpMi = pwi;
+						 }
+						  
+						  //if (cError > e)  // select the larger error
+						  //{
+								// e = cError;
+								// bpMi = pwi;
+						  //}
+								
+
+								// e = cError; // the last one :S
+								// bpMi = pwi;
+					}
+						// bpnumber++;
+					//break;
 				}
 			}
 			if (shouldBeRecorded){
 				errV(mi) = e;
 				bpi(mi) = bpMi;
-				///Console.OUT.println("mi= "+mi+" e= "+e+" bpMi= "+bpMi);
+				//Console.OUT.println("mi= "+mi+" e= "+e+" bpMi= "+bpMi+ " in total this man have "+ uBPn+" undominated bps");
 			}
 			
+			// clean variables for next man 
+			flagBP = false;
+			levelBP = 0n;
+			uBPn = 0n;
 		}
 		if (shouldBeRecorded) {
 			nbBP = bpnumber;
@@ -388,7 +440,7 @@ public class SMTIAS extends ModelAS{
 				singles++;
 				// Console.OUT.println("m "+ (mi+1n) +" is SINGLE (not a valid match with w "+(pmi+1n)+")");
 				val hos = mapTable(pmi);
-				Console.OUT.println("r "+ (mi+1n) +" is SINGLE (not a valid match with h "+(hos+1n)+")");
+				Logger.debug(()=>{"r "+ (mi+1n) +" is SINGLE (not a valid match with h "+(hos+1n)+")"});
 			} 
 			else
 			{ // m has a valid assignment pm
@@ -418,7 +470,8 @@ public class SMTIAS extends ModelAS{
 				if (e > 0n)
 				{
 					r++;
-					Console.OUT.println("ERROR: blocking pair m="+(mi+1n)+" w="+w+" pw= "+(pwi+1n) +" with error= "+e);
+					val wval=w; val pwval=pwi+1n; val eval=e;
+					Logger.debug(()=>{"ERROR: blocking pair m="+(mi+1n)+" w="+wval+" pw= "+pwval +" with error= "+eval});
 					/* count the errors (number of BP) */
 					break; 			//only consider undominated BP
 				}

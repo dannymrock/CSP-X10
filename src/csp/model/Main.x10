@@ -275,23 +275,26 @@ public class Main {
 				
 				val modelSeed = random.nextLong();
 				val prob = param;
-				val cspGen=():ModelAS(vectorSz)=>CSPProblem(prob).make(size as Long,vectorSz,
+				val cspGen = ():ModelAS(vectorSz)=>CSPProblem(prob).make(size as Long,vectorSz,
 						modelSeed,matrix1, matrix2,restartLimit, mapTable, inputPath);
 				
 				/**
 				 *   Start remote solver processes
 				 */
 				if (solverMode == 0n){
-					finish for (p in Place.places()) {
+					finish for (p in Place.places()) 
+					{
 						val solverSeed = random.nextLong(); 
 						at (p) async
 						solvers().solve(solvers, cspGen, solverSeed);   
 					}
 				}else{
-					finish for(var i:Long=Place.MAX_PLACES-1; i>=0; i-=16) at (Place(i)) async {
+					finish for(var i:Long = Place.MAX_PLACES-1; i >= 0; i-= 16) at (Place(i)) async 
+					{
 						val max = here.id; val min = Math.max(max-15, 0);
 						val r = new Random(random.nextLong()+here.id);
-						finish for(k in min..max){
+						finish for(k in min..max)
+						{
 							val solverSeed = r.nextLong();
 							at(Place(k)) async  solvers().solve(solvers, cspGen, solverSeed);
 						}
