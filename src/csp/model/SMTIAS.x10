@@ -227,6 +227,7 @@ public class SMTIAS extends ModelAS{
 						 e = cError;     // count the errors (number of BP)
 						 //uBPn = 1n;
 						 
+						// if (r.randomDouble() < 0.0) 
 						 if (r.randomDouble() <= 1.0) 
 						 {
 							  bpnumber++;
@@ -567,9 +568,10 @@ public class SMTIAS extends ModelAS{
 			  }
 			  Console.OUT.print("\n");
 		 }
-		 else 
+		 
+		 //else 
 		 {
-			  Console.OUT.println("\n Solution Vector:");
+			  Console.OUT.println("\n SMTI Solution Vector:");
 			  for (i in match.range())
 			  {
 					if(revpM(i)(match(i)-1n) == 0n)
