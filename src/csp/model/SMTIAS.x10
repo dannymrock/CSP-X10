@@ -164,7 +164,7 @@ public class SMTIAS extends ModelAS{
 		
 		
 		var flagBP:Boolean = false; // true when the first undominated BP is found
-		var levelBP:Int = 0n;        // It saves the level in which the first uBP is found 
+		
 		
 		/// if(shouldBeRecorded){
 		///  Console.OUT.println("cost of Sol");
@@ -207,9 +207,9 @@ public class SMTIAS extends ModelAS{
 				}
 				else
 				{
-					 //if (flagBP) break; // break when find the first uBP
 					w = -w;             // if w < 0 -> same level of preference (tie), "restore" w
 				}
+				
 				if (levelW >= levelPM) // stop if cuerrent level of pref is bigger or equal 
 					break;             // than the level of pref of pm (current match) "stop condition"  
 				
@@ -222,17 +222,16 @@ public class SMTIAS extends ModelAS{
 					 {
 						 //Console.OUT.println("first uBP ("+(mi+1)+","+w+")");
 						 flagBP = true;
-						 //levelBP = levelW;
 						 bpMi = pwi;
 						 e = cError;     // count the errors (number of BP)
-						 //uBPn = 1n;
+						 uBPn = 1n;
 						 
-						// if (r.randomDouble() < 0.0) 
-						 if (r.randomDouble() <= 1.0) 
-						 {
-							  bpnumber++;
-							  break; // the 98% of the time select the first
-						 }
+						 //if (r.randomDouble() < 0.0) 
+						 // if (r.randomDouble() <= 0.2)  //prob to only select the first uBP
+						 // {
+						 //bpnumber++;
+						 //break;
+						 // }
 					 } 
 					 else
 					{
@@ -243,18 +242,16 @@ public class SMTIAS extends ModelAS{
 							  bpMi = pwi;
 						 }
 						  
-						  //if (cError > e)  // select the larger error
-						  //{
+						  // if (cError > e)  // select the larger error
+						  // {
 								// e = cError;
 								// bpMi = pwi;
-						  //}
+						  // }
 								
 
 								// e = cError; // the last one :S
 								// bpMi = pwi;
 					}
-						// bpnumber++;
-					//break;
 				}
 			}
 			if (shouldBeRecorded){
@@ -265,7 +262,6 @@ public class SMTIAS extends ModelAS{
 			
 			// clean variables for next man 
 			flagBP = false;
-			levelBP = 0n;
 			uBPn = 0n;
 		}
 		if (shouldBeRecorded) {

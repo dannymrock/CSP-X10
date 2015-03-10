@@ -117,20 +117,28 @@ public class ModelAS(sz:Long, seed:Long) {
 		 if (inVector)
 		 {
 			  //initialize from inVector
-			  val fin = new FileReader(new File(inPath));
-			  val inLine = fin.readLine();
+			  val fileIn = new FileReader(new File(inPath));
+			  val line = fileIn.readLine();
 			  var i : Int;
 			  var j : Int = 0n;
-			  var buffer:String =  "";
-			  val x = new Rail[Int](3,0n);
-			  for(i = 0n ; i < inLine.length() ; i++){
-					if( inLine(i) == ' ' || inLine(i) == '\n' ){
+			  var buffer:String = "";
+			  
+			  for(i = 0n ; i < line.length() ; i++)
+			  {
+					if( line(i) == ' ' || line(i) == '\n' )
+					{
 						 variables(j++) = Int.parse(buffer);
-						 Console.OUT.println("var "+(j-1)+" = "+variables(j-1));
+						 //Console.OUT.println("var "+(j-1)+" = "+variables(j-1));
 						 buffer = "";
-					}else{
-						 buffer += inLine(i);
+					}else
+					{
+						 buffer += line(i);
 					}
+			  }
+			  if ( !buffer.equals("") )
+			  {
+					variables(j++) = Int.parse(buffer);
+					//Console.OUT.println("var "+(j-1)+" = "+variables(j-1));
 			  }
 			  
 			  if(j < length)
@@ -144,12 +152,10 @@ public class ModelAS(sz:Long, seed:Long) {
 					permutV(value-1)++;
 					if (permutV(value-1)>1)
 					{
-						 Console.OUT.println("ERROR: Not valid permutation, value "+ value +" is repeted");
+						 Console.OUT.println("ERROR: Not valid permutation, value "+ value +" is repeted "+mi);
 					}
 			  }
-			  
-			  
-			  
+			  Utils.show("after ini",variables);  
 		 }
 		 else
 		 {
@@ -164,7 +170,6 @@ public class ModelAS(sz:Long, seed:Long) {
 					swapVariables(i,j);
 			  }
 		 }
-		 //Utils.show("after ini",variables);
 	}
 	
 	/**
