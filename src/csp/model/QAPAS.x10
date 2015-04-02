@@ -46,6 +46,7 @@ public class QAPAS extends ModelAS
 		  d = mD;
 		  
 		  delta = new Array_2 [Long](size, size , 0);
+		  printMatrices();
 		  initParameters(restLimit);
 	 }
 	 
@@ -382,6 +383,25 @@ public class QAPAS extends ModelAS
 		  Console.OUT.println("Final cost of assignment "+r);
 		  
 		  return (r == 0);
+	 }
+	 
+	 private def printMatrices(){
+		  
+		  Console.OUT.println("\nMatrix1");
+		  var i : Int = 0n;
+		  for ( i = 0n; i < length; i++ ){
+				Console.OUT.print( (i+1) + " : ");
+				for(j in f(i))
+					 Console.OUT.print( j + " ");
+				Console.OUT.println("");
+		  }
+		  Console.OUT.println("Matrix2");
+		  for ( i = 0n; i < length; i++ ){
+				Console.OUT.print( (i+1) + ": ");
+				for( j in d(i))
+					 Console.OUT.print( j + " ");
+				Console.OUT.println("");
+		  }
 	 }
 }
 

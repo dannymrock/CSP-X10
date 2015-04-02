@@ -67,8 +67,6 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 val interTeamInterval:Long;
 	 val minDistance:Double;
 	 
-	 val target:Int;
-	 val beat:Boolean;
 	 val maxTime:Long;
 	 
 	 val verify:Boolean;
@@ -93,12 +91,12 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	  * 	Constructor of the class
 	  */
 	 public def this(vectorSize:Long, intraTIRecv : Int, intraTISend : Int, interTI : Long, ps : Int, npT : Int, 
-				changeProb:Int, minDistance:Double, target:Int, maxTime:Long, verify : Boolean, delay:Long,affectedP:Double){
+				changeProb:Int, minDistance:Double, maxTime : Long, verify : Boolean, delay:Long, affectedP : Double ){
 		  property(vectorSize,ps);
 		  this.intraTIRecv = intraTIRecv;
 		  this.intraTISend = intraTISend;
 		  //commOption = commOpt;
-		  nbExplorerPT = npT; // will be a parameter 
+		  nbExplorerPT = npT; 
 		  nTeams = Place.MAX_PLACES as Int / nbExplorerPT ;
 		  this.changeProb = changeProb;
 		  interTeamInterval = interTI;
@@ -112,15 +110,6 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);
 		  
-		  
-		  if(target < 0n){ //when target is negative, the aim is obtain a cost lower than the specified target
-				beat = true;
-				this.target = target * -1n; 
-		  }else{ // Lower or equal than the specified target
-				beat = false;
-				this.target = target;
-		  }
-		  
 	 }
 	 
 	 public def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)]):void{ 
@@ -128,7 +117,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  val ss = st() as ParallelSolverI(sz);
 		  val size = sz as Int;
 		  var nsize:Int = size;
-		  solver = new ASSolverPermut(sz, nsize, /*seed,*/ ss, target, beat, maxTime);
+		  solver = new ASSolverPermut( sz, nsize, ss, maxTime);
 		  commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, nTeams, changeProb); // check parameteres 
 	 }
 	 
@@ -142,7 +131,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	  * 	@param cspProblem code with the problem to be solved (1 for Magic Square Problems, other number for Queens Problem)
 	  * 	@return cost of the solution
 	  */
-	 public def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), seed_ :Long ):void
+	 public def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
 	 { 
 		  val solvers = st;
 		  assert solvers() == this : "Whoa, basic plumbing problem -- I am not part of solvers!";
@@ -188,12 +177,12 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  //Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
 		  
 		  time = -System.nanoTime();
-		  cost = solver.solve(csp_);
+		  cost = solver.solve(csp_, targetCost, strictLow);
 		  time += System.nanoTime();
 		  
 		  // Logger.debug(()=>"  PlacesMultiWalks: end solve process: solver.solve() function ");
 		  //if (cost == 0n){ //TODO: Define a new condition (It's possible to finish without cost=0)
-		  if ((beat && cost < target)||(!beat && cost <= target))
+		  if ((strictLow && cost < targetCost)||(!strictLow && cost <= targetCost))
 		  { 
 				//TODO: Define a new condition (It's possible to finish without cost=0)
 				// A solution has been found! Huzzah! 

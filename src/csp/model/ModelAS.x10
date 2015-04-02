@@ -28,6 +28,13 @@ public class ModelAS(sz:Long, seed:Long) {
 	val inVector:Boolean;
 	val inPath:String;
 	
+	//Constants for Target COST
+	public static val COST_FROM_COMMAND_LINE = 0;
+	public static val COST_FROM_FILE_OPT = 1;
+	public static val COST_FROM_FILE_BKS = 2;
+	public static val STRICTLY_LOWER = -3;
+	public static val LOWER_OR_EQUAL = -4;
+	
 	/**
 	 * 	Constructor of the class
 	 */

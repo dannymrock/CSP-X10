@@ -84,7 +84,8 @@ public interface ParallelSolverI {
     public def getCost():Int;
     def setStats_(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
     
-    def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), seed :Long ):void;
+    def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), 
+   			seed :Long, targetCost : Long, strictLow: Boolean ):void;
         
     def verify_(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
     	

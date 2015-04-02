@@ -37,13 +37,12 @@ public class ASSolverParameters{
 	
 	/** minimum permisible distance between places */
 	public var minDistance : Double;
-	
-	
+
 	/**
 	 * 	Constructor
 	 */
 	public def this(){
-		firstBest = false; //revisar val por default
+		firstBest = false; //check val por default
 		nbVarToReset = -1n;
 		minDistance = 0.3;
 	}

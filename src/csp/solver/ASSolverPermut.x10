@@ -20,12 +20,14 @@ import x10.util.StringUtil;
  * 	
  */
 
-public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int, b:Boolean, mTime:Long) {
+public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime:Long)
+{
 
-    val target = t;
-	val beat = b;
+   var target : Long = 0;
+	var strictLow : Boolean = false;
 	
 	val mark = new Rail[Int] (size, 0n); 
+	// Solver parameters - Different values for every kind of problem
 	val solverP = new ASSolverParameters();
 
 	//var nb_var_to_reset : Int; 
@@ -106,12 +108,16 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 	/**
 	 *  solve( csp : ModelAS ) : Int
 	 *  Solve a csp Problem through the Adaptive Search algoritm
-	 * 	@param csp The model of the problem to solve
-	 *  @return the final total cost after solving process (If success returns 0)
+	 *  @param csp The model of the problem to solve
+	 *  @return the final best cost after solving process
 	 */ 
-	public def solve( csp_ : ModelAS{self.sz==this.sz} ) : Int { 
+	public def solve( csp_ : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Int { 
 		
 		csp_.setParameters(solverP);
+		
+		target = tCost;
+		this.strictLow = sLow;
+		
 		
 		//nb_var_to_reset = (((size * solverP.resetPercent) + (100) - 1) / (100));
 		if (solverP.nbVarToReset == -1n){
@@ -150,14 +156,8 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		nbLocalMinTot = 0n; 
 		nbForceRestart = 0n;
 		
-		// rBestCost = x10.lang.Int.MAX_VALUE;
-		// locMinC = 0n;
-		
 		totalCost = csp_.costOfSolution(true);
-		//bestCost = totalCost;
 		bestOfBest = x10.lang.Int.MAX_VALUE;
-		//var slope : Int = 0;
-		//var antcost : Int = totalCost;
 		
 		// Copy the first match to bestConf vector
 		Rail.copy(csp_.getVariables(),bestConf as Valuation(sz));
@@ -170,11 +170,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		bestSent = false;
 		var initialTime:Long = System.nanoTime();
 		
-		//while ((beat && totalCost < target)||(!beat && totalCost <= target)){
 		while( totalCost != 0n ){
-			// if (bestCost < bestOfBest)
-			// 	bestOfBest = bestCost;
-				 
 			nbIter++;
 			
 			if (nbIter >= solverP.restartLimit){
@@ -236,14 +232,10 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 					 * totalCost = csp.costOfSolution(1);
 					 * }
 					 * }else{*/
-					
-					
 					//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
 					doReset(solverP.nbVarToReset,csp_);//doReset(nb_var_to_reset,csp);
 					//Main.show("after reset= ",csp.variables);
 					//}
-					
-					
 				}
 			}else {
 				mark(maxI) = nbSwap + solverP.freezeSwap; //Mark(maxI, ad.freeze_swap);
@@ -253,16 +245,13 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				nbSwap++;
 				csp_.executedSwap(maxI, minJ);
 				totalCost = newCost;
-				
-				//slope = antcost - totalCost;
-				//antcost = totalCost;
-				//Console.OUT.println("slope in "+here.id+" : "+slope+ " total cost : "+totalCost);
 			}
 			
 			// 	Utils.show("partial sol",csp_.getVariables());
 			//csp_.displaySolution();			
 			
 			// --- Interaction with other solvers -----
+			
 			Runtime.probe();		// Give a chance to the other activities
 			if (kill){	//if (kill.get()){ 
 				//Logger.debug(()=>" killed!");
@@ -275,8 +264,6 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 			 	// Console.OUT.println("i"+nbIter+"i\t"+(bestCost/100n)+"\t"+(bestCost%100n));
 			// Console.OUT.println(nbIter+" "+(totalCost)+" "+(totalCost));
 			
-			
-			
 			/**
 			 *  optimization
 			 */
@@ -287,7 +274,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 				 
 				 // Console.OUT.println(here+" best cost= "+bestCost);
 				 // Compare cost and break if target is accomplished
-				 if ((beat && bestCost < target)||(!beat && bestCost <= target)){
+				 if ((strictLow && bestCost < target)||(!strictLow && bestCost <= target)){
 					  break;
 				 }
 			}
@@ -373,7 +360,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz),t:Int,
 		// }
 		
 		
-		//creating an error
+		//creating Artificial errors for testing purposes
 		//csp_.swapVariables(1n,150n);
 		//csp_.swapVariables(1n,2n);
 		//bestConf(2)=2n;

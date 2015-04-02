@@ -31,6 +31,8 @@ public class SMTIAS extends ModelAS{
 	val errV = new Rail[Int](length,-1n);
 	/** bpi:Blocking par indexes (index man - value bp index to swap)**/
 	val bpi = new Rail[Int](length,-1n);
+	/** sgV : vector with singles men in match **/
+	val sgV = new Rail[Long](length,-1);
 	
 	/** weight: weight to compute the total cost (cost = bp*weight + singles)**/
 	var weight:Int = length;
@@ -43,6 +45,8 @@ public class SMTIAS extends ModelAS{
 	val isHRT:Boolean;
 	
 	val mapTable:Rail[Int];
+	
+	val mprefLength = new Rail[Int](length,0n);
 	
 	public def this (lengthProblem : Long , seed : Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
 			restLimit:Int, mapTable:Rail[Int], isHRT:Boolean, inv:String):SMTIAS(lengthProblem){
@@ -65,7 +69,7 @@ public class SMTIAS extends ModelAS{
 		for(mw = 0n; mw < length; mw++){
 			level = 0n;
 			var man:Int;
-			for(pos=0n; (man = womenPref(mw)(pos)) != 0n; pos++ ){
+			for(pos=0n; ( man = womenPref(mw)(pos)) != 0n; pos++ ){
 				if (man > 0n) 
 					level++;
 				else // if current value is negative = tie, same level as the previous one
@@ -79,7 +83,7 @@ public class SMTIAS extends ModelAS{
 		for(mw = 0n; mw < length; mw++){
 			level=0n;
 			var woman:Int;
-			for(pos=0n; (woman = menPref(mw)(pos)) != 0n; pos++ ){
+			for(pos = 0n; (woman = menPref(mw)(pos)) != 0n; pos++ ){
 				if (woman > 0n) 
 					level++;
 				else // if current value is negative = tie, same level as the previous one
@@ -88,8 +92,10 @@ public class SMTIAS extends ModelAS{
 				//Converting to an index	
 				revpM(mw)(woman - 1) = level;
 			}
+			mprefLength(mw) = pos;
+			//Console.OUT.println("length "+mw+" = "+pos);
 		}
-		///printPreferencesTables();
+		//printPreferencesTables();
 		//writeSMTIFile("outSMTI.smp");
 	}
 	
@@ -155,143 +161,156 @@ public class SMTIAS extends ModelAS{
 	 *  @param shouldBeRecorded if true saves the computatuon in global variables
 	 * 	@return cost
 	 */
-	public def costOfSolution( shouldBeRecorded : Boolean ) : Int {	
-		var w:Int;
-		var pmi:Int = 0n; // index of current match of mi 
-		var pwi:Int = 0n; // index of current match of wi
-		var bpnumber:Int = 0n;
-		var singles:Int = 0n;
-		
-		
-		var flagBP:Boolean = false; // true when the first undominated BP is found
-		
-		
-		/// if(shouldBeRecorded){
-		///  Console.OUT.println("cost of Sol");
-		///  Utils.show("conf:",variables);
-		/// }
-		
-		variablesW.clear();
-		for (mi in variables.range()){ // mi -> man index (man number = mi + 1)
-			variablesW(variables(mi)-1) = mi as Int + 1n;
-		}
-		
-		// verify existence of undomminated BP's for each man 
-		for (mi in variables.range()){  // mi -> man index (man number = mi + 1)
-			pmi = variables(mi) - 1n; // pm current match of mi (if pm is not valid, mi is single)
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Int 
+	{	
+		 var w : Int;
+		 var pmi : Int = 0n; // index of current match of mi 
+		 var pwi : Int = 0n; // index of current match of wi
+		 var bpnumber : Int = 0n;
+		 var singles : Int = 0n;
+		 var flagBP : Boolean = false; // true when the first undominated BP is found
+		 
+		 variablesW.clear();
+		 for (mi in variables.range()) // mi -> man index (man number = mi + 1)
+		 { 
+			  variablesW( variables(mi) - 1 ) = mi as Int + 1n;
+		 }
+		 
+		 // verify existence of undomminated BP's for each man 
+		 for ( mi in variables.range() ) // mi -> man index (man number = mi + 1)
+		 {  
+			  pmi = variables(mi) - 1n; // pm current match of mi (if pm is not valid, mi is single)
+			  
+			  var bpMi : Int = -1n;		//NB: -1 to avoid false positive in the test of costIfSwap
+			  var uBPn : Int = 0n;      // number of undominated BP per man
+			  var e : Int = 0n; 	 	
+			  var levelPM : Int = revpM(mi)(pmi); // m's current match level of preference  
+			  
+			  if(levelPM == 0n )   //verify if m is single (pm is not a valid match)
+			  { 
+					levelPM = length + 1n;  // FIX (single should be length +1 )
+					singles++;
+					
+					// if (shouldBeRecorded && r.randomInt(singles) == 0n)
+					// {
+					// 	 singlei = mi as Int;
+					// }
+					
+					if (shouldBeRecorded)
+						 sgV(singles-1) = mi;
+			  }
 			
-			var bpMi:Int = -1n;		//NB: -1 to avoid false positive in the test of costIfSwap
-			var uBPn:Int = 0n;      // number of undominated BP per man
-			var e:Int = 0n; 	 	
-			var levelPM:Int = revpM(mi)(pmi); // m's current match level of preference  
-			
-			if(levelPM == 0n ){ //verify if m is single (pm is not a valid match)
-				levelPM = length + 1n;  //FIX
-				singles++;
-				if (shouldBeRecorded && r.randomInt(singles) == 0n){
-					singlei = mi as Int;
-				}
-			}
-			
-			var levelW:Int = 0n;
-			var li:Long=0;
-			for(li=0;(w=menPref(mi)(li))!=0n;li++){
-				if(w > 0n)
-				{
-					levelW++;			// new level of preference
-					 if (flagBP)
-					 {
-					 	 bpnumber++; // only count the men involved in BP not the number of BPs
-					 	 break;  // Only consider undominated BP
-					 }
-				}
-				else
-				{
-					w = -w;             // if w < 0 -> same level of preference (tie), "restore" w
-				}
-				
-				if (levelW >= levelPM) // stop if cuerrent level of pref is bigger or equal 
-					break;             // than the level of pref of pm (current match) "stop condition"  
-				
-				pwi = variablesW(w-1)-1n; // pwi index of the current match of the woman w
-				
-				val cError = blockingPairError(w-1n, pwi, mi as int);  // check if w prefers m to pw 
-				if (cError > 0n){	
-					 			// only consider undominated BP
-					 if (!flagBP) // first uBP
-					 {
-						 //Console.OUT.println("first uBP ("+(mi+1)+","+w+")");
-						 flagBP = true;
-						 bpMi = pwi;
-						 e = cError;     // count the errors (number of BP)
-						 uBPn = 1n;
-						 
-						 //if (r.randomDouble() < 0.0) 
-						 // if (r.randomDouble() <= 0.2)  //prob to only select the first uBP
-						 // {
-						 //bpnumber++;
-						 //break;
-						 // }
-					 } 
-					 else
+			  var levelW : Int = 0n;
+			  var li : Long=0;
+			  for( li = 0; ( w = menPref(mi)(li) ) != 0n; li++ )
+			  {
+					if ( w > 0n )
 					{
-						 //Console.OUT.println("other uBP ("+(mi+1)+","+w+")");
-						 if (r.randomInt(++uBPn) == 0n)  // random selection if there are more than one uBP
+						 levelW++;			// new level of preference
+						 if (flagBP)
 						 {
-							  e = cError;
-							  bpMi = pwi;
+							  bpnumber++; // only count the men involved in BP not the number of BPs
+							  break;  // Only consider undominated BP
 						 }
-						  
-						  // if (cError > e)  // select the larger error
-						  // {
-								// e = cError;
-								// bpMi = pwi;
-						  // }
-								
-
-								// e = cError; // the last one :S
-								// bpMi = pwi;
 					}
-				}
-			}
-			if (shouldBeRecorded){
-				errV(mi) = e;
-				bpi(mi) = bpMi;
-				//Console.OUT.println("mi= "+mi+" e= "+e+" bpMi= "+bpMi+ " in total this man have "+ uBPn+" undominated bps");
-			}
-			
-			// clean variables for next man 
-			flagBP = false;
-			uBPn = 0n;
-		}
-		if (shouldBeRecorded) {
-			nbBP = bpnumber;
-			nbSingles = singles;
-			///Console.OUT.println("totalCost= "+(bpnumber*weight+singles));
-		}
-		
-		//         val s2 : Int = 2n * singles - length;  // check the case where singles is an odd number, is it correct to use round up, ie. (singles +1) / 2 ?
-		// 
-		//         if (bpnumber == 0n ) // check if the mariage is stable and if it improves the min number of singles
-		//         {
-		//         	Console.OUT.println("minSingles= "+minSingles+" Singles= "+singles);
-		//         	}
-		//         
-		//         if (bpnumber == 0n && s2 > minSingles) // check if the mariage is stable and if it improves the min number of singles
-		//         	{
-		//         	Console.OUT.println("minSingles= "+minSingles+" Singles= "+singles+" New min singles= "+s2);	
-		//         	minSingles = s2;
-		//         
-		//         	}
-		// 
-		//         // DEBUG: this test is for debug only - should never be true
-		//         if (singles < minSingles)
-		//         	Console.OUT.println("ERROR "+singles+" <-> "+minSingles);
-		// 
-		//         return bpnumber * weight + singles - minSingles; // take into account the best min_singles known so far
-		
-		
-		return bpnumber * weight + singles;	
+					else
+					{
+						 w = -w;             // if w < 0 -> same level of preference (tie), "restore" w
+					}
+					
+					if (levelW >= levelPM) // stop if cuerrent level of pref is bigger or equal 
+						 break;             // than the level of pref of pm (current match) "stop condition"  
+					
+					pwi = variablesW(w-1)-1n; // pwi index of the current match of the woman w
+					
+					val cError = blockingPairError(w-1n, pwi, mi as int);  // check if w prefers m to pw 
+					if (cError > 0n)
+					{	
+						 // only consider undominated BP
+						 if ( !flagBP ) // first uBP
+						 {
+							  //Console.OUT.println("first uBP ("+(mi+1)+","+w+")");
+							  flagBP = true;
+							  bpMi = pwi;
+							  e = cError;     
+							  uBPn = 1n;  // count the errors (number of undominated BP)
+							  
+							  // if (r.randomDouble() < 0.0) 
+							  // if (r.randomDouble() <= 0.98)  //prob to only select the first uBP	
+							  // {
+							  bpnumber++;
+							  break;
+							  // }
+						 } 
+						 else
+						 {
+							  //Console.OUT.println("other uBP ("+(mi+1)+","+w+")");
+							  if (r.randomInt(++uBPn) == 0n)  // random selection if there are more than one uBP
+							  {
+							    e = cError;
+							    bpMi = pwi;
+							  }
+							  
+							  // if ( cError > e )  // select the larger error
+							  // {
+									// e = cError;
+									// bpMi = pwi;
+							  // }
+							  
+							  
+							  // e = cError; // the last one :S
+							  // bpMi = pwi;
+							  
+							  // if (uBPn > 2)
+							  // {
+								//	bpnumber++;
+								//	break;
+							  // }
+							  
+						 }
+					}
+			  }
+			  
+			  if ( shouldBeRecorded )
+			  {
+					errV(mi) = e;
+					bpi(mi) = bpMi;
+					//Console.OUT.println("mi= "+mi+" e= "+e+" bpMi= "+bpMi+ " in total this man have "+ uBPn+" undominated bps");
+			  }
+			  
+			  // clean variables for next man 
+			  flagBP = false;
+			  uBPn = 0n;
+		 }
+		 if (shouldBeRecorded) 
+		 {
+			  nbBP = bpnumber;
+			  nbSingles = singles;
+			  ///Console.OUT.println("totalCost= "+(bpnumber*weight+singles));
+		 }
+		 
+		 //         val s2 : Int = 2n * singles - length;  // check the case where singles is an odd number, is it correct to use round up, ie. (singles +1) / 2 ?
+		 // 
+		 //         if (bpnumber == 0n ) // check if the mariage is stable and if it improves the min number of singles
+		 //         {
+		 //         	Console.OUT.println("minSingles= "+minSingles+" Singles= "+singles);
+		 //         	}
+		 //         
+		 //         if (bpnumber == 0n && s2 > minSingles) // check if the mariage is stable and if it improves the min number of singles
+		 //         	{
+		 //         	Console.OUT.println("minSingles= "+minSingles+" Singles= "+singles+" New min singles= "+s2);	
+		 //         	minSingles = s2;
+		 //         
+		 //         	}
+		 // 
+		 //         // DEBUG: this test is for debug only - should never be true
+		 //         if (singles < minSingles)
+		 //         	Console.OUT.println("ERROR "+singles+" <-> "+minSingles);
+		 // 
+		 //         return bpnumber * weight + singles - minSingles; // take into account the best min_singles known so far
+		 
+		 
+		 return bpnumber * weight + singles;	
 	}
 	
 	/** 
@@ -379,11 +398,51 @@ public class SMTIAS extends ModelAS{
 				return -1n;
 			}
 		}
-		
+		//else
 		if (nbSingles > 0) {
-			val j = r.randomInt(length);
-			///Console.OUT.println("Reset single singV("+singlei+")= "+singV(singlei)+" random j = "+ j+"  nbSingles="+nbSingles);
-			swapVariables(singlei, j);		
+			 
+			 // * Assign a random partner to a single
+			 //val j = r.randomInt(length);
+			 ///Console.OUT.println("Reset single singV("+singlei+")= "+singV(singlei)+" random j = "+ j+"  nbSingles="+nbSingles);
+			 //swapVariables(singlei, j);		
+			 
+			 // * Assign the best partner to a single
+			 
+			 // search the man married with the "best" partner of singlei
+			 //var bestpar : Int = menPref(singlei)(0)  ;
+			 
+			 // val j = r.randomInt( mprefLength(singlei) ); 
+			 // val bestpar = Math.abs( menPref(singlei)(j) );			 
+			 // val manToSwap = variablesW( bestpar - 1 ) - 1n ;
+			 // //Console.OUT.println("Reset single singV("+singlei+"),best par "+ bestpar +"  best = "+ manToSwap+"  nbSingles="+nbSingles);
+			 // swapVariables(singlei, manToSwap);	
+			 
+			 
+			 // select a single man
+			 val singleman = sgV( r.randomInt( nbSingles ) );
+			 // select a woman in the pref list of the single
+			 val j = r.randomInt( mprefLength(singleman) ); 
+			 val bestpar = Math.abs( menPref(singleman)(j) );
+			 // find man paired with bestpar woman
+			 val manToSwap = variablesW( bestpar - 1 ) - 1n ;
+			 // Console.OUT.println("Reset single singV("+singlei+"),best par "+ bestpar +"  best = "+ manToSwap+"  nbSingles="+nbSingles);
+			 swapVariables(singleman as Int, manToSwap);		
+			 
+			 
+			 // Try to match a second single t
+			 // if (nbSingles > 1 && r.randomDouble() < 0.98)
+			 // {	  
+				//   // select a second single man
+				//   val singleman2 = sgV( r.randomInt( nbSingles ) );
+				//   // select a woman in the pref list of the single
+				//   val wj = r.randomInt( mprefLength(singleman2) ); 
+				//   val bestpar2 = Math.abs( menPref(singleman2)(wj) );
+				//   // find man paired with bestpar woman
+				//   val manToSwap2 = variablesW( bestpar2 - 1 ) - 1n ;
+				//   
+				//   //Console.OUT.println("Reset single singV("+singlei+"),best par "+ bestpar +"  best = "+ manToSwap+"  nbSingles="+nbSingles);
+				//   swapVariables(singleman2 as Int, manToSwap2);	
+			 // }
 		} else {
 			val i = r.randomInt(length);
 			val j = r.randomInt(length);
@@ -567,7 +626,7 @@ public class SMTIAS extends ModelAS{
 		 
 		 //else 
 		 {
-			  Console.OUT.println("\n SMTI Solution Vector:");
+			  Console.OUT.printf("\n SMTI Solution Vector:");
 			  for (i in match.range())
 			  {
 					if(revpM(i)(match(i)-1n) == 0n)
@@ -661,79 +720,105 @@ public class SMTIAS extends ModelAS{
 		// }
 	}
 	
-	static def readMatrix(fr:FileReader, sizeF:Int,  mP:Rail[Rail[Int]], wP:Rail[Rail[Int]]){
+	// static def readMatrix( fr : FileReader, size : Long,  m1 : Rail[Rail[Int]], 
+	// 		  m2 : Rail[Rail[Int]] ){
+	// 	try{
+	// 		var i : Int = 0n;
+	// 		//var charNo : Int = 0n;
+	// 		var j : Int;
+	// 		var buffer:String;
+	// 		var mline:Int=0n;
+	// 		var wline:Int=0n;
+	// 		
+	// 		// Number of the line in which the first pref list entry appears.
+	// 		val FIRST_PREF_LINE = 3n;
+	// 		
+	// 		for (line in fr.lines()) {
+	// 			i++;
+	// 			buffer = ""; j = 0n;
+	// 			if (i >= FIRST_PREF_LINE && i < size + FIRST_PREF_LINE){
+	// 				//Console.OUT.println("mp:"+i+" :"+line);
+	// 				// Read Men Pref Matrix
+	// 				for(char in line.chars() ){
+	// 					if( char == ' '){
+	// 						if(!buffer.equals("")) {
+	// 							if (j < size){
+	// 								m1(mline)(j++) = Int.parse(buffer);
+	// 								//Console.OUT.println("menPrefs "+(mline)+","+(j-1)+" = "+(mP(mline)(j-1)));
+	// 							}
+	// 						}
+	// 						buffer = "";
+	// 					}else{
+	// 						buffer += char;
+	// 					}                       
+	// 				}
+	// 				if(!buffer.equals("")) { // process last element
+	// 					 if (j < size){
+	// 						  m1(mline)(j++) = Int.parse(buffer);
+	// 						  //Console.OUT.println("menPrefs "+(mline)+","+(j-1)+" = "+(mP(mline)(j-1)));
+	// 					 }
+	// 				}
+	// 				mline++;
+	// 			}else if (i > size + FIRST_PREF_LINE && i <= size * 2 + FIRST_PREF_LINE){
+	// 				//Console.OUT.println("wp:"+i+" :"+line);
+	// 				// Read Women Pref Matrix
+	// 				for(char in line.chars() ){
+	// 					if( char == ' ' || char == '\n' ){
+	// 						if(!buffer.equals("")) {
+	// 							if ( j < size ){
+	// 								m2(wline)(j++) = Int.parse(buffer);
+	// 								//Console.OUT.println("womenPref "+(wline)+","+(j-1)+" = "+(wP(wline)(j-1)));
+	// 							}
+	// 						}
+	// 						buffer = "";
+	// 					}else{
+	// 						buffer += char;
+	// 					}                       
+	// 				}
+	// 				if(!buffer.equals("")) {
+	// 					 if ( j < size ){
+	// 						  m2(wline)(j++) = Int.parse(buffer);
+	// 						  //Console.OUT.println("womenPref "+(wline)+","+(j-1)+" = "+(wP(wline)(j-1)));
+	// 					 }
+	// 				}
+	// 				wline++;
+	// 			}
+	// 		}
+	// 	}catch(Exception){
+	// 		Console.OUT.println("Error reading file");
+	// 		//EOF
+	// 	}
+	// }
+	
+	static def readMatrix( fr : FileReader, n1 : Long, n2 : Long, m1 : Rail[Rail[Int]],
+			  m2 : Rail[Rail[Int]], getCap : Boolean, cap : Rail[Int] ){
 		try{
 			var i : Int = 0n;
 			//var charNo : Int = 0n;
 			var j : Int;
+			var countM2 : Int = 0n;
 			var buffer:String;
-			var mline:Int=0n;
-			var wline:Int=0n;
+			var m1line : Int = 0n;
+			var m2line : Int = 0n;
+			val DELIM_CHAR = ' ';
 			
-			for (line in fr.lines()) {
-				i++;
-				buffer = ""; j = 0n;
-				if (i >= 2n && i < sizeF + 2){
-					//Console.OUT.println("mp:"+i+" :"+line);
-					// Read Men Pref Matrix
-					for(char in line.chars() ){
-						if( char == ' ' || char == '\n' ){
-							if(!buffer.equals("")) {
-								if (j < sizeF){
-									mP(mline)(j++) = Int.parse(buffer);
-									//Console.OUT.println("menPrefs "+(mline)+","+(j-1)+" = "+(mP(mline)(j-1)));
-								}
-							}
-							buffer = "";
-						}else{
-							buffer += char;
-						}                       
-					}
-					mline++;
-				}else if (i > sizeF + 2 && i <= sizeF * 2 + 2){
-					//Console.OUT.println("wp:"+i+" :"+line);
-					// Read Women Pref Matrix
-					for(char in line.chars() ){
-						if( char == ' ' || char == '\n' ){
-							if(!buffer.equals("")) {
-								if (j < sizeF){
-									wP(wline)(j++)= Int.parse(buffer);
-									//Console.OUT.println("womenPref "+(wline)+","+(j-1)+" = "+(wP(wline)(j-1)));
-								}
-							}
-							buffer = "";
-						}else{
-							buffer += char;
-						}                       
-					}
-					wline++;
-				}
-			}
-		}catch(Exception){
-			Console.OUT.println("Error reading file");
-			//EOF
-		}
-	}
-	static def readMatrixHR(fr:FileReader, n1:Int, n2:Int, rP:Rail[Rail[Int]], hP:Rail[Rail[Int]],hcap:Rail[Int]){
-		try{
-			var i : Int = 0n;
-			//var charNo : Int = 0n;
-			var j : Int;
-			var buffer:String;
-			var rline:Int=0n;
-			var hline:Int=0n;
+			// Number of the line in which the first pref list entry appears.
+			val FIRST_PREF_LINE = 3n;
 			
-			for (line in fr.lines()) {
+			for (line in fr.lines())
+			{
 				i++;
-				buffer = ""; j = 0n;
-				if (i >= 2n && i < n1 + 3){ // The file has 3 header lines (already read)
+				buffer = ""; j = 0n; countM2 =0n;
+				if (i >= FIRST_PREF_LINE && i < n1 + FIRST_PREF_LINE){ // The file has x header lines (already read)
 					// Console.OUT.println("rp:"+i+" :"+line);
-					// Read residents Pref Matrix
+					// Read first matrix
 					for(char in line.chars() ){
-						if( char == ' ' || char == '\n' ){
-							if(!buffer.equals("")) {
-								if (j < n2){       // maximum number of entries in hospital pref list
-									rP(rline)(j++) = Int.parse(buffer);
+						if( char == DELIM_CHAR ){
+							if( !buffer.equals("") )
+							{
+								if (j < n2)  // maximum number of entries in matrix2
+								{
+									m1(m1line)(j++) = Int.parse(buffer);
 									// Console.OUT.println("resPrefs "+(rline)+","+(j-1)+" = "+(rP(rline)(j-1)));
 								}
 							}
@@ -742,26 +827,40 @@ public class SMTIAS extends ModelAS{
 							buffer += char;
 						}                       
 					}
-					rline++; 
-				}else if (i > n1 + 2 && i <= n1 + n2 + 2){
+					if( !buffer.equals("") ) // Process last entry in line
+					{
+						 if (j < n2)        // maximum number of entries in matrix2
+ 						 { 
+							  m1(m1line)(j) = Int.parse(buffer);
+							  // Console.OUT.println("resPrefs "+(rline)+","+(j-1)+" = "+(rP(rline)(j-1)));
+						 }
+					}
+					m1line++; 
+				}else if (i > n1 + FIRST_PREF_LINE && i <= n1 + n2 + FIRST_PREF_LINE)
+				{
 					// Console.OUT.println("hp:"+i+" :"+line);
 					// Read hospitals Pref Matrix
-					for(char in line.chars() ){
-						if( char == ' ' || char == '\n' ){
-							if(!buffer.equals("")) {
-								if(j == 0n){ // first entry in line is the hospital capacity
-									 var cap:String="";
-									for(c in buffer.chars()){
-										if (c != '(' && c != ')'){
-											 cap += c;
+					for(char in line.chars() )
+					{
+						if( char == DELIM_CHAR )
+						{
+							if(!buffer.equals(""))
+							{
+								if(getCap && j == 0n)  // first entry capacity eg. (cap)
+								{
+									var capb : String = "";
+									for (c in buffer.chars()){
+										if (c != '(' && c != ')')
+										{
+											 capb += c;
 										}
 									}
-									 hcap(hline) = Int.parse(cap);
-									 // Console.OUT.println("capacity of hospital "+ hline+" is "+hcap(hline));
-									 j++;
-								}
-								else if (j < n1 + 1){   // maximum number of entries in hospital pref list (n2 + 1 for capacity)
-									hP(hline)(j-1)= Int.parse(buffer);
+									cap(m2line) = Int.parse(capb);
+									// Console.OUT.println("capacity of hospital "+ hline+" is "+hcap(hline));
+									j++;
+								} else if (countM2 < n1 ) 
+								{  
+									 m2(m2line)(countM2++)= Int.parse(buffer);
 									// Console.OUT.println("hosPref "+(hline)+","+(j-1)+" = "+(hP(hline)(j-1)));
 									j++;
 								}
@@ -771,7 +870,13 @@ public class SMTIAS extends ModelAS{
 							buffer += char; 
 						}                       
 					}
-					hline++;
+					if(!buffer.equals("")) // Process last element in list
+					{
+						 m2(m2line)(countM2) = Int.parse(buffer);
+						 // Console.OUT.println("hosPref "+(hline)+","+(j-1)+" = "+(hP(hline)(j-1)));
+						 j++;
+					}
+					m2line++;
 				}
 			}
 		}catch(Exception){
@@ -780,17 +885,59 @@ public class SMTIAS extends ModelAS{
 		}
 	}
 	
-	static def readParameters(line : String):Rail[Int]{
+	
+	/** load Parameters Line
+	 *  load the parameters of the problems 
+	 *  @param filePath path of the data file to be loaded
+	 *  @param params rail to return problems parameters on file
+	 *  @return true if success, false if filePath is a directory
+	 */
+	static 
+	def tryReadParameters (filePath : String, params : Rail[Long] ):Boolean{
+		 
+		 //Load first line with problem's parameters
+		 val filep = new File(filePath);
+		 
+		 if (filep.isDirectory()) return false;
+		 
+		 Console.OUT.println("\n--   Solving "+filePath+" ");
+		 
+		 val fr = filep.openRead();
+		 var fLine : String;
+		 
+		 do {
+			  fLine = fr.readLine(); //get line
+		 }while( fLine( 0n ) == '#'); //ignore first lines that starts with number symbol character
+		 
+		 val header = readParameters(fLine);
+		 
+		 //Assign reading parameter to output array
+		 for ( var i : Long = 0; i < 4; i++ )
+		 {
+			  params(i) = header(i);
+			  // Console.OUT.println("p "+i+" = "+ params(i));
+		 }
+		 
+		 fr.close();
+		 
+		 return true;
+	}
+	
+	static def readParameters( line : String ) : Rail[Int]
+	{
 		var i : Int;
 		var j : Int = 0n;
-		var buffer:String =  "";
-		val x = new Rail[Int](3,0n);
-		for(i = 0n ; i < line.length() ; i++){
-			if( line(i) == ' ' || line(i) == '\n' ){
+		var buffer : String =  "";
+		val x = new Rail[Int]( 4, -1n );
+		for(i = 0n ; i < line.length() ; i++) 
+		{
+			if( line(i) == ' ' || line(i) == '\n' )
+			{
 				x(j++) = Int.parse(buffer);
 				//Console.OUT.println("x "+(j-1)+" = "+x(j-1));
 				buffer = "";
-			}else{
+			}else
+			{
 				buffer += line(i);
 			}
 		}
@@ -799,24 +946,31 @@ public class SMTIAS extends ModelAS{
 		return x;
 	}
 	
-	static def readParametersHR(line : String):Rail[Int]{
-		var i : Int;
-		var j : Int = 0n;
-		var buffer:String =  "";
-		val x = new Rail[Int](3,0n);
-		for(i = 0n ; i < line.length() ; i++){
-			if( line(i) == ' ' || line(i) == '\n' ){
-				x(j++) = Int.parse(buffer);
-				//Console.OUT.println("x "+(j-1)+" = "+x(j-1));
-				buffer = "";
-			}else{
-				buffer += line(i);
-			}
-		}
-		x(j) = Int.parse(buffer);
-		//Console.OUT.println("x "+j+" = "+x(j));
-		return x;
-	}
+	// /**
+	//  *  Read Parameters from HRT file
+	//  *  Always try to load 4 parameters
+	//  * 
+	//  */
+	// 
+	// static def readParametersHR ( line : String ) : Rail[Int] {
+	// 	var i : Int;
+	// 	var j : Int = 0n;
+	// 	var buffer : String =  "";
+	// 	val x = new Rail[Int]( 4, -1n );
+	// 	
+	// 	for( i = 0n ; i < line.length() ; i++ ){
+	// 		if( line(i) == ' ' || line(i) == '\n' ){
+	// 			x(j++) = Int.parse(buffer);
+	// 			//Console.OUT.println("x "+(j-1)+" = "+x(j-1));
+	// 			buffer = "";
+	// 		}else{
+	// 			buffer += line(i);
+	// 		}
+	// 	}
+	// 	x(j) = Int.parse(buffer);
+	// 	//Console.OUT.println("x "+j+" = "+x(j));
+	// 	return x;
+	// }
 	
 	
 	
@@ -845,34 +999,64 @@ public class SMTIAS extends ModelAS{
 	}
 	
 	
-	/** load data
+	/** load data returning maptable
 	 *  load the data in filePath to the data structures mPref and w Pref 
 	 *  @param filePath path of the data file to be loaded
-	 *  @param mPref men prefernce list (parameter by reference)
-	 *  @param wPref men prefernce list (parameter by reference)
-	 *  @return true if success, false if filePath is a directory
+	 *  @param matrix1 first matrix (parameter by reference)
+	 *  @param matrix2 second matrix (parameter by reference)
+	 *  @param mapTable returned map table (parameter by reference)
 	 */
-	static def loadData(filePath : String, mPref:Rail[Rail[Int]],wPref:Rail[Rail[Int]]):Boolean{
-		var loadTime:Long = -System.nanoTime();
-		//Load first line wtith headers size p1 p2
-		val filep = new File(filePath);//new File(file);//
-		if (filep.isDirectory()) return false;
-		
-		Console.OUT.println("\n--   Solving "+filePath+" ");
-		
-		val fr = filep.openRead();
-		val fLine = fr.readLine(); //get first line
-		val header = readParameters(fLine);
-		
-		val sizeF = header(0); val p1F = header(1); val p2F = header(2);
-		Logger.debug(()=>{"file: "+filePath+" size: "+sizeF+" p1: "+p1F+" p2: "+p2F});
-		
-		//Load Problem
-		readMatrix(fr, sizeF,  mPref, wPref);
-		fr.close();
-		return true;
-	}
+	// static def loadData( filePath : String, n1 : Long, n2 : Long, 
+	// 		  matrix1 : Rail[Rail[Int]], matrix2 : Rail[Rail[Int]], mapTable : Rail[Int])
+	// {
+	// 	var loadTime:Long = -System.nanoTime();
+	// 	//Load first line wtith headers size p1 p2
+	// 	val filep = new File(filePath);//new File(file);//
+	// 	
+	// 	//if (filep.isDirectory()) return false;
+	// 	
+	// 	Console.OUT.println("\n--   Solving "+filePath+" ");
+	// 	
+	// 	val fr = filep.openRead();
+	// 	
+	// 	//Load Problem
+	// 	readMatrix ( fr, n1,  matrix1, matrix2 );
+	// 	fr.close();
+	// }
 	
+	/** load data (SMP, QAP)
+	 *  load the data in filePath to the data structures mPref and w Pref 
+	 *  @param filePath path of the data file to be loaded
+	 *  @param matrix1 first matrix (parameter by reference)
+	 *  @param matrix2 second matrix (parameter by reference)
+	 */
+	static def loadData( filePath : String, n1 : Long, n2 : Long, 
+			  matrix1 : Rail[Rail[Int]], matrix2 : Rail[Rail[Int]]){
+		 var loadTime:Long = -System.nanoTime();
+		 //Load first line wtith headers size p1 p2
+		 val filep = new File(filePath);//new File(file);//
+		 
+		 //if (filep.isDirectory()) return false;
+		 
+		 Console.OUT.println("\n--   Solving "+filePath+" ");
+		 
+		 
+		 try{
+			  val	  fr = filep.openRead();
+			  
+			  
+			  //Load Problem
+			  // false in 6th parameter means that it is not necessary to load capacities, 
+			  // for that reason the 7th parameter is a dummy rail (won't be used)
+			  readMatrix ( fr, n1, n2, matrix1, matrix2, false, new Rail[Int](1,0n) );
+			  fr.close();
+		 }catch( e : Exception){
+			  Console.OUT.println("Error opening file:" + e.getMessage()+" cause "+ e.getCause() );
+			  e.printStackTrace();
+			  Console.OUT.println("Error " );
+			  
+		 }
+	}
 	
 	/** load data customized for HRP
 	 *  load the data in filePath to the data structures mPref and w Pref 
@@ -881,65 +1065,48 @@ public class SMTIAS extends ModelAS{
 	 *  @param wPref men prefernce list (parameter by reference)
 	 *  @return true if success, false if filePath is a directory
 	 */
-	static def loadDataHR(filePath : String, mPref:Rail[Rail[Int]],wPref:Rail[Rail[Int]],
-			  mapTable:Rail[Int]):Boolean{
-		var loadTime:Long = -System.nanoTime();
-		//Load first line wtith headers size p1 p2
-		val filep = new File(filePath);//new File(file);//
-		if (filep.isDirectory()) return false;
+	static def loadData( filePath : String, n1 : Long, n2 : Long, 
+			  matrix1 : Rail[Rail[Int]], matrix2 : Rail[Rail[Int]], mapTable : Rail[Int]) 
+	{ 
+		var loadTime : Long = -System.nanoTime();
 		
-		Console.OUT.println("\n--   Solving "+filePath+" ");
-		
+		//Load first line with headers size p1 p2
+		val filep = new File( filePath );         //new File(file);//
 		val fr = filep.openRead();
-		val line1 = fr.readLine(); //ignore first line commented line with all parameters  
-		val line2 = fr.readLine(); //get second line - read the parameters needed for the program
-		val header = readParametersHR(line2);
-		
-		val n1 = header(0); val n2 = header(1); val c = header(2);
-		Logger.info(()=>{"file: "+filePath+" n1: "+n1+" n2: "+n2+" c: "+c});
-		
 		val hcap = new Rail[Int](n2,0n);  
 		//Load Problem
-		readMatrixHR(fr, n1, n2, mPref, wPref, hcap);
+		readMatrix(fr, n1, n2, matrix1, matrix2, true, hcap);
 		
-		
-		// Create mapTable from hcap
-		// var pos:Int=0n;
-		// for(var hi:Int=0n; hi<n2; hi++){
-		// 	 for(var rep:Int = hcap(hi); rep>0n;rep--){
-		// 		  mapTable(pos++) = hi;
-		// 		  Console.OUT.println("maptable "+(pos-1n)+" = "+hi);
-		// 	 }
-		// }
-		var pos:Int = n2;
-		for(var hi:Int=0n; hi<n2; hi++){
-			 for(var rep:Int = hcap(hi) - 1n ; rep > 0n; rep--){
-			 //Console.OUT.println("rep "+rep+" hi "+hi);	  
-			 mapTable(pos++) = hi;
-				//  Console.OUT.println("maptable "+(pos-1n)+" = "+hi);
+		//Create map table for HRP problems
+		var pos : Long = n2;
+		for(var hi : Int = 0n; hi < n2; hi++){
+			 for( var rep : Int = hcap(hi) - 1n; rep > 0n; rep--)
+			 {
+				  // Console.OUT.println("rep "+rep+" hi "+hi);	  
+				  mapTable(pos++) = hi;
+				  // Console.OUT.println("maptable "+(pos-1n)+" = "+hi);
 			 }
 		}
 		
 		// for(index in mapTable.range())
 		// 	 Console.OUT.println("maptable "+index+" = "+mapTable(index));
 		
-		//Turn HR data into corresponding SMTI
-		convertRPL(mPref,hcap, n1, n2);
-		convertHPL(wPref,hcap, n1, n2);
+		//Turn HR data into corresponding SMTI (cloning technique) 
+		convertRPL( matrix1, hcap, n1, n2);
+		convertHPL( matrix2, hcap, n1, n2);
 		//printPreferencesTables();
 		
 		fr.close();
-		return true;
-	}
+	}	
 	
-	static def convertRPL(mP:Rail[Rail[Int]],hcap:Rail[Int], n1 : Int, n2 : Int){
+	static def convertRPL(mP:Rail[Rail[Int]],hcap:Rail[Int], n1 : Long, n2 : Long){
 		 var ri : Int, hi : Int, rep :Int;
 		 var pos : Int = 0n;
 		 
 		 val accCap = new Rail[Int](n2,0n);
 		 var acc:Int=0n;
 		 
-		 for (var k:Int = 1n; k < n2 ;k++){
+		 for (var k : Int = 1n; k < n2 ;k++){
 			  
 			  acc += hcap(k-1)-1n;
 			  accCap(k) = acc;
@@ -949,7 +1116,7 @@ public class SMTIAS extends ModelAS{
 		 for(ri=0n; ri<n1 ; ri++){
 			  val currentList = new Rail[Int](n1,0n);
 			  pos = 0n;
-			  Rail.copy(mP(ri),currentList);
+			  Rail.copy( mP(ri), currentList );
 			  for (h in currentList.range()){
 					val ch = currentList(h);
 					if (ch == 0n) break;
@@ -959,14 +1126,14 @@ public class SMTIAS extends ModelAS{
 					val capCh = hcap(ch-1); // to index
 					//Console.OUT.println("capCh="+capCh);
 					for (rep = 1n ; rep < capCh; rep++){ //create ties for the same hospital
-						 mP(ri)(pos++) = (n2 + accCap(ch-1) + rep)*-1n;
+						 mP(ri)(pos++) = (n2 as Int + accCap(ch-1) + rep)*-1n;
 						 // Console.OUT.println("resPrefs "+ri+","+(pos-1)+" = "+(mP(ri)(pos-1)));
 					}
 			  }
 		 }
 	}
 	
-	static def convertHPL(wP:Rail[Rail[Int]],hcap:Rail[Int], n1 : Int, n2 : Int){
+	static def convertHPL(wP:Rail[Rail[Int]],hcap:Rail[Int], n1 : Long, n2 : Long){
 		 var hi : Int, ri : Int, rep :Int;
 		 var pos : Int = 0n;
 		 

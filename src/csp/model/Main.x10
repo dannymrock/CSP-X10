@@ -18,19 +18,31 @@ import x10.io.FileWriter;
 import x10.util.StringBuilder;
 
 public class Main {
-	public static struct CSPProblem(kind:Int) {
-		public def make(size:Long, vectorSize:Long, seed:Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
-				restLimit:Int, mapTable:Rail[Int], inVector:String):ModelAS(vectorSize) {
-			if (kind == MAGIC_SQUARE_PROBLEM) return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
-			if (kind == COSTAS_PROBLEM) return new CostasAS(vectorSize, seed, restLimit, inVector);
-			if (kind == ALL_INTERVAL_PROBLEM) return new AllIntervalAS(vectorSize, seed, true, restLimit, inVector);
-			if (kind == LANGFORD_PROBLEM) return new LangfordAS(size, vectorSize, seed, restLimit, inVector);
-			if (kind == STABLE_MARRIAGE_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, false, inVector);
-			if (kind == HOSPITAL_RESIDENT_PROBLEM) return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, true, inVector);
-			if (kind == QA_PROBLEM) return new QAPAS(vectorSize, seed, mPrefs, wPrefs, restLimit, inVector);
-			return new PartitAS(vectorSize, seed, restLimit, inVector);
-		}
-	}
+	 
+	 public static struct CSPProblem(kind:Int) 
+	 {
+		  public def make( size : Long, vectorSize : Long, seed : Long, 
+					          mPrefs : Rail[Rail[Int]], wPrefs : Rail[Rail[Int]], 
+					         restLimit : Int, mapTable : Rail[Int], inVector : String ) 
+		            : ModelAS(vectorSize) 
+		  {
+				if (kind == MAGIC_SQUARE_PROBLEM) 
+					 return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
+				if (kind == COSTAS_PROBLEM) 
+					 return new CostasAS(vectorSize, seed, restLimit, inVector);
+				if (kind == ALL_INTERVAL_PROBLEM) 
+					 return new AllIntervalAS(vectorSize, seed, true, restLimit, inVector);
+				if (kind == LANGFORD_PROBLEM) 
+					 return new LangfordAS(size, vectorSize, seed, restLimit, inVector);
+				if (kind == STABLE_MARRIAGE_PROBLEM) 
+					 return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, false, inVector);
+				if (kind == HOSPITAL_RESIDENT_PROBLEM) 
+					 return new SMTIAS(vectorSize, seed, mPrefs, wPrefs, restLimit, mapTable, true, inVector);
+				if (kind == QA_PROBLEM) 
+					 return new QAPAS(vectorSize, seed, mPrefs, wPrefs, restLimit, inVector);
+				return new PartitAS(vectorSize, seed, restLimit, inVector);
+			}
+	 }
 	
 	public static val UNKNOWN_PROBLEM=0n;
 	public static val MAGIC_SQUARE_PROBLEM = 1n;
@@ -60,7 +72,8 @@ public class Main {
 				                       Option("m", "", "Solver (m)ode distribution 0 for Places \"n\" for Activities (n number of activities). Default 0."),
 				                       Option("l", "", "restart (l)imit"),
 				                       Option("t", "", "(T)ime out default 0"),
-				                       Option("c", "", "target (c)ost. default 0"),
+				                       Option("c", "", "target (c)ost from Command Line Parameter. default 0"),
+				                       Option("a", "", "Flag to receive target cost form file. default 0 from command line, 1 take optimal from file, 2 take BKS from file "),
 				                       Option("b", "", "Number of (b)enchmark tests"),
 				                       Option("N", "", "nodes_per_team parameter. Default 4."),
 				                       Option("U", "", "Update Interval Intra-team Communication (iterations) . Default 0 - no communication."),
@@ -83,7 +96,8 @@ public class Main {
 		val solverMode	    = opts("-m", 0n);
 		val restartLimit   = opts("-l", 1000000000n);
 		val maxTime        = opts("-t", 0);
-		val targetCost	    = opts("-c", 0n);	
+		val tCostFromCL    = opts("-c", 0n);
+		val costFromF      = opts("-a", 0);
 		val testNb         = opts("-b", 10n);
 		val nodesPTeam     = opts("-N", 1n);		
 		val updateI        = opts("-U", 0n);
@@ -98,13 +112,17 @@ public class Main {
 		val verify         = opts("-v", 0);
 		val inputPath      = opts("-i", ".");
 		val outFormat	    = opts("-o", 1n);
-				
+			
+
+		
 		/**
 		 *   Print Parameters
 		 */
 		Console.OUT.println("Problem "+problem+" size "+size+" File Path (SMTI):"+filePath); 
 		Console.OUT.println("Solver: Mode "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
-		Console.OUT.println("Target cost: "+(targetCost >= 0n ? "lower or equal than ":"lower than ")+ Math.abs(targetCost));
+		Console.OUT.println("Target cost from "+(costFromF  == 0  ? "command line. " :
+			                                     ((tCostFromCL >= 0n ? "file, lower or equal than ":
+			                                    	"file, strictly lower than ")+ Math.abs(tCostFromCL))));
 		Console.OUT.println("Solving "+testNb+" times each instance");
 		Console.OUT.println((nodesPTeam > 1n ? "Using ":"Without ")+"Cooperative Search: "+Place.MAX_PLACES+" places. "+nodesPTeam+" nodes per team "+(Place.MAX_PLACES as Int / nodesPTeam)+" Teams");
 		Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
@@ -169,7 +187,7 @@ public class Main {
 		}
 		else
 		{
-			 Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP , SMP or HRP"); 
+			 Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP , SMP, HRP or QAP"); 
 			 return;
 		}
 		
@@ -179,21 +197,16 @@ public class Main {
 		val seed = inSeed;//(inSeed == 0) ? j as Long:inSeed;
 		val random = new Random(seed);	
 		
-		// generic matrices to load data from files
-		val matrix1:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
-		val matrix2:Rail[Rail[Int]] = new Rail[Rail[Int]](size, (Long) => new Rail[Int](size,0n));
-		
-		//maping table for HRT problems "cloning"
-		val mapTable = new Rail[Int](size, (i:long)=>i as Int);
-		//val mapTable = new Rail[Int](size, 0n);
+		val fileMode = (param == STABLE_MARRIAGE_PROBLEM || param == HOSPITAL_RESIDENT_PROBLEM 
+		|| param == QA_PROBLEM );
 		
 		val vectorSz = vectorSize;
-		val solvers:PlaceLocalHandle[ParallelSolverI(vectorSz)];    
+		val solvers:PlaceLocalHandle[ParallelSolverI(vectorSz)];
 		solvers = PlaceLocalHandle.make[ParallelSolverI(vectorSz)](PlaceGroup.WORLD, 
 				()=>new PlacesMultiWalks(vectorSz, updateI, reportI, interTI, poolSize, nodesPTeam,
-						changeProb, minDistance, targetCost, maxTime, (verify!=0), delayI, 
+						changeProb, minDistance, maxTime, (verify!=0), delayI, 
 						affectedP) as ParallelSolverI(vectorSz));
-		
+		 
 		var insNb:Int = 0n; //counter of instances
 		var iList : Rail[String];
 		
@@ -207,10 +220,8 @@ public class Main {
 			solvers().installSolver(solvers);
 		}
 		
-		val fileMode = (param == STABLE_MARRIAGE_PROBLEM || param == HOSPITAL_RESIDENT_PROBLEM 
-				  || param == QA_PROBLEM );
 		val nPath = new StringBuilder();
-		if (fileMode){
+		if ( fileMode ){
 			//Load Files enable double loop
 			iList = SMTIAS.loadDir(filePath,nPath);
 			//Logger.info(()=>{"nPath "+nPath});
@@ -223,56 +234,105 @@ public class Main {
 		/**
 		 *  1st Loop: for all files in the list (used for SMTI an QAP) 
 		 */
-		for (instance in iList){
+		for (instance in iList)
+		{
+			 //I expect to receive 4 parameters
+			 val problemParams = new Rail[Long](4, -1 );
+
+			 // mode equal to:
+			 // 1 -> filemode==true && sucess (valid file)
+			 // 2 -> filemode==true && !sucess (not valid file eg. directory)   
+			 // 3 -> filemode==false
+			 val mode = (fileMode) ? (SMTIAS.tryReadParameters( nPath+"/"+instance, problemParams)? 1 : 2 ): 3;
+			 
+			 // if filemode == true and "path" is a directory -> skip
+			 if ( mode == 2 ) continue; 
+			 
+			 /** First parameter (in the file) is the size of the problem 
+			  *  in SMP:   n1 -> number of men         n2 -> number of women
+			  *  in HRP:   n1 -> number of residents   n2 -> number of hospitals
+			  *  in QAP:   n1 -> number of facilities  n2 -> number of locations (n1 == n2)
+			  *  in noFile: n1 = n2 = 1  - matrix1, matrix2 and mapTable are not used
+			  */
+			 val n1 = problemParams(0) < 0 ? 1 : problemParams(0);
+			 
+			 val n2 = (mode == 3 || problemParams(1) < 0) ? 1 :     // default value
+					    param == QA_PROBLEM                 ? n1:     // n1 == n2  
+					    problemParams(1);                             // file loaded value 
 			
-			if (param == STABLE_MARRIAGE_PROBLEM){
-				
-				var loadTime:Long = -System.nanoTime();
-				// load men and women preferences for the SMTI problem 
-				val success = SMTIAS.loadData(nPath+"/"+instance, matrix1, matrix2);
-				if (!success)
-					continue; //path is a directory
-				
-				val cT= loadTime += System.nanoTime();
-				//Logger.debug(()=>{"Time to load the problem="+cT/1e9});
-				
-			} else if (param == HOSPITAL_RESIDENT_PROBLEM){
-				 
-				 var loadTime:Long = -System.nanoTime();
-				 
-				 // load residents hospitals preference lists for HRTP - size is n1
-				 val success = SMTIAS.loadDataHR(nPath+"/"+instance, matrix1, matrix2, mapTable);
-				 if (!success)
-					  continue; //path is a directory
-				 
-				 val cT= loadTime += System.nanoTime();
-				 //Logger.debug(()=>{"Time to load the problem="+cT/1e9});
-				 
-			} else if (param == QA_PROBLEM){
-				 
-				 var loadTime:Long = -System.nanoTime();
-				 
+			 /**
+			  * Data structures for file problems SMP HRP QAP
+			  * if fileMode is false create "empty" matrices of size 1
+			  */
+			 // Warning: matrices 1 and 2 must be always square matrices, because of the 
+			 // cloning technique implementation in HRT problems 
+			 val matrix1 = new Rail[Rail[Int]](n1, (Long) => new Rail[Int]( n1, 0n ));
+			 val matrix2 = new Rail[Rail[Int]](n1, (Long) => new Rail[Int]( n1, 0n ));
+			 // maping table for HRT problems "cloning"
+			 val mapTable = new Rail[Int]( n2, ( i : long ) => i as Int );
+			 
+			 var opt : Long = 0;
+			 var bks : Long = 0;
+			 
+			 var loadTime:Long = -System.nanoTime();
+			 if ( param == STABLE_MARRIAGE_PROBLEM)
+			 {	
+				  // load men and women preferences for the SMTI problem or
+				  SMTIAS.loadData( nPath+"/"+instance, n1, n2, matrix1, matrix2);
+				  opt = problemParams(2);
+				  bks = problemParams(3);
+			 } else if (param == HOSPITAL_RESIDENT_PROBLEM){
+				  // load residents hospitals preference lists for HRTP - size is n1
+				  SMTIAS.loadData(nPath+"/"+instance, n1, n2, matrix1, matrix2, mapTable);
+				  opt = problemParams(2);
+				  bks = problemParams(3);
+			 } else if (param == QA_PROBLEM){
 				 // load flow and distance matrices for QAP 
-				 val success = QAPAS.loadData(nPath+"/"+instance, matrix1, matrix2);
-				 if (!success)
-					  continue; //path is a directory
-				 
-				 val cT= loadTime += System.nanoTime();
-				 //Logger.debug(()=>{"Time to load the problem="+cT/1e9});
-				 
+				 SMTIAS.loadData(nPath+"/"+instance, n1, n2, matrix1, matrix2);
+				 opt = problemParams(1);
+				 bks = problemParams(2);
+			}
+			val cT= loadTime += System.nanoTime();
+			//Logger.debug(()=>{"Time to load the file problem="+cT/1e9});
+			
+			
+			
+			var c : Long = 0;
+			var sl : Boolean = false;
+			
+			if ( costFromF == 0 ) // target cost loaded from command line parameter
+			{	
+				 if (tCostFromCL >= 0) // get lower or equal to target 
+				 {	
+					  c = tCostFromCL;
+					  sl = false;
+					  //ff = false;
+				 } else 
+				 {	
+					  c = tCostFromCL * -1;
+					  sl = true;
+				 }
+			} else // target cost loaded from file
+			{
+				 sl = costFromF < 0; // strictly lower true for negative numbers
+				 if ( costFromF == 1  || costFromF == -1  ) // try to get optimal cost
+					  c = opt; 
+				 else
+					  c = bks;
 			}
 			
-			insNb++;
+			val tCost = c >= 0? c : 0; // if negative cost put default value
+			val sLow = sl;
 			
+			insNb++;
 			printHeader(outFormat);
 			
 			/**
 			 *  2nd Loop: for repetition (testNb) 
 			 */
-			for (var j:Int = 1n ; j<=testNb; j++){
-				
-				var wallTime:Long = -System.nanoTime();
-				
+			for (var j:Int = 1n ; j<=testNb; j++)
+			{
+				var wallTime:Long = -System.nanoTime();	
 				val modelSeed = random.nextLong();
 				val prob = param;
 				val cspGen = ():ModelAS(vectorSz)=>CSPProblem(prob).make(size as Long,vectorSz,
@@ -286,7 +346,7 @@ public class Main {
 					{
 						val solverSeed = random.nextLong(); 
 						at (p) async
-						solvers().solve(solvers, cspGen, solverSeed);   
+						solvers().solve(solvers, cspGen, solverSeed, tCost, sLow);   
 					}
 				}else{
 					finish for(var i:Long = Place.MAX_PLACES-1; i >= 0; i-= 16) at (Place(i)) async 
@@ -296,7 +356,7 @@ public class Main {
 						finish for(k in min..max)
 						{
 							val solverSeed = r.nextLong();
-							at(Place(k)) async  solvers().solve(solvers, cspGen, solverSeed);
+							at(Place(k)) async  solvers().solve(solvers, cspGen, solverSeed, tCost, sLow );
 						}
 					}
 				}
