@@ -25,6 +25,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 
    var target : Long = 0;
 	var strictLow : Boolean = false;
+	var targetSucc : Boolean = false;
 	
 	val mark = new Rail[Int] (size, 0n); 
 	// Solver parameters - Different values for every kind of problem
@@ -117,6 +118,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 		
 		target = tCost;
 		this.strictLow = sLow;
+		targetSucc = false;
 		
 		
 		//nb_var_to_reset = (((size * solverP.resetPercent) + (100) - 1) / (100));
@@ -164,7 +166,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 		if (totalCost == 0n)
 			 bestCost = totalCost;
 		else
-			 bestCost =x10.lang.Int.MAX_VALUE;
+			 bestCost = x10.lang.Int.MAX_VALUE;
 		//Console.OUT.println("initial bestCost="+bestCost);
 		
 		bestSent = false;
@@ -248,7 +250,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			}
 			
 			// 	Utils.show("partial sol",csp_.getVariables());
-			//csp_.displaySolution();			
+			// csp_.displaySolution();			
 			
 			// --- Interaction with other solvers -----
 			
@@ -257,8 +259,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 				//Logger.debug(()=>" killed!");
 				break;		// Check if other place or activity have finished
 			}
-			
-			
+				
 			// print iter an cost
 			//if (nbIter % 10n == 0n)
 			 	// Console.OUT.println("i"+nbIter+"i\t"+(bestCost/100n)+"\t"+(bestCost%100n));
@@ -275,10 +276,11 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 				 // Console.OUT.println(here+" best cost= "+bestCost);
 				 // Compare cost and break if target is accomplished
 				 if ((strictLow && bestCost < target)||(!strictLow && bestCost <= target)){
+					  targetSucc = true;
 					  break;
+					  
 				 }
 			}
-			
 			
 			/**
 			 *  Time out
@@ -291,9 +293,9 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 				 }
 			}
 	        
-	        /**
-	         *  Interaction with other places
-	         */
+			/**
+			 *  Interaction with other places
+			 */
 			if( solver.intraTISend() != 0n && nbIter % solver.intraTISend() == 0n){        //here.id as Int ){
 				if(!bestSent){ 
 					solver.communicate( bestCost, bestConf as Valuation(sz));
@@ -333,10 +335,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 				//doReset(size as Int / 8n , csp_);
 				doReset(nbVarReset as Int , csp_); // This reset should be bigger than the normal reset
 				continue;
-			}
-			
-			
-			
+			}	
 			
 			// ----- end of interaction with other solvers -----
 		} // while (totalCost != 0n)

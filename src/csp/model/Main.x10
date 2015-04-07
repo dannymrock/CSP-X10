@@ -120,9 +120,9 @@ public class Main {
 		 */
 		Console.OUT.println("Problem "+problem+" size "+size+" File Path (SMTI):"+filePath); 
 		Console.OUT.println("Solver: Mode "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
-		Console.OUT.println("Target cost from "+(costFromF  == 0  ? "command line. " :
-			                                     ((tCostFromCL >= 0n ? "file, lower or equal than ":
-			                                    	"file, strictly lower than ")+ Math.abs(tCostFromCL))));
+		Console.OUT.println("Target cost from "+(costFromF != 0 ? "file. " :
+			                                     ((tCostFromCL >= 0n ? "command line, lower or equal than ":
+			                                    	"command line, strictly lower than ") + Math.abs( tCostFromCL ))));
 		Console.OUT.println("Solving "+testNb+" times each instance");
 		Console.OUT.println((nodesPTeam > 1n ? "Using ":"Without ")+"Cooperative Search: "+Place.MAX_PLACES+" places. "+nodesPTeam+" nodes per team "+(Place.MAX_PLACES as Int / nodesPTeam)+" Teams");
 		Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
@@ -231,11 +231,21 @@ public class Main {
 		}
 		
 		
+		var cFile : String = new String (""); 
+		var fWall : Long = 0;
+		if(outFormat == 0n){
+			 Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,"
+						+"same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,"
+						+"solution,target,walltime");
+		}
+		
 		/**
 		 *  1st Loop: for all files in the list (used for SMTI an QAP) 
 		 */
 		for (instance in iList)
 		{
+			 fWall = 0;
+			 cFile = instance;
 			 //I expect to receive 4 parameters
 			 val problemParams = new Rail[Long](4, -1 );
 
@@ -321,10 +331,13 @@ public class Main {
 					  c = bks;
 			}
 			
-			val tCost = c >= 0? c : 0; // if negative cost put default value
+			val tCost = c >= 0 ? c : 0; // if negative cost put default value
 			val sLow = sl;
 			
 			insNb++;
+			
+			if ( mode == 1 && outFormat == 1n )
+				 Console.OUT.println("\n"+instance);
 			printHeader(outFormat);
 			
 			/**
@@ -369,6 +382,7 @@ public class Main {
 				wallTime += System.nanoTime();
 				val wtime = wallTime;
 				totalWallT += wallTime;
+				fWall += wallTime;
 				//Logger.debug(()=>{"wall time="+wtime/1e9});
 				
 				/**
@@ -401,8 +415,9 @@ public class Main {
 			 *   Print average of repetitions  
 			 */
 			if(outFormat == 0n){
-				//Console.OUT.print(file+",");
+				Console.OUT.print(cFile+",");
 				solvers().printAVG(testNb,outFormat);
+				Console.OUT.println(","+(fWall/(testNb*1e9)));
 			}
 			else if (outFormat == 1n){
 				Console.OUT.printf("\r");
@@ -420,12 +435,16 @@ public class Main {
 			for(mline in matrix2) mline.clear();
 		}//End 1st Loop
 		
+		val avgWall = totalWallT/(insNb*testNb as Double);
+		totalTime += System.nanoTime();
+		
 		/**
 		 *  Print General average if necessary (SMTI QAP)
 		 */
 		if(outFormat == 0n){
 			Console.OUT.print("TOTAL,");
 			solvers().printGenAVG(insNb*testNb,outFormat);
+			Console.OUT.println(","+avgWall/1e9);
 		}else if (outFormat == 1n){
 			Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
 			Console.OUT.println("\n   General Statistics for "+insNb+" problems, each one solved "+testNb+" times ");
@@ -437,11 +456,9 @@ public class Main {
 			Console.OUT.printf("\n");
 		}
 		
-		val avgWall = totalWallT/(insNb*testNb as Double);
-		totalTime += System.nanoTime();
 		if(outFormat == 0n)
-			Console.OUT.println("TotalInstances,"+insNb+",,Repetitions,"+testNb+",,Total_Time,"+(totalTime/1e9)+
-					",,AVG_wall_Time,"+(avgWall/1e9));
+			Console.OUT.println("TotalInstances,"+insNb+",Repetitions,"+testNb+",Total_Time,"+(totalTime/1e9)+
+					",AVG_wall_Time,"+(avgWall/1e9));
 		else if (outFormat == 1n)
 			Console.OUT.println("TotalInstances: "+insNb+" Repetitions: "+testNb+" Total_Time: "+(totalTime/1e9)+
 					" AVG_wall_Time: "+(avgWall/1e9));	
@@ -450,9 +467,10 @@ public class Main {
 	}	
 	
 	static def printHeader(outF : Int){
-		if(outF == 0n){
-			Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,solution,walltime");
-		}else if(outF == 1n){
+		// if(outF == 0n){
+		// 	Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,solution,walltime");
+		// }else 
+			 if(outF == 1n){
 			Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
 			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS | walltime");
 			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");

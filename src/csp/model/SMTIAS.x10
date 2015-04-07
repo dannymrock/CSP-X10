@@ -626,7 +626,8 @@ public class SMTIAS extends ModelAS{
 		 
 		 //else 
 		 {
-			  Console.OUT.printf("\n SMTI Solution Vector:");
+			  //Logger.debug(()=>{"\n SMTI Solution Vector:"});
+			  Console.OUT.print("SMTI Solution Vector: ");
 			  for (i in match.range())
 			  {
 					if(revpM(i)(match(i)-1n) == 0n)
@@ -634,7 +635,7 @@ public class SMTIAS extends ModelAS{
 					else
 						 Console.OUT.print(match(i)+" ");
 			  }
-			  Console.OUT.print("\n");
+			  Logger.debug(()=>{"\n"});
 			  
 			  // Console.OUT.println("\nMatching  m->w:");
 			  // for (i in match.range())
@@ -893,14 +894,14 @@ public class SMTIAS extends ModelAS{
 	 *  @return true if success, false if filePath is a directory
 	 */
 	static 
-	def tryReadParameters (filePath : String, params : Rail[Long] ):Boolean{
-		 
+	def tryReadParameters (filePath : String, params : Rail[Long] ):Boolean
+	{	 
 		 //Load first line with problem's parameters
 		 val filep = new File(filePath);
 		 
 		 if (filep.isDirectory()) return false;
 		 
-		 Console.OUT.println("\n--   Solving "+filePath+" ");
+		 Logger.debug(()=>{"\n--   Solving "+filePath+" "});
 		 
 		 val fr = filep.openRead();
 		 var fLine : String;
@@ -1038,7 +1039,7 @@ public class SMTIAS extends ModelAS{
 		 
 		 //if (filep.isDirectory()) return false;
 		 
-		 Console.OUT.println("\n--   Solving "+filePath+" ");
+		 //Console.OUT.println("\n--   Solving "+filePath+" ");
 		 
 		 
 		 try{

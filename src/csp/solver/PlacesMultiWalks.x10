@@ -49,7 +49,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 val stats = new CSPStats();
 	 val sampleAccStats = new CSPStats();
 	 val genAccStats = new CSPStats();
-	 /** Comunication Variables*/
+	 /** Comunication Variables */
 	 var commM : CommManager(sz);
 	 //Hybrid approach
 	 val nbExplorerPT : Int;
@@ -60,7 +60,6 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 var seed:Long;
 	 
 	 val changeProb:Int;
-	 
 	 
 	 //InterTeam Communication
 	 var interTeamKill:Boolean = false;
@@ -86,7 +85,6 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 
 	 var solString : String =  new String();
 	 
-	 
 	 /**
 	  * 	Constructor of the class
 	  */
@@ -101,15 +99,11 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  this.changeProb = changeProb;
 		  interTeamInterval = interTI;
 		  this.minDistance = minDistance;
-		  
 		  this.maxTime = maxTime;
-		  
 		  this.verify = verify;
 		  this.iniDelay = delay;
 		  this.affectedPer = affectedP;
-		  
-		  this.bestSolHere = new Rail[Int](vectorSize, 0n);
-		  
+		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	  
 	 }
 	 
 	 public def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)]):void{ 
@@ -146,7 +140,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  solver.setSeed(random.nextLong()); 
 		  
 		  val optStr = System.getenv("O");
-		  option = (optStr==null)? 0 : StringUtil.parseLong(optStr);
+		  option = (optStr==null)? 0 : StringUtil.parseLong( optStr );
 		  
 		  //Logger.info(()=>{"   Seed in solver:"+seed});
 		  //Console.OUT.println("   Seed in solver:"+seed);
@@ -162,7 +156,6 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				//val delayStr = System.getenv("D");
 				//Console.OUT.println(here+"iniDelay "+iniDelay);
 				//val delay:Int = (delayStr==null)? 0n : StringUtil.parseInt(delayStr);
-				
 				async
 				{
 					 System.sleep(iniDelay);
@@ -182,14 +175,13 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  
 		  // Logger.debug(()=>"  PlacesMultiWalks: end solve process: solver.solve() function ");
 		  //if (cost == 0n){ //TODO: Define a new condition (It's possible to finish without cost=0)
-		  if ((strictLow && cost < targetCost)||(!strictLow && cost <= targetCost))
-		  { 
-				//TODO: Define a new condition (It's possible to finish without cost=0)
+		  
+		  if ( ( strictLow && cost < targetCost ) || (!strictLow && cost <= targetCost) )
+		  {
 				// A solution has been found! Huzzah! 
 				// Light the candles! Kill the blighters!
 				val home = here.id;
-				
-				val winner = at(Place.FIRST_PLACE) solvers().announceWinner(solvers, home);
+				val winner = at(Place.FIRST_PLACE) solvers().announceWinner( solvers, home );
 				
 				//winPlace = here;
 				bcost = cost;
@@ -198,11 +190,14 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				{ 
 					 interTeamKill = true;
 					 setStats_(solvers);
-					 if (verify){
+					 if (verify)
+					 {
 					   csp_.displaySolution(solver.bestConf as Valuation(sz));
-					   Console.OUT.println("   Solution is " + 
-					 			 (csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect, maybe wrong ..."));
-					 }
+					   Console.OUT.println(", Solution is " + 
+					 		 (csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect "));
+					   //Console.OUT.println("," + csp_.verify(solver.bestConf as Valuation(sz)));
+					 } 
+					 // else Console.OUT.println();
 				}
 		  } else
 		  {
@@ -298,6 +293,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  val singles = solver.bestCost % sz;
 		  val bp = (solver.bestCost-singles)/sz;
 		  val fr = solver.nbForceRestart;
+		  val target = solver.targetSucc;
 		  
 		  val head = here.id % nTeams;
 		  val gR = at(Place(head)) ss().getGroupReset();
@@ -305,24 +301,15 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  
 		  val gReset = (fr > gR)? fr : gR;
 		  
-		  // try to verify solution here
-		  //Utils.show("Solution",bestSolHere);
-		  //Console.OUT.println(solString);
-		  
-		  // end try
-		  
-		  
-		  
-		  
 		  at (Place.FIRST_PLACE) /*async*/ 
 		  ss().setStats(0n, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
-					 bp as Int, singles as Int, gReset);
+					 bp as Int, singles as Int, gReset, target);
 	 }
 	 
 	 public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-				fr : Int, bp:Int, sg:Int, gr:Int)
+				fr : Int, bp:Int, sg:Int, gr:Int, tar:Boolean)
 	 {
-		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr);
+		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr, tar);
 		  accStats(stats);
 	 }
 	 
@@ -395,7 +382,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  
 		  if (stats.explorer == -1n)
 		  {
-				Logger.info(()=>"No winner found");
+				Logger.debug(()=>"No winner found");
 				
 				for (k in Place.places())
 				{
@@ -411,7 +398,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				//val s = minCost % sz; val bp = (minCost-s)/sz;
 				//Console.OUT.println("Cost = "+minCost+" Singles= "+s+ "BP= "+bp);
 				val place = bestPlace; val mC = minCost;
-				Logger.info(()=>"winner "+ place + " final cost "+ mC);
+				Logger.debug(()=>"winner "+ place + " final cost "+ mC);
 				
 				val ver = this.verify;
 				at (bestPlace)

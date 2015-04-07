@@ -12,40 +12,43 @@ import csp.util.Monitor;
  */
 
 public class CSPStats{
-	/** Final Cost of solution */
-	var cost : Int=-1n;	
-	/** Team id solution */
-	var team : Int=-1n;
-	/** explorer id solution */
-	var explorer : Int=-1n;
-	/** time to reach the solution */
-	var time : Double=0.0d;
-	/** Number of iterations */
-	var iters : Long=0;
-	/** Number of local minimum */
-	var locmin : Int=0n;
-	/** Number of swaps */
-	var swaps : Long=0;
-	/** Number of resets */
-	var reset : Int=0n;
-	/** number of same variables */
-	var same : Long=0;
-	/** number of restarts */  
-	var restart : Int=0n;
-	/** Number time to change vector due to communication */ 
-	var change : Int=0n;
-	/** number of restarts */  
-	var forceRestart:Int = 0n;
-    /** Variables for SMTI */
-    /** number of BP */
-    var bp:Int = 0n;
-    /** number of singles */
-    var singles:Int = 0n;
-    /** acc perfect mariages */
-    var accPM:Int = 0n;
-    /** number of restart of the group */
-    var groupR:Int = 0n;
-    
+	 /** Final Cost of solution */
+	 var cost : Int = -1n;	
+	 /** Team id solution */
+	 var team : Int = -1n;
+	 /** explorer id solution */
+	 var explorer : Int = -1n;
+	 /** time to reach the solution */
+	 var time : Double = 0.0d;
+	 /** Number of iterations */
+	 var iters : Long = 0;
+	 /** Number of local minimum */
+	 var locmin : Int = 0n;
+	 /** Number of swaps */
+	 var swaps : Long = 0;
+	 /** Number of resets */
+	 var reset : Int = 0n;
+	 /** number of same variables */
+	 var same : Long = 0;
+	 /** number of restarts */  
+	 var restart : Int = 0n;
+	 /** Number time to change vector due to communication */ 
+	 var change : Int = 0n;
+	 /** number of restarts */  
+	 var forceRestart:Int = 0n;
+	 /** Variables for SMTI */
+	 /** number of BP */
+	 var bp:Int = 0n;
+	 /** number of singles */
+	 var singles:Int = 0n;
+	 /** acc perfect mariages */
+	 var accPM:Int = 0n;
+	 /** number of restart of the group */
+	 var groupR:Int = 0n;
+	 /** taget succeded ? */
+	 var target:Boolean = false;
+	 /** number of targets accomplished */
+	 var ntarget:Int = 0n;
 	 
 	transient val monitor:Monitor  = new Monitor("CSPStats");
 	
@@ -61,7 +64,7 @@ public class CSPStats{
 	 * 	@param rs restarts
 	 */
 	public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-			fr : Int, bp:Int, sg:Int, gr:Int){
+			fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean){
 	    //monitor.atomicBlock(()=> {
 	    	//Console.OUT.println(here+" set stats for: "+p);
 	        this.cost = co;
@@ -79,6 +82,7 @@ public class CSPStats{
 	        this.bp = bp;
 	        this.singles = sg;
 	        this.groupR = gr;
+	        this.target = target;
 	      //  Unit()
 	    //});
 	}
@@ -106,6 +110,9 @@ public class CSPStats{
 	        
 	        if(stats.bp == 0n && stats.singles == 0n)
 	        	accPM++;
+	        
+	        if (stats.target)
+	      		ntarget++;
 	       // Unit()
 	   // });
 	        //Logger.info(()=>{"number of Perfect sol:"+accPM});
@@ -120,11 +127,13 @@ public class CSPStats{
 		//val changeF : Double = (change as Double)/count;
 		if (oF == 0n){
 			Console.OUT.print(count+","+time+","+iters+","+team+/*","+explorer+*/","+locmin+","+swaps
-					+","+reset+","+sameIter+","+restart+","+bp+","+singles+","+change+","+forceRestart+","+groupR+","+((bp == 0n && singles == 0n)?1n:0n));
+					+","+reset+","+sameIter+","+restart+","+bp+","+singles+","+change+","+forceRestart
+					+","+groupR+","+((bp == 0n && singles == 0n)?1n:0n)+","+target);
 		}else{
 			Console.OUT.printf("|  %3d  | %8.4f | %8d | %3d-%2d | %8d |",count, time, iters, team, explorer, locmin);
 			Console.OUT.printf(" %8d | %8d | %5.1f | %3d | %3d | %3d |",swaps,reset,sameIter,restart, bp, singles);
 			Console.OUT.printf(" %4d | %3d-%3d | %3d |", change, forceRestart,groupR,((bp == 0n && singles == 0n)?1:0));
+			Console.OUT.print( (target ? "target success":"" ) );
 		}
 	}
 
@@ -139,13 +148,14 @@ public class CSPStats{
 		if (oF == 0n){
 			Console.OUT.print("AVG,"+time/no+","+iters/no+",,"+locmin/no+","+swaps/no+","+reset/no
 					+","+sameIter+","+restart/no+","+bp/(no as float)+","+singles/(no as Double)
-					+","+changeF+","+forceRestart/(no as float)+","+groupR/(no as float)+","+accPM+"\n");
+					+","+changeF+","+forceRestart/(no as float)+","+groupR/(no as float)+","+accPM
+					+","+ntarget);
 		}else{
 			Console.OUT.printf("|avg-%3d| %8.4f | %8d |  N/A   | %8d |", no, time/no, iters/no, locmin/no);
 			Console.OUT.printf(" %8d | %8d | %5.1f | %3d | %3.1f | %3.1f | ",swaps/no,reset/no,sameIter,restart/no,
 				bp/(no as float), singles/(no as Double));
 			Console.OUT.printf("%4.1f | %2.1f-%2.1f |", changeF, forceRestart/(no as float),groupR/(no as float));
-			Console.OUT.printf(" %3d |",accPM);
+			Console.OUT.printf(" %3d | %d",accPM, ntarget);
 		}
 	}
 	
@@ -167,5 +177,6 @@ public class CSPStats{
 		bp = 0n;
 		singles = 0n;
 		accPM = 0n;
+		ntarget = 0n;
 	}
 }
