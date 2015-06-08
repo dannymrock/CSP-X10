@@ -1,5 +1,6 @@
 package csp.solver; 
-import csp.util.Monitor;
+//import csp.util.Monitor;
+import csp.model.Main;
 /** CSPStats
  * 	This class implements a container for the CSP solver statistics. 
  * 
@@ -12,8 +13,13 @@ import csp.util.Monitor;
  */
 
 public class CSPStats{
+	 
+	 /** Desired Target */
+	 var dTarget : Long = 0;	
+	 
+	 
 	 /** Final Cost of solution */
-	 var cost : Int = -1n;	
+	 var cost : Long = 0;	
 	 /** Team id solution */
 	 var team : Int = -1n;
 	 /** explorer id solution */
@@ -36,21 +42,25 @@ public class CSPStats{
 	 var change : Int = 0n;
 	 /** number of restarts */  
 	 var forceRestart:Int = 0n;
+	 /** acc perfect Solutions best cost == 0*/
+	 var accPS:Int = 0n;
+	 /** number of restart of the group */
+	 var groupR:Int = 0n;
+	 /** taget succeded ?  best cost <= target cost*/
+	 var target:Boolean = false;
+	 /** far from target - target cost - best cost*/
+	 var fftarget:Int = 0n;
+	 /** number of targets accomplished */
+	 var ntarget:Int = 0n;
+	 
+	 
 	 /** Variables for SMTI */
 	 /** number of BP */
 	 var bp:Int = 0n;
 	 /** number of singles */
 	 var singles:Int = 0n;
-	 /** acc perfect mariages */
-	 var accPM:Int = 0n;
-	 /** number of restart of the group */
-	 var groupR:Int = 0n;
-	 /** taget succeded ? */
-	 var target:Boolean = false;
-	 /** number of targets accomplished */
-	 var ntarget:Int = 0n;
 	 
-	transient val monitor:Monitor  = new Monitor("CSPStats");
+	//transient val monitor:Monitor  = new Monitor("CSPStats");
 	
 	/**
 	 * 	Set statistics to the object
@@ -63,8 +73,8 @@ public class CSPStats{
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-			fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean){
+	public def setStats(co : Long, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
+			fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean, fft:Int){
 	    //monitor.atomicBlock(()=> {
 	    	//Console.OUT.println(here+" set stats for: "+p);
 	        this.cost = co;
@@ -83,6 +93,9 @@ public class CSPStats{
 	        this.singles = sg;
 	        this.groupR = gr;
 	        this.target = target;
+	        this.fftarget = fft;
+	        
+	        
 	      //  Unit()
 	    //});
 	}
@@ -95,6 +108,7 @@ public class CSPStats{
 	 */
 	public def accStats(stats:CSPStats){
 	    //monitor.atomicBlock(() => {
+		 this.cost += stats.cost;
 	        this.time += stats.time;
 	        this.iters += stats.iters;
 	        this.locmin += stats.locmin;
@@ -109,10 +123,11 @@ public class CSPStats{
 	        this.groupR += stats.groupR;
 	        
 	        if(stats.bp == 0n && stats.singles == 0n)
-	        	accPM++;
+	        	accPS++;
 	        
 	        if (stats.target)
 	      		ntarget++;
+	        
 	       // Unit()
 	   // });
 	        //Logger.info(()=>{"number of Perfect sol:"+accPM});
@@ -122,61 +137,75 @@ public class CSPStats{
 	 * 	Print the stat values
 	 * 	@param count Number of this iteration
 	 */
-	public def print(count:Int, oF:Int){
+	public def print(count:Int, oF:Int, problem:Int){
 		val sameIter : Double = same /(iters as Double);
+		val gap = (cost-dTarget)/(cost as Double)*100.0;
+		
 		//val changeF : Double = (change as Double)/count;
 		if (oF == 0n){
-			Console.OUT.print(count+","+time+","+iters+","+team+/*","+explorer+*/","+locmin+","+swaps
-					+","+reset+","+sameIter+","+restart+","+bp+","+singles+","+change+","+forceRestart
-					+","+groupR+","+((bp == 0n && singles == 0n)?1n:0n)+","+target);
+			 Console.OUT.print(count+","+time+","+iters+","+team+/*","+explorer+*/","+locmin+","+swaps
+						+","+reset+","+sameIter+","+restart+","+bp+","+singles+","+change+","+forceRestart
+						+","+groupR+","+(cost == 0)+","+(target ? "S":"-" )+","+cost+","+fftarget+","+gap);
 		}else{
 			Console.OUT.printf("|  %3d  | %8.4f | %8d | %3d-%2d | %8d |",count, time, iters, team, explorer, locmin);
-			Console.OUT.printf(" %8d | %8d | %5.1f | %3d | %3d | %3d |",swaps,reset,sameIter,restart, bp, singles);
+			Console.OUT.printf(" %8d | %8d | %5.1f | %3d |",swaps,reset,sameIter,restart);
+			if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
+				 Console.OUT.printf(" %3d | %3d |",bp, singles);
 			Console.OUT.printf(" %4d | %3d-%3d | %3d |", change, forceRestart,groupR,((bp == 0n && singles == 0n)?1:0));
-			Console.OUT.print( (target ? "target success":"" ) );
-		}
+			Console.OUT.printf("  %s | %8d | %5.2f |", (target ? "S":"-" ),cost,gap );
+		} 
 	}
 
 	/**
 	 * 	Print the stat averages
 	 * 	@param no total number of iterations
 	 */
-	public def printAVG(no:Int, oF:Int){ 
+	public def printAVG(no:Int, oF:Int, problem:Int){ 
 	   // val no = no1 as Double;
 		val sameIter : Double = same/(iters as Double);
 		val changeF : Double = (change as Double)/no;
+		val avgCost:Double = cost/(no as Double);
+		val gap = (avgCost-dTarget)/(avgCost as Double)*100.0;
+		
+		
 		if (oF == 0n){
 			Console.OUT.print("AVG,"+time/no+","+iters/no+",,"+locmin/no+","+swaps/no+","+reset/no
-					+","+sameIter+","+restart/no+","+bp/(no as float)+","+singles/(no as Double)
-					+","+changeF+","+forceRestart/(no as float)+","+groupR/(no as float)+","+accPM
-					+","+ntarget);
+					+","+sameIter+","+restart/no+","+bp/(no as float)+","+singles/(no as Double)+","
+					+changeF+","+forceRestart/(no as float)+","+groupR/(no as float)
+					+","+accPS+","+ntarget+","+avgCost+","+gap+",");
 		}else{
 			Console.OUT.printf("|avg-%3d| %8.4f | %8d |  N/A   | %8d |", no, time/no, iters/no, locmin/no);
-			Console.OUT.printf(" %8d | %8d | %5.1f | %3d | %3.1f | %3.1f | ",swaps/no,reset/no,sameIter,restart/no,
-				bp/(no as float), singles/(no as Double));
-			Console.OUT.printf("%4.1f | %2.1f-%2.1f |", changeF, forceRestart/(no as float),groupR/(no as float));
-			Console.OUT.printf(" %3d | %d",accPM, ntarget);
+			Console.OUT.printf(" %8d | %8d | %5.1f | %3d |",swaps/no,reset/no,sameIter,restart/no);
+			if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
+				 Console.OUT.printf(" %3.1f | %3.1f |",bp/(no as float), singles/(no as Double));
+			Console.OUT.printf(" %4.1f | %2.1f-%2.1f |", changeF, forceRestart/(no as float),groupR/(no as float));
+			Console.OUT.printf(" %3d | %2d |%10.1f| %5.2f |",accPS, ntarget, avgCost,gap);
 		}
 	}
 	
 	public def clear():void{ 
-		cost = -1n;	
-		team = -1n;
-		explorer = -1n;
-		time = 0.0d;
-		iters = 0n;
-		locmin = 0n;
-		swaps = 0n;
-		reset = 0n;
-		same = 0n;
-		restart = 0n;
-		change = 0n;
-		forceRestart = 0n;
-		groupR = 0n;
-		
-		bp = 0n;
-		singles = 0n;
-		accPM = 0n;
-		ntarget = 0n;
+		 cost = 0n;	
+		 team = -1n;
+		 explorer = -1n;
+		 time = 0.0d;
+		 iters = 0n;
+		 locmin = 0n;
+		 swaps = 0n;
+		 reset = 0n;
+		 same = 0n;
+		 restart = 0n;
+		 change = 0n;
+		 forceRestart = 0n;
+		 groupR = 0n;
+		 
+		 bp = 0n;
+		 singles = 0n;
+		 accPS = 0n;
+		 ntarget = 0n;
+	}
+	
+	public def setTarget(target:Long) : void
+	{ 
+		 dTarget = target;
 	}
 }

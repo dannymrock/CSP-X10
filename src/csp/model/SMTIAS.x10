@@ -245,17 +245,17 @@ public class SMTIAS extends ModelAS{
 						 else
 						 {
 							  //Console.OUT.println("other uBP ("+(mi+1)+","+w+")");
-							  if (r.randomInt(++uBPn) == 0n)  // random selection if there are more than one uBP
-							  {
-							    e = cError;
-							    bpMi = pwi;
-							  }
-							  
-							  // if ( cError > e )  // select the larger error
+							  // if (r.randomInt(++uBPn) == 0n)  // random selection if there are more than one uBP
 							  // {
-									// e = cError;
-									// bpMi = pwi;
+							  //   e = cError;
+							  //   bpMi = pwi;
 							  // }
+							  
+							  if ( cError > e )  // select the larger error
+							  {
+									e = cError;
+									bpMi = pwi;
+							  }
 							  
 							  
 							  // e = cError; // the last one :S
@@ -266,6 +266,12 @@ public class SMTIAS extends ModelAS{
 								//	bpnumber++;
 								//	break;
 							  // }
+							  
+							  // if (uBPn++ > 5n)
+							  // {
+									// bpnumber++;
+									// break;
+							  // }	
 							  
 						 }
 					}
@@ -425,7 +431,7 @@ public class SMTIAS extends ModelAS{
 			 val bestpar = Math.abs( menPref(singleman)(j) );
 			 // find man paired with bestpar woman
 			 val manToSwap = variablesW( bestpar - 1 ) - 1n ;
-			 // Console.OUT.println("Reset single singV("+singlei+"),best par "+ bestpar +"  best = "+ manToSwap+"  nbSingles="+nbSingles);
+			 //Console.OUT.println("Reset single singV("+singlei+"),best par "+ bestpar +"  best = "+ manToSwap+"  nbSingles="+nbSingles);
 			 swapVariables(singleman as Int, manToSwap);		
 			 
 			 
@@ -496,7 +502,7 @@ public class SMTIAS extends ModelAS{
 				singles++;
 				// Console.OUT.println("m "+ (mi+1n) +" is SINGLE (not a valid match with w "+(pmi+1n)+")");
 				val hos = mapTable(pmi);
-				Logger.debug(()=>{"r "+ (mi+1n) +" is SINGLE (not a valid match with h "+(hos+1n)+")"});
+				//Logger.info(()=>{"r "+ (mi+1n) +" is SINGLE (not a valid match with h "+(hos+1n)+")"});
 			} 
 			else
 			{ // m has a valid assignment pm
@@ -1114,10 +1120,11 @@ public class SMTIAS extends ModelAS{
 			  // Console.OUT.println("accCap "+k+" ="+accCap(k));
 		 }
 		 
-		 for(ri=0n; ri<n1 ; ri++){
-			  val currentList = new Rail[Int](n1,0n);
+		 val currentList = new Rail[Int](n1,0n);
+		 
+		 for( ri = 0n; ri < n1; ri++){
 			  pos = 0n;
-			  Rail.copy( mP(ri), currentList );
+			  Rail.copy( mP(ri),0, currentList,0,n1 );
 			  for (h in currentList.range()){
 					val ch = currentList(h);
 					if (ch == 0n) break;
@@ -1148,14 +1155,15 @@ public class SMTIAS extends ModelAS{
 	//		  Console.OUT.println("accCap "+k+" ="+accCap(k));
 		 }
 		 
+		 val currentList = new Rail[Int](n1,0n);
+		 
 		 for(hi = 0n; hi<n2 ; hi++){
-			  val currentList = new Rail[Int](n1,0n);
 			  pos = 0n;
-			  Rail.copy(wP(hi),currentList);
+			  Rail.copy(wP(hi),0,currentList,0,n1);
 			  for (rep = 1n; rep < hcap(hi); rep++){
 					val index = n2 + accCap(hi) + rep - 1n;
 					// Console.OUT.println("reply list from hospital"+hi +" in line"+index);
-					Rail.copy(currentList,wP(index));
+					Rail.copy(currentList,0,wP(index),0,n1);
 			  }
 		 }
 	}

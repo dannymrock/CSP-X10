@@ -38,7 +38,7 @@ public class QAPAS extends ModelAS
 	 //val sizeM : Long;
 	 
 	 def this (size :Long , seed : Long, mF:Rail[Rail[Int]], mD:Rail[Rail[Int]], 
-				restLimit : Int, inV : String)
+				restLimit : Int, inV : String):QAPAS(size)
 	 {
 		  super(size, seed, inV);
 		  
@@ -46,19 +46,19 @@ public class QAPAS extends ModelAS
 		  d = mD;
 		  
 		  delta = new Array_2 [Long](size, size , 0);
-		  printMatrices();
+		  //printMatrices();
 		  initParameters(restLimit);
 	 }
 	 
 	 
-	 // It's necessary to tune parameters
+	 // TODO: tune parameters
 	 private def initParameters(rLimit:Int)
 	 {
 		  solverParams.probSelectLocMin = 60n;
-		  solverParams.freezeLocMin = 5n;
+		  solverParams.freezeLocMin = length as Int; //5n;
 		  solverParams.freezeSwap = 0n;
-		  solverParams.resetLimit = 2n;
-		  solverParams.resetPercent = 25n;
+		  solverParams.resetLimit = 1n;//2n;
+		  solverParams.resetPercent = 4n; //25n;
 		  solverParams.restartLimit = rLimit;
 		  solverParams.restartMax = 0n;
 		  solverParams.baseValue = 0n;
@@ -78,39 +78,39 @@ public class QAPAS extends ModelAS
 				(f(i)(i) - f(j)(j)) * (d(pj)(pj) - d(pi)(pi)) +
 				(f(i)(j) - f(j)(i)) * (d(pj)(pi) - d(pi)(pj));
 		  
-		  for(k = 0; k < length; k++)
-		  {
-				if (k != i && k != j)
-				{
-					 pk = variables(k);
-					 dis +=
-						  (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-						  (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
-				}
-		  }
+		  // for(k = 0; k < length; k++)
+		  // {
+				// if (k != i && k != j)
+				// {
+				// 	 pk = variables(k);
+				// 	 dis +=
+				// 		  (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
+				// 		  (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+				// }
+		  // }
 		  
-// 		  for(k = 0; k < i; k++)
-// 		  {
-// 				pk = variables(k);
-// 				dis +=
-// 					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-// 					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
-// 		  }
-// 
-// 		  while(++k < j)
-// 		  {
-// 				pk = variables(k);
-// 				dis +=
-// 					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-// 					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
-// 		  }
-// 		  while(++k < length)
-// 		  {
-// 				pk = variables(k);
-// 				dis +=
-// 					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-// 					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
-// 		  }
+		  for(k = 0; k < i; k++)
+		  {
+				pk = variables(k);
+				dis +=
+					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
+					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+		  }
+
+		  while(++k < j)
+		  {
+				pk = variables(k);
+				dis +=
+					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
+					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+		  }
+		  while(++k < length)
+		  {
+				pk = variables(k);
+				dis +=
+					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
+					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+		  }
 
 		  
 		  return dis;
@@ -380,7 +380,7 @@ public class QAPAS extends ModelAS
 				for(j = 0; j < length; j++)
 					 r += f(i)(j) * d(match(i))(match(j));
 		  
-		  Console.OUT.println("Final cost of assignment "+r);
+		  //Console.OUT.println("Final cost of assignment "+r);
 		  
 		  return (r == 0);
 	 }
@@ -405,4 +405,4 @@ public class QAPAS extends ModelAS
 	 }
 }
 
-public type QAPAS(s:Long) = QAPAS{self.sz==s};
+public type QAPAS(s:Long)=QAPAS{self.sz==s};

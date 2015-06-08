@@ -234,9 +234,9 @@ public class Main {
 		var cFile : String = new String (""); 
 		var fWall : Long = 0;
 		if(outFormat == 0n){
-			 Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,"
-						+"same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,"
-						+"solution,target,walltime");
+			 Console.OUT.println("1_Instance,2_Count,3_Time(s),4_Iters,*5_Place,6_Local_Min,7_Swaps,8_Resets,"
+						+"9_Same/iter,10_Restarts,11_Blocking_Pairs,12_Singles,13_Changes,14_Force_Restart_Place,15_Force_Restart_Team,"
+						+"16_Perfect_Sol,17_Target_Ac,18_Cost,*19_Distance_to_Target,20_Gap,21_Wall_Time");
 		}
 		
 		/**
@@ -266,7 +266,7 @@ public class Main {
 			  */
 			 val n1 = problemParams(0) < 0 ? 1 : problemParams(0);
 			 
-			 val n2 = (mode == 3 || problemParams(1) < 0) ? 1 :     // default value
+			 val n2 = (mode == 3 || problemParams(1) == -1) ? 1 :     // default value
 					    param == QA_PROBLEM                 ? n1:     // n1 == n2  
 					    problemParams(1);                             // file loaded value 
 			
@@ -279,7 +279,7 @@ public class Main {
 			 val matrix1 = new Rail[Rail[Int]](n1, (Long) => new Rail[Int]( n1, 0n ));
 			 val matrix2 = new Rail[Rail[Int]](n1, (Long) => new Rail[Int]( n1, 0n ));
 			 // maping table for HRT problems "cloning"
-			 val mapTable = new Rail[Int]( n2, ( i : long ) => i as Int );
+			 val mapTable = new Rail[Int]( n1, ( i : long ) => i as Int );
 			 
 			 var opt : Long = 0;
 			 var bks : Long = 0;
@@ -297,10 +297,15 @@ public class Main {
 				  opt = problemParams(2);
 				  bks = problemParams(3);
 			 } else if (param == QA_PROBLEM){
+				 //Console.OUT.println("n1 " + n1 + " n2 "+n2);				
 				 // load flow and distance matrices for QAP 
-				 SMTIAS.loadData(nPath+"/"+instance, n1, n2, matrix1, matrix2);
+				 SMTIAS.loadData(nPath+"/"+instance, n1, n1, matrix1, matrix2);
 				 opt = problemParams(1);
 				 bks = problemParams(2);
+				 
+				 Console.OUT.println(((opt < 0)?"bound ":"opt ")+Math.abs(opt)+" bks "+ bks);
+				 opt = Math.abs(opt);
+				 
 			}
 			val cT= loadTime += System.nanoTime();
 			//Logger.debug(()=>{"Time to load the file problem="+cT/1e9});
@@ -317,18 +322,22 @@ public class Main {
 					  c = tCostFromCL;
 					  sl = false;
 					  //ff = false;
+					  Console.OUT.println("Target from CL: lower or equal than "+c);
 				 } else 
 				 {	
 					  c = tCostFromCL * -1;
 					  sl = true;
+					  Console.OUT.println("Target from CL: strictly lower than "+c);
 				 }
 			} else // target cost loaded from file
 			{
+			
 				 sl = costFromF < 0; // strictly lower true for negative numbers
 				 if ( costFromF == 1  || costFromF == -1  ) // try to get optimal cost
 					  c = opt; 
 				 else
 					  c = bks;
+				 Console.OUT.println("Target from file: "+(sl?"strictly lower than ":" lower or equal than ")+c);
 			}
 			
 			val tCost = c >= 0 ? c : 0; // if negative cost put default value
@@ -338,7 +347,7 @@ public class Main {
 			
 			if ( mode == 1 && outFormat == 1n )
 				 Console.OUT.println("\n"+instance);
-			printHeader(outFormat);
+			printHeader(outFormat,param);
 			
 			/**
 			 *  2nd Loop: for repetition (testNb) 
@@ -390,14 +399,14 @@ public class Main {
 				 */
 				if(outFormat == 0n){
 					if (fileMode) Console.OUT.print(instance+",");
-					solvers().printStats(j,outFormat);
+					solvers().printStats(j,outFormat,param);
 					Console.OUT.println(","+wallTime/1e9);
 				}
 				else if (outFormat == 1n){
 					Console.OUT.printf("\r");
-					solvers().printStats(j,outFormat);
-					Console.OUT.printf(" %3.2f \n",wallTime/1e9);
-					solvers().printAVG(j,outFormat);
+					solvers().printStats(j,outFormat,param);
+					Console.OUT.printf(" %8.4f |\n",wallTime/1e9);
+					solvers().printAVG(j,outFormat,param);
 					Console.OUT.flush();
 				}
 				
@@ -405,7 +414,7 @@ public class Main {
 				 *  Clear solvers data structures 
 				 *  (to start the soving process with other instance)
 				 */
-				finish for (p in Place.places()) at (p) async{   
+				finish for (p in Place.places()) at (p) {   
 					solvers().clear();
 				}	
 				
@@ -416,15 +425,14 @@ public class Main {
 			 */
 			if(outFormat == 0n){
 				Console.OUT.print(cFile+",");
-				solvers().printAVG(testNb,outFormat);
+				solvers().printAVG(testNb,outFormat,param);
 				Console.OUT.println(","+(fWall/(testNb*1e9)));
 			}
 			else if (outFormat == 1n){
 				Console.OUT.printf("\r");
-				Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
-				Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS |");
-				Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
-				solvers().printAVG(testNb,outFormat);
+				printHeader(outFormat,param);
+				solvers().printAVG(testNb,outFormat,param);
+				Console.OUT.printf(" %8.4f |\n",(fWall/(testNb*1e9)));
 				//accStats.printAVG(testNo);
 				Console.OUT.printf("\n");
 			}
@@ -443,16 +451,15 @@ public class Main {
 		 */
 		if(outFormat == 0n){
 			Console.OUT.print("TOTAL,");
-			solvers().printGenAVG(insNb*testNb,outFormat);
+			solvers().printGenAVG(insNb*testNb,outFormat,param);
 			Console.OUT.println(","+avgWall/1e9);
 		}else if (outFormat == 1n){
-			Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
-			Console.OUT.println("\n   General Statistics for "+insNb+" problems, each one solved "+testNb+" times ");
-			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
-			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS |");
-			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
-			solvers().printGenAVG(insNb*testNb,outFormat);
+			 //Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
+			 Console.OUT.println("\n   General Statistics for "+insNb+" problems, each one solved "+testNb+" times ");
+			printHeader(outFormat,param);
+			solvers().printGenAVG(insNb*testNb,outFormat, param);
 			//accStats.printAVG(testNo);
+			Console.OUT.printf(" %8.4f |\n",avgWall/1e9);
 			Console.OUT.printf("\n");
 		}
 		
@@ -466,14 +473,24 @@ public class Main {
 		return;
 	}	
 	
-	static def printHeader(outF : Int){
-		// if(outF == 0n){
-		// 	Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,solution,walltime");
-		// }else 
-			 if(outF == 1n){
-			Console.OUT.println("|------------------------------------------------------------------------------------------------------------------------|");
-			Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS | walltime");
-			Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|");
-		}
+	static def printHeader(outF : Int, problem:Int){
+		 // if(outF == 0n){
+		 // 	Console.OUT.println("instance,count,time(s),iters,place,local_Min,swaps,resets,same/iter,restarts,blocking_pairs,singles,Changes,fRestP,fRestT,solution,walltime");
+		 // }else 
+		 if(outF == 1n)
+		 {
+			  if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
+			  {	
+					Console.OUT.println("|-----------------------------------------------------------------------------------------------------------------------------------------------------------|");
+					Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS | TS |final cost|  gap  |   wtime  |");
+					Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|----|----------|-------|----------|");
+			  } else
+			  {
+					Console.OUT.println("|-----------------------------------------------------------------------------------------------------------------------------------------------|");
+					Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Cng  | frP-frT |  PS | TS |final cost|  gap  |   wtime  |");
+					Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|------|---------|-----|----|----------|-------|----------|");
+					
+			  }
+		 }
 	}
 }

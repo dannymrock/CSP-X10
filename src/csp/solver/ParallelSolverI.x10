@@ -69,15 +69,13 @@ public interface ParallelSolverI {
     def announceWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)], p:Long):Boolean;
 
     def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int,
-            fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean):void;
+            fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean, fft:Int):void;
 
     def getRandomConf():Maybe[CSPSharedUnit(sz)];
     
     def getBestConf():Maybe[CSPSharedUnit(sz)];
 
     def accStats(CSPStats):void;
-    def printStats(count:Int, oF:Int):void;
-    def printAVG(count:Int, oF:Int):void;
     
     def verifyWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
     
@@ -91,18 +89,16 @@ public interface ParallelSolverI {
     	
  	def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)] ):void;
 
- 	def printGenAVG(count:Int, oF:Int):void ;
+ 	
+ 	def printStats(count:Int, oF:Int, problem:Int):void;
+ 	def printAVG(count:Int, oF:Int, problem:Int):void;
+ 	def printGenAVG(count:Int, oF:Int, problem:Int):void ;
+ 
  	def clearSample():void;
- 	
- 	//def forceRestart():void;
- 	//def interTeamComm(ss:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long):void;
- 	//def interTeamActivity(st:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long):void;
- 	
  	def clearPool():void;
  	def diversify():void;
 
  	def getGroupReset():Int;
-
  	def incGroupReset():void;
  	
 }

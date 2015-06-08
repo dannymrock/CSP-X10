@@ -49,6 +49,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 val stats = new CSPStats();
 	 val sampleAccStats = new CSPStats();
 	 val genAccStats = new CSPStats();
+	 
+	 
 	 /** Comunication Variables */
 	 var commM : CommManager(sz);
 	 //Hybrid approach
@@ -125,8 +127,14 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	  * 	@param cspProblem code with the problem to be solved (1 for Magic Square Problems, other number for Queens Problem)
 	  * 	@return cost of the solution
 	  */
+	 var tcost:Int;
 	 public def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
 	 { 
+		  tcost = targetCost as Int;
+		  stats.setTarget(tcost);
+		  sampleAccStats.setTarget(tcost);
+		  genAccStats.setTarget(tcost);
+		  
 		  val solvers = st;
 		  assert solvers() == this : "Whoa, basic plumbing problem -- I am not part of solvers!";
 		  
@@ -145,11 +153,12 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  //Logger.info(()=>{"   Seed in solver:"+seed});
 		  //Console.OUT.println("   Seed in solver:"+seed);
 		  
-		  
+		  interTeamKill = false;
 		  
 		  // verify if inter team comm is able, if the number of teams is greater than 1 and 
 		  //        if place(here) is a head node 
-		  if (interTeamInterval > 0 && nTeams > 1n && here.id < nTeams)
+		  if (interTeamInterval > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
+		  // if (interTeamInterval > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
 		  {
 				//val delay = random.nextLong(interTeamInterval);
 				//Logger.debug(()=>{" creating Inter-Team Activity"});
@@ -176,6 +185,10 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  // Logger.debug(()=>"  PlacesMultiWalks: end solve process: solver.solve() function ");
 		  //if (cost == 0n){ //TODO: Define a new condition (It's possible to finish without cost=0)
 		  
+		  
+		  interTeamKill = true;
+		  //Runtime.probe();
+		  
 		  if ( ( strictLow && cost < targetCost ) || (!strictLow && cost <= targetCost) )
 		  {
 				// A solution has been found! Huzzah! 
@@ -188,7 +201,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				
 				if (winner) 
 				{ 
-					 interTeamKill = true;
+					 
 					 setStats_(solvers);
 					 if (verify)
 					 {
@@ -203,8 +216,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  {
 				solString = "Solution "+here+ " is "+(csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect, maybe wrong ...");
 				Rail.copy(solver.bestConf as Valuation(sz),bestSolHere as Valuation(sz));
-		  }
-				
+		  }			
 		  
 		  // if (verify){
 				// csp_.displaySolution(solver.bestConf as Valuation(sz));
@@ -294,6 +306,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  val bp = (solver.bestCost-singles)/sz;
 		  val fr = solver.nbForceRestart;
 		  val target = solver.targetSucc;
+		  val cost = solver.bestCost;
 		  
 		  val head = here.id % nTeams;
 		  val gR = at(Place(head)) ss().getGroupReset();
@@ -301,32 +314,34 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  
 		  val gReset = (fr > gR)? fr : gR;
 		  
+		  val fft = solver.bestCost - tcost;
+		  
 		  at (Place.FIRST_PLACE) /*async*/ 
-		  ss().setStats(0n, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
-					 bp as Int, singles as Int, gReset, target);
+		  ss().setStats(cost, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
+					 bp as Int, singles as Int, gReset, target, fft);
 	 }
 	 
 	 public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-				fr : Int, bp:Int, sg:Int, gr:Int, tar:Boolean)
+				fr : Int, bp:Int, sg:Int, gr:Int, tar:Boolean, fftar:Int)
 	 {
-		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr, tar);
+		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr, tar, fftar);
 		  accStats(stats);
 	 }
 	 
-	 public def printStats(count:Int, oF:Int):void
+	 public def printStats(count:Int, oF:Int, problem:Int):void
 	 {
-		  stats.print(count,oF);
+		  stats.print(count,oF,problem);
 	 }
 	 
-	 public def printAVG(count:Int, oF:Int):void
+	 public def printAVG(count:Int, oF:Int, problem:Int):void
 	 {
-		  sampleAccStats.printAVG(count,oF);
+		  sampleAccStats.printAVG(count,oF,problem);
 	 }
 	 
 	 
-	 public def printGenAVG(count:Int, oF:Int):void 
+	 public def printGenAVG(count:Int, oF:Int, problem:Int):void 
 	 {
-		  genAccStats.printAVG(count,oF);
+		  genAccStats.printAVG(count,oF, problem);
 	 }
 	 
 	 public def tryInsertVector(cost:Int, variables:Rail[Int]{self.size==sz}, place:Int) 
@@ -345,7 +360,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  stats.clear();
 		  bestC.clear();
 		  solver.clear();
-		  interTeamKill = false;
+		  //interTeamKill = false;
 		  cGroupReset = 0n;
 		  //Console.OUT.println(here+" clear");
 	 }
@@ -419,7 +434,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 public def interTeamActivity(st:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long){
 		  val r = new Random(seed);
 		  while (!interTeamKill) {
-				//Console.OUT.println(" interTeamInterval: "+ interTeamInterval);
+				Console.OUT.println(" kill "+interTeamKill);
 				
 				if (!System.sleep(interTeamInterval)){ 
 					 //Logger.info(()=>"interTeamActivity error: cannot execute sleep");
@@ -429,12 +444,12 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 				}
 				//while(commM.ep.countInsert % 10n != 0n);
 				
-				//Runtime.probe();		// Give a chance to the other activities
 				// woken up
 				//Logger.info(()=>{" interTeamActivity - run : woken up (every "+interTeamInterval+" ms)"});
 				//val random = new Random(seed);
 				//if (random.nextInt(100n) < 16) 
 				interTeamComm(st, r);
+				Runtime.probe();		// Give a chance to the other activities
 		  }
 	 }
 	 
@@ -449,18 +464,18 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  }
 		  
 		  //val vremote = remote;
-		  //Logger.info(()=>"MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
+		  //Logger.info(()=> "MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
 		  // get current configuration and cost from local and  remote Team
 		  //if(interTeamKill) return;
 		  
 		  val localConf = getBestConf();
 		  //compute distance between Teams
-		  if( localConf==null) {
+		  if( localConf == null) {
 				//Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
 				return;
 		  }
 		  val remoteConf = at(Place(remote)) ss().getBestConf();
-		  if(remoteConf==null) {
+		  if(remoteConf == null) {
 				//Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
 				return;
 		  }
@@ -474,21 +489,21 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  avgDis += dis;
 		  cDis++;
 		  
-		  //val rem = remote;
-		  //Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis});
+		  val rem = remote;
+		  Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis});
 		  
 		  if (dis <= minDistance){ 
-				//Logger.info(()=>"MW - interTeamComm : force Restart");
+				Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+localConf().cost+" remote cost "+remoteConf().cost);
 				val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
 				
 				// Count total group partial restart
 				at(Place(teamToRest)) ss().incGroupReset();
-				//Console.OUT.println("reset team "+teamToRest);
+				Console.OUT.println("reset team "+teamToRest);
 				
 				for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){ //i < Place.MAX_PLACES
 					 //Restart the members of the team "res"
 					 val vali = i;
-					 //Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
+					 Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
 					 if (r.nextDouble() <= affectedPer)
 						  at(Place(i)) ss().diversify();
 				}

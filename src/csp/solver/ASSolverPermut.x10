@@ -57,7 +57,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	//val updateP : Int;
 	
 	/**	Statistics	*/
-	var nbRestart : Int=0n;
+	var nbRestart : Int = 0n;
 	var nbForceRestart : Int = 0n;
 	var nbIter : Int;
 	var nbReset : Int;
@@ -65,7 +65,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	var nbSameVar : Int;
 	var nbLocalMin : Int;
 	/** Number time to change vector due to communication */ 
-	var nbChangeV : Int=0n;
+	var nbChangeV : Int = 0n;
 	
 	/** Total Statistics */
 	var nbIterTot : Int;
@@ -85,7 +85,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	val bestConf = new Rail[Int](size, 0n);
 	var bestCost:Int = x10.lang.Int.MAX_VALUE;
 	
-	var bestOfBest: Int;
+	var bestOfBest:Int;
 	var bestSent:Boolean=false;
 	
 	//val kill : AtomicBoolean;
@@ -288,7 +288,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			if(maxTime > 0){
 				 val eTime = System.nanoTime() - initialTime; 
 				 if(eTime/1e6 >= maxTime){ //comparison in miliseconds
-					  //Loger.info(()=>{" Time Out"});
+					  //Logger.info(()=>{" Time Out"});
 					  break;
 				 }
 			}
@@ -320,7 +320,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			 */
 			if (forceRestart){
 				//restart
-				//Logger.info(()=>{"   ASSolverPermut : force Restart"});
+				Logger.info(()=>{"   ASSolverPermut : force Restart"});
 				forceRestart = false;
 				nbForceRestart++;
 				restartVar(csp_);
@@ -329,7 +329,7 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			
 			if (forceReset){
 				//reset
-				//Logger.info(()=>{"   ASSolverPermut : force Reset"});
+				Logger.info(()=>{"   ASSolverPermut : force Reset"});
 				forceReset = false;
 				nbForceRestart++;
 				//doReset(size as Int / 8n , csp_);
