@@ -250,7 +250,7 @@ public class Main {
 			 val problemParams = new Rail[Long](4, -1 );
 
 			 // mode equal to:
-			 // 1 -> filemode==true && sucess (valid file)
+			 // 1 -> filemode==true && sucess (vali.0/bcgilmptwd file)
 			 // 2 -> filemode==true && !sucess (not valid file eg. directory)   
 			 // 3 -> filemode==false
 			 val mode = (fileMode) ? (SMTIAS.tryReadParameters( nPath+"/"+instance, problemParams)? 1 : 2 ): 3;

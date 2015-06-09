@@ -152,7 +152,7 @@ public class CSPStats{
 			if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
 				 Console.OUT.printf(" %3d | %3d |",bp, singles);
 			Console.OUT.printf(" %4d | %3d-%3d | %3d |", change, forceRestart,groupR,((bp == 0n && singles == 0n)?1:0));
-			Console.OUT.printf("  %s | %8d | %5.2f |", (target ? "S":"-" ),cost,gap );
+			Console.OUT.printf("  %s | %8d |%6.3f |", (target ? "S":"-" ),cost,gap );
 		} 
 	}
 
@@ -172,14 +172,14 @@ public class CSPStats{
 			Console.OUT.print("AVG,"+time/no+","+iters/no+",,"+locmin/no+","+swaps/no+","+reset/no
 					+","+sameIter+","+restart/no+","+bp/(no as float)+","+singles/(no as Double)+","
 					+changeF+","+forceRestart/(no as float)+","+groupR/(no as float)
-					+","+accPS+","+ntarget+","+avgCost+","+gap+",");
+					+","+accPS+","+ntarget+","+avgCost+",,"+gap);
 		}else{
 			Console.OUT.printf("|avg-%3d| %8.4f | %8d |  N/A   | %8d |", no, time/no, iters/no, locmin/no);
 			Console.OUT.printf(" %8d | %8d | %5.1f | %3d |",swaps/no,reset/no,sameIter,restart/no);
 			if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
 				 Console.OUT.printf(" %3.1f | %3.1f |",bp/(no as float), singles/(no as Double));
 			Console.OUT.printf(" %4.1f | %2.1f-%2.1f |", changeF, forceRestart/(no as float),groupR/(no as float));
-			Console.OUT.printf(" %3d | %2d |%10.1f| %5.2f |",accPS, ntarget, avgCost,gap);
+			Console.OUT.printf(" %3d | %2d |%10.1f|%6.3f |",accPS, ntarget, avgCost,gap);
 		}
 	}
 	
