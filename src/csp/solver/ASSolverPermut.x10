@@ -121,11 +121,14 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	 */ 
 	public def solve( csp_ : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Int { 
 		
-		 // EO
-		 val tau = 1.0 + 1.0 / Math.log(size);
-		 //val tau = 0.5;
 		 
-		 //Console.OUT.println("tau "+tau);
+		 val tStr = System.getenv("T");
+		 val tau = (tStr==null)? (1.0 + 1.0 / Math.log(size)) : StringUtil.parseLong(tStr)/100.0;
+		 // EO
+		 //val tau = 1.0 + 1.0 / Math.log(size);
+		 //val tau = 1.5;
+		 
+		 Console.OUT.println("tau "+tau);
 		 inittau( tau, size );
 		 
 		csp_.setParameters(solverP);
@@ -207,11 +210,12 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 				
 				maxI = selectVarHighCostEO( csp_ );
 				//Console.OUT.print("maxI= "+maxI);
-				minJ = selectVarMinConflict( csp_ );
+				//minJ = selectVarMinConflict( csp_ );
 				
-				//minJ = select2VarEO( csp_ );
+				minJ = select2VarEO( csp_ );
 				
 				//Console.OUT.println("  minJ= "+minJ);
+				//Console.OUT.println("maxI "+maxI+"  minJ "+minJ+" cost "+totalCost+"  newCost "+newCost);
 			} else {
 				selectVarsToSwap( csp_ );
 				//Console.OUT.println("maxI= "+maxI+"  minJ= "+minJ);
@@ -231,34 +235,34 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			
 			if (minJ == -1n) continue;
 			
-			if (maxI == minJ) {
-				//val res = solverC.communicate(totalCost, csp,commRefs);
-				//if (minJ != alMinJ)
-				//Console.OUT.println("lminJ = "+ minJ+ " alMinJ = "+alMinJ);
-				
-				nbLocalMin++;
-				mark(maxI) = nbSwap + solverP.freezeLocMin; //Mark(maxI, freeze_loc_min);
-				//Console.OUT.println("nbVarMarked "+nbVarMarked+"solverP.resetLimit= "+solverP.resetLimit);
-				if (nbVarMarked + 1 >= solverP.resetLimit)
-				{				
-					// do reset or get some vector from the comm pool
-					/*if (random.randomInt(100) < solverP.probChangeVector){
-					 * val result = solverC.getIPVector(csp, totalCost );
-					 * if (result == -1)
-					 * doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
-					 * else{
-					 * nbChangeV++;
-					 * nbSwap += size ; //I don't know what happened here with costas reset
-					 * mark.clear();
-					 * totalCost = csp.costOfSolution(1);
-					 * }
-					 * }else{*/
-					//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
-					doReset(solverP.nbVarToReset,csp_);//doReset(nb_var_to_reset,csp);
-					//Main.show("after reset= ",csp.variables);
-					//}
-				}
-			}else {
+			// if (maxI == minJ) {
+			// 	//val res = solverC.communicate(totalCost, csp,commRefs);
+			// 	//if (minJ != alMinJ)
+			// 	//Console.OUT.println("lminJ = "+ minJ+ " alMinJ = "+alMinJ);
+			// 	
+			// 	nbLocalMin++;
+			// 	mark(maxI) = nbSwap + solverP.freezeLocMin; //Mark(maxI, freeze_loc_min);
+			// 	//Console.OUT.println("nbVarMarked "+nbVarMarked+"solverP.resetLimit= "+solverP.resetLimit);
+			// 	if (nbVarMarked + 1 >= solverP.resetLimit)
+			// 	{				
+			// 		// do reset or get some vector from the comm pool
+			// 		/*if (random.randomInt(100) < solverP.probChangeVector){
+			// 		 * val result = solverC.getIPVector(csp, totalCost );
+			// 		 * if (result == -1)
+			// 		 * doReset(solverP.nbVarToReset,csp);//doReset(nb_var_to_reset,csp);
+			// 		 * else{
+			// 		 * nbChangeV++;
+			// 		 * nbSwap += size ; //I don't know what happened here with costas reset
+			// 		 * mark.clear();
+			// 		 * totalCost = csp.costOfSolution(1);
+			// 		 * }
+			// 		 * }else{*/
+			// 		//Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
+			// 		doReset(solverP.nbVarToReset,csp_);//doReset(nb_var_to_reset,csp);
+			// 		//Main.show("after reset= ",csp.variables);
+			// 		//}
+			// 	}
+			// }else {
 				mark(maxI) = nbSwap + solverP.freezeSwap; //Mark(maxI, ad.freeze_swap);
 				mark(minJ) = nbSwap + solverP.freezeSwap; //Mark(minJ, ad.freeze_swap);
 				
@@ -266,7 +270,8 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 				nbSwap++;
 				csp_.executedSwap(maxI, minJ);
 				totalCost = newCost;
-			}
+				//Console.OUT.println("swap "+maxI+" <-> "+minJ);
+			// }
 			
 			// 	Utils.show("partial sol",csp_.getVariables());
 			// csp_.displaySolution();			
@@ -527,7 +532,6 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			flagOut = false;
 			listJnb = 0n;
 			newCost = totalCost;
-			
 			j = -1n;
 			
 			while((j = csp.nextJ(maxI, j, 0n)) as UInt < size as UInt) // false if j < 0 //solverP.exhaustive???
@@ -545,9 +549,8 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 					listJnb = 1n;
 					newCost = x;
 					lminJ = j;
-					
-					
-					if (solverP.firstBest) return lminJ;   
+					if (solverP.firstBest)
+						 return lminJ;   
 				} else if (x == newCost){
 					if (random.nextInt(++listJnb) == 0n)
 						lminJ = j;
