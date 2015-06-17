@@ -82,7 +82,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	 * 	Cost on variable function (may be virtual)
 	 */
 	public def costOnVariable(i:Int):Int{
-		//Console.OUT.println("Error bad costOnVariable");
+		Console.OUT.println("Error bad costOnVariable");
 		return 0n;
 	}
 	

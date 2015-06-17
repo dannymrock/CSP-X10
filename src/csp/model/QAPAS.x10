@@ -54,16 +54,16 @@ public class QAPAS extends ModelAS
 	 // TODO: tune parameters
 	 private def initParameters(rLimit:Int)
 	 {
-		  solverParams.probSelectLocMin = 60n;
-		  solverParams.freezeLocMin = length as Int; //5n;
+		  solverParams.probSelectLocMin = 0n;//60n;
+		  solverParams.freezeLocMin = 0n;//length as Int; //5n;
 		  solverParams.freezeSwap = 0n;
-		  solverParams.resetLimit = 1n;//2n;
+		  solverParams.resetLimit = length as Int;//1n;//2n;
 		  solverParams.resetPercent = 4n; //25n;
 		  solverParams.restartLimit = rLimit;
 		  solverParams.restartMax = 0n;
 		  solverParams.baseValue = 0n;
-		  solverParams.exhaustive = true;
-		  solverParams.firstBest = true;
+		  solverParams.exhaustive = false; //true;
+		  solverParams.firstBest = false;//true;
 	 }
 	 
 	 /**
@@ -159,7 +159,17 @@ public class QAPAS extends ModelAS
 	 
 	 public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
 	 {
-		  return currentCost + delta(i1 as Int , i2 as Int) as Int;
+		  //return currentCost + delta(i1 as Int , i2 as Int) as Int;
+		  var i1v : Int = i1;
+		  var i2v : Int = i2;
+		  
+		  if (i1 > i2)
+		  {	
+			 i1v = i2;
+			 i2v = i1;
+		  }
+		  
+		  return currentCost + delta(i1v, i2v) as Int;
 	 }
 	 
 	 
@@ -182,6 +192,33 @@ public class QAPAS extends ModelAS
 					 else
 						  delta(i,j) = computeDelta(i, j);
 	 }
+	 
+	 /** 
+	  * 	costOnVariable( i : Int ) : Int
+	  * 	This function computes the cost of individual variable i
+	  * 	@param i This is the variable that we want to know the cost
+	  *  @return Int value with the cost of this variable
+	  */
+	 public def costOnVariable( i : Int ) : Int{
+		  // val xr = xref(i);
+		  // val r = err_l_abs(xr.l) + err_c_abs(xr.c) + 
+		  // (xr.d1 ? err_d1_abs : 0n) + (xr.d2 ? err_d2_abs : 0n);		  
+		  
+		  var r : Int = Int.MIN_VALUE; 
+		  
+		  for (var j:Int = 0n; j < length; j++)
+		  {
+				if (i == j)
+					 continue;
+				var d : Int = (i < j)? delta(i,j) as Int:delta(j,i) as Int;
+				d = -d;
+				if (d > r)
+					 r = d;
+		  }
+		  
+		  return r;
+	 }
+	 
 	 
 	 /** load data
 	  *  load the data in filePath to the data structures matrixFlow and matrixDist 

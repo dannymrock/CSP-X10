@@ -6,6 +6,7 @@ import x10.util.Random;
 import x10.util.concurrent.AtomicBoolean;
 import csp.model.ModelAS;
 import x10.util.StringUtil; 
+import x10.util.RailUtils;
 
 
 /** ASSolverPermut is the implementation of Adaptive Search solver
@@ -100,6 +101,12 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	
 	val maxTime = mTime;
 	
+	
+	// PDF for EO
+	val pdf = new Rail[Int](size, 0n);
+
+	
+	
 	public def setSeed(seed:Long){
 		this.seed = seed;
 		random = new Random(seed);
@@ -114,6 +121,13 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	 */ 
 	public def solve( csp_ : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Int { 
 		
+		 // EO
+		 val tau = 1.0 + 1.0 / Math.log(size);
+		 //val tau = 0.5;
+		 
+		 //Console.OUT.println("tau "+tau);
+		 inittau( tau, size );
+		 
 		csp_.setParameters(solverP);
 		
 		target = tCost;
@@ -189,9 +203,14 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 			}
 			
 			if( !solverP.exhaustive ){
-				maxI = selectVarHighCost( csp_ );
+				//maxI = selectVarHighCost( csp_ );
+				
+				maxI = selectVarHighCostEO( csp_ );
 				//Console.OUT.print("maxI= "+maxI);
 				minJ = selectVarMinConflict( csp_ );
+				
+				//minJ = select2VarEO( csp_ );
+				
 				//Console.OUT.println("  minJ= "+minJ);
 			} else {
 				selectVarsToSwap( csp_ );
@@ -418,6 +437,78 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 		return maxI;
 	}
 	
+	
+	val fit = new Rail[PairAS] (size); 
+	
+	val cmp : (PairAS,PairAS) => Int = (a:PairAS,b:PairAS) => {return b.j - a.j ;};
+	
+	public def selectVarHighCostEO( csp_ : ModelAS ) : Int{
+		 
+		 var i: Int =-1n;
+		 var x: Int;
+		 var max: Int = 0n;
+		 
+		 listInb = 0n; //Number of elements
+		 nbVarMarked = 0n; 
+		 while((i = csp_.nextI(i)) as UInt < size as UInt) { //False if i < 0
+			  if (nbSwap < mark(i)) {
+					nbVarMarked++;
+					continue;
+			  }
+			  x = csp_.costOnVariable(i);
+			  
+			  //Console.OUT.println("var "+i+" = "+x);
+			  
+			  fit(i) = new PairAS(i as Int , x);
+			  
+		 }
+		 //[PairAS]
+		 RailUtils.sort(fit, cmp);
+		 
+		 //for (f in fit)
+			//  Console.OUT.println("org "+f.i+" = "+f.j);
+		 //sort fitness
+		 
+		 // check sort
+		 // select one with a PDF
+		 // put some values on ListI? or 
+		 
+		 val ma = taupick();
+		 maxI = fit(ma).i;
+		 
+		 //Console.OUT.println("pick "+ma+" maxi "+maxI);
+		 
+		 // if (listInb == 0n) // all variables are OK but the global cost is > 0 (can occur in SMTI with no BP but singles)
+			//   maxI = random.nextInt(size);
+		 // else {
+			//   x = random.nextInt(listInb);
+			//   //Console.OUT.println("listInb "+listInb+ " x "+x+" listI(x) "+listI(x));
+			//   maxI = listI(x); //This maxI must be local or only returns the value
+		 // }
+		 // nbSameVar += listInb;
+
+		 return maxI;
+	}
+	
+	
+	public def inittau(tau:Double, nv:Double){
+		 var i:Int;
+		 var a:Double,b:Double;
+		 
+		 a = (1 - Math.pow( nv + 1, 1 - tau ))/size as Double;
+		 b = 1 / (1 - tau);
+		 for (var k:Int=0n; k < size; k++){
+			  pdf(k) = (Math.pow(1 - k * a, b)) as Int;
+			  //Console.OUT.println("pdf="+k+" = "+pdf(k));
+		 }
+	}
+	
+	public def taupick():Int{
+		 return pdf(random.nextInt(size)) - 1n;
+	}
+	
+	
+	
 	/**
 	 * 	selectVarMinConflict( csp : ModelAS) : Int
 	 * 	Computes swap and selects the minimum of cost if swap
@@ -487,6 +578,16 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 	
 	// var rBestCost : Int = x10.lang.Int.MAX_VALUE;
 	// var locMinC : Int = 0n;
+	
+	public def select2VarEO( csp : ModelAS) : Int {
+	val j = random.nextInt(size);
+	newCost = csp.costIfSwap(totalCost, j, maxI);	 
+	
+	return j;
+		 
+	}
+		 
+	
 	
 	/**
 	 * 	doReset( var n : Int, csp : ModelAS )
@@ -585,9 +686,9 @@ public class ASSolverPermut(sz:Long, size:Int, solver:ParallelSolverI(sz), mTime
 							return; 
 						}
 					}
-					listIJ(nbListIJ) = new PairAS();
-					listIJ(nbListIJ).i = i;
-					listIJ(nbListIJ).j = j;
+					listIJ(nbListIJ) = new PairAS(i,j);
+					//listIJ(nbListIJ).i = i;
+					//listIJ(nbListIJ).j = j;
 					nbListIJ = (nbListIJ + 1n) % size;
 				}
 			}
