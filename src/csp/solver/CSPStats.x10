@@ -100,6 +100,25 @@ public class CSPStats{
 	    //});
 	}
 	
+	public def setStats( c:CSPStats ){
+		 this.cost = c.cost;
+		 this.team = c.team;
+		 this.explorer = c.explorer;
+		 this.time = c.time;
+		 this.iters = c.iters;
+		 this.locmin = c.locmin;
+		 this.swaps = c.swaps;
+		 this.reset = c.reset;
+		 this.same = c.same;
+		 this.restart = c.restart;
+		 this.change = c.change;
+		 this.forceRestart = c.forceRestart;
+		 this.bp = c.bp;
+		 this.singles = c.singles;
+		 this.groupR = c.groupR;
+		 this.target = c.target;
+		 this.fftarget = c.fftarget;
+	}
 	
 	
 	/**

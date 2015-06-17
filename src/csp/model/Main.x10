@@ -4,7 +4,7 @@
  */
 
 package csp.model;
-import csp.solver.ParallelSolverI;
+import csp.solver.IParallelSolver;
 import csp.solver.PlacesMultiWalks;
 import csp.util.Logger;
 import x10.util.Team;
@@ -16,15 +16,18 @@ import x10.io.File;
 import x10.io.FileReader;
 import x10.io.FileWriter;
 import x10.util.StringBuilder;
+import csp.solver.ISolver;
+import csp.solver.ASSolverPermut;
+import csp.solver.EOSolver;
 
 public class Main {
 	 
 	 public static struct CSPProblem(kind:Int) 
 	 {
 		  public def make( size : Long, vectorSize : Long, seed : Long, 
-					          mPrefs : Rail[Rail[Int]], wPrefs : Rail[Rail[Int]], 
-					         restLimit : Int, mapTable : Rail[Int], inVector : String ) 
-		            : ModelAS(vectorSize) 
+					 mPrefs : Rail[Rail[Int]], wPrefs : Rail[Rail[Int]], 
+					 restLimit : Int, mapTable : Rail[Int], inVector : String ) 
+		  : ModelAS(vectorSize) 
 		  {
 				if (kind == MAGIC_SQUARE_PROBLEM) 
 					 return new MagicSquareAS(size as Int, vectorSize, seed, restLimit, inVector);
@@ -41,19 +44,40 @@ public class Main {
 				if (kind == QA_PROBLEM) 
 					 return new QAPAS(vectorSize, seed, mPrefs, wPrefs, restLimit, inVector);
 				return new PartitAS(vectorSize, seed, restLimit, inVector);
-			}
+		  }
 	 }
-	
-	public static val UNKNOWN_PROBLEM=0n;
-	public static val MAGIC_SQUARE_PROBLEM = 1n;
-	public static val COSTAS_PROBLEM = 2n;
-	public static val ALL_INTERVAL_PROBLEM = 3n;
-	public static val LANGFORD_PROBLEM = 4n;
-	public static val PARTIT_PROBLEM = 5n;
-	public static val STABLE_MARRIAGE_PROBLEM = 6n;
-	public static val HOSPITAL_RESIDENT_PROBLEM = 7n;
-	public static val QA_PROBLEM = 8n;
-
+	 
+	 public static struct Solver(kind:Int) 
+	 {
+		  public def make( size : Long, nsize : Int, ss : IParallelSolver(size), maxTime : Long) 
+		  : ISolver(size) 
+		  {
+				if (kind == AS_SOL) 
+					 return new ASSolverPermut( size, nsize, ss , maxTime) ;
+				if (kind == EO_SOL) 
+					 return new EOSolver( size, nsize, ss, maxTime);
+				return new ASSolverPermut( size, nsize, ss, maxTime);
+		  }
+	 }
+	 
+	 
+	 
+	 public static val UNKNOWN_PROBLEM=0n;
+	 public static val MAGIC_SQUARE_PROBLEM = 1n;
+	 public static val COSTAS_PROBLEM = 2n;
+	 public static val ALL_INTERVAL_PROBLEM = 3n;
+	 public static val LANGFORD_PROBLEM = 4n;
+	 public static val PARTIT_PROBLEM = 5n;
+	 public static val STABLE_MARRIAGE_PROBLEM = 6n;
+	 public static val HOSPITAL_RESIDENT_PROBLEM = 7n;
+	 public static val QA_PROBLEM = 8n;
+	 
+	 
+	  
+	 public static val UNKNOWN_SOL = 0n;
+	 public static val AS_SOL = 1n;
+	 public static val EO_SOL = 2n;
+	 
 	
 	var fp  : File;
 	
@@ -75,6 +99,7 @@ public class Main {
 				                       Option("c", "", "target (c)ost from Command Line Parameter. default 0"),
 				                       Option("a", "", "Flag to receive target cost form file. default 0 from command line, 1 take optimal from file, 2 take BKS from file "),
 				                       Option("b", "", "Number of (b)enchmark tests"),
+				                       Option("sol", "", "Solver to use"),
 				                       Option("N", "", "nodes_per_team parameter. Default 4."),
 				                       Option("U", "", "Update Interval Intra-team Communication (iterations) . Default 0 - no communication."),
 				                       Option("R", "", "Report Interval Intra-team Communication (iterations) . Default 0 - no communication."),
@@ -99,6 +124,7 @@ public class Main {
 		val tCostFromCL    = opts("-c", 0n);
 		val costFromF      = opts("-a", 0);
 		val testNb         = opts("-b", 10n);
+		val solverIn       = opts("-sol", "AS");
 		val nodesPTeam     = opts("-N", 1n);		
 		val updateI        = opts("-U", 0n);
 		val reportI        = opts("-R", 0n);
@@ -118,6 +144,7 @@ public class Main {
 		/**
 		 *   Print Parameters
 		 */
+		Console.OUT.println("Solver "+solverIn);
 		Console.OUT.println("Problem "+problem+" size "+size+" File Path (SMTI):"+filePath); 
 		Console.OUT.println("Solver: Mode "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
 		Console.OUT.println("Target cost from "+(costFromF != 0 ? "file. " :
@@ -192,6 +219,18 @@ public class Main {
 		}
 		
 		/**
+		 *   Define basic values for each type of Solver
+		 */
+		var solParam : Int = UNKNOWN_SOL;
+		
+		if (solverIn.equalsIgnoreCase("AS"))
+			 solParam = AS_SOL;
+		else if(solverIn.equals("EO"))
+			 solParam = EO_SOL;
+		
+		
+		
+		/**
 		 *  Creating objects for solver execution
 		 */
 		val seed = inSeed;//(inSeed == 0) ? j as Long:inSeed;
@@ -201,11 +240,11 @@ public class Main {
 		|| param == QA_PROBLEM );
 		
 		val vectorSz = vectorSize;
-		val solvers:PlaceLocalHandle[ParallelSolverI(vectorSz)];
-		solvers = PlaceLocalHandle.make[ParallelSolverI(vectorSz)](PlaceGroup.WORLD, 
+		val solvers:PlaceLocalHandle[IParallelSolver(vectorSz)];
+		solvers = PlaceLocalHandle.make[IParallelSolver(vectorSz)](PlaceGroup.WORLD, 
 				()=>new PlacesMultiWalks(vectorSz, updateI, reportI, interTI, poolSize, nodesPTeam,
 						changeProb, minDistance, maxTime, (verify!=0), delayI, 
-						affectedP) as ParallelSolverI(vectorSz));
+						affectedP) as IParallelSolver(vectorSz));
 		 
 		var insNb:Int = 0n; //counter of instances
 		var iList : Rail[String];
@@ -213,11 +252,16 @@ public class Main {
 		// accumulated times
 		var totalWallT :Long = 0;
 
+		
+		val sparam = solParam;
+		//val ss = solvers() as IParallelSolver(vectorSz);
+		val solGen = ():ISolver(vectorSz)=>Solver(sparam).make( vectorSz, size, solvers() as IParallelSolver(vectorSz), maxTime );
+		
 		/**
 		 *  Install solver data structures on every available place
 		 */
 		finish for (p in Place.places()) at (p) async{    
-			solvers().installSolver(solvers);
+			solvers().installSolver(solvers, solGen);
 		}
 		
 		val nPath = new StringBuilder();

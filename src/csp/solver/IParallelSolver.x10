@@ -1,15 +1,15 @@
 package csp.solver;
 import csp.model.ModelAS;
 /**
- * A solver runs a local solver in every place, within the frame of a
- * ParallelSolverI instance. All communication by a solver with other solvers
+ * A PARALLEL solver runs a local solver in every place, within the frame of a
+ * IParallelSolver instance. All communication by a solver with other solvers
  * in the team is mediated through the frame.
  *
  * <p> Therefore to design a new parallel solver, simply have it implement
- * ParallelSolverI.
+ * IParallelSolver.
  *
  */
-public interface ParallelSolverI {
+public interface IParallelSolver {
     property sz():Long;
 
     /**
@@ -19,9 +19,9 @@ public interface ParallelSolverI {
 
     /**
      * Solves the problem, which is specified by cspGen. We expect (but this is not checked in the code) that
-     * all instances of the ParallelSolverI frame (one in each place) is solving the same problem.
+     * all instances of the IParallelSolver frame (one in each place) is solving the same problem.
      */
-   // def solve(st:PlaceLocalHandle[ParallelSolverI(sz)] ):void;
+   // def solve(st:PlaceLocalHandle[IParallelSolver(sz)] ):void;
 
     /**
      * Get some best solution from the communication partner or my local pool. If its
@@ -66,10 +66,11 @@ public interface ParallelSolverI {
      *
      * <p> In the invocation that returns true, kill() is invoked at every place.
      */
-    def announceWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)], p:Long):Boolean;
+    def announceWinner(ss:PlaceLocalHandle[IParallelSolver(sz)], p:Long):Boolean;
 
     def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int,
             fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean, fft:Int):void;
+    def setStats(c:CSPStats):void;
 
     def getRandomConf():Maybe[CSPSharedUnit(sz)];
     
@@ -77,17 +78,17 @@ public interface ParallelSolverI {
 
     def accStats(CSPStats):void;
     
-    def verifyWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
+    def verifyWinner(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     
     public def getCost():Int;
-    def setStats_(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
+    def setStats_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     
-    def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), 
+    def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), 
    			seed :Long, targetCost : Long, strictLow: Boolean ):void;
         
-    def verify_(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void;
+    def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     	
- 	def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)] ):void;
+ 	def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void;
 
  	
  	def printStats(count:Int, oF:Int, problem:Int):void;
@@ -102,4 +103,4 @@ public interface ParallelSolverI {
  	def incGroupReset():void;
  	
 }
-public type ParallelSolverI(s:Long)=ParallelSolverI{self.sz==s};
+public type IParallelSolver(s:Long)=IParallelSolver{self.sz==s};

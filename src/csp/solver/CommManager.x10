@@ -58,9 +58,9 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	/**
 	 * The reference to all team members, for communication.
 	 */
-	val solvers:PlaceLocalHandle[ParallelSolverI(sz)];
+	val solvers:PlaceLocalHandle[IParallelSolver(sz)];
 	
-	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[ParallelSolverI(sz)], 
+	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[IParallelSolver(sz)], 
 	        intraTIRecv : Int, intraTISend : Int, interTeamI : Int ,  poolSize: Int, teamsNumber : Int,
 	        changeProb:Int){
 		property(sz, poolSize);

@@ -35,11 +35,13 @@ import x10.util.StringUtil;
  *  >
  * </verbatim>
  */
-public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {  
+public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {  
 	 property sz()=sz;
 	 // Shared state, accessible from any place, via at(
 	 var csp_:ModelAS(sz);
-	 var solver:ASSolverPermut(sz);
+	 //var solver:ASSolverPermut(sz);
+	 var solver:ISolver(sz);
+	 
 	 var time:Long;	
 	 val intraTIRecv : Int;
 	 val intraTISend : Int;
@@ -108,12 +110,14 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	  
 	 }
 	 
-	 public def installSolver(st:PlaceLocalHandle[ParallelSolverI(sz)]):void{ 
+	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void{ 
 		  //Logger.debug(()=>{"Installing solver"});
-		  val ss = st() as ParallelSolverI(sz);
-		  val size = sz as Int;
-		  var nsize:Int = size;
-		  solver = new ASSolverPermut( sz, nsize, ss, maxTime);
+		  //val ss = st() as IParallelSolver(sz);
+		  //val size = sz as Int;
+		  //var nsize:Int = size;
+		  //solver = new ASSolverPermut( sz, nsize, ss, maxTime) as ISolver(sz);
+		  //solver = new EOSolver( sz, nsize, ss, maxTime) as ISolver(sz);
+		  solver = solGen();
 		  commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, nTeams, changeProb); // check parameteres 
 	 }
 	 
@@ -128,7 +132,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	  * 	@return cost of the solution
 	  */
 	 var tcost:Int;
-	 public def solve(st:PlaceLocalHandle[ParallelSolverI(sz)], cspGen:()=>ModelAS(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
+	 public def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
 	 { 
 		  tcost = targetCost as Int;
 		  stats.setTarget(tcost);
@@ -205,23 +209,23 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 					 setStats_(solvers);
 					 if (verify)
 					 {
-					   csp_.displaySolution(solver.bestConf as Valuation(sz));
+					   csp_.displaySolution(solver.getBestConfiguration());
 					   Console.OUT.println(", Solution is " + 
-					 		 (csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect "));
-					   //Console.OUT.println("," + csp_.verify(solver.bestConf as Valuation(sz)));
+					 		 (csp_.verify(solver.getBestConfiguration())? "perfect !!!" : "not perfect "));
+					   //Console.OUT.println("," + csp_.verify(solver.getBestConfiguration()));
 					 } 
 					 // else Console.OUT.println();
 				}
 		  } else
 		  {
-				solString = "Solution "+here+ " is "+(csp_.verify(solver.bestConf as Valuation(sz))? "perfect !!!" : "not perfect, maybe wrong ...");
-				Rail.copy(solver.bestConf as Valuation(sz),bestSolHere as Valuation(sz));
+				solString = "Solution "+here+ " is "+(csp_.verify(solver.getBestConfiguration())? "perfect !!!" : "not perfect, maybe wrong ...");
+				Rail.copy(solver.getBestConfiguration(),bestSolHere as Valuation(sz));
 		  }			
 		  
 		  // if (verify){
-				// csp_.displaySolution(solver.bestConf as Valuation(sz));
+				// csp_.displaySolution(solver.getBestConfiguration());
 				// Console.OUT.println("   Solution is " + 
-				// 		  (csp_.verify(solver.bestConf as Valuation(sz))? "ok" : "WRONG"));
+				// 		  (csp_.verify(solver.getBestConfiguration())? "ok" : "WRONG"));
 		  // }
 		  
 		  
@@ -248,7 +252,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 {
 		  if (solver != null) 
 		  {
-				solver.kill = true; //solver.kill.set(true); //
+				solver.kill(); //solver.kill.set(true); //
 				interTeamKill = true;
 				//Logger.debug(()=>{"Kill=true"});
 		  }else
@@ -259,7 +263,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 
 	 val winnerLatch = new AtomicBoolean(false);
 	 
-	 public def announceWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)], p:Long):Boolean 
+	 public def announceWinner(ss:PlaceLocalHandle[IParallelSolver(sz)], p:Long):Boolean 
 	 {
 		  //Logger.debug(()=> "  PlacesMultiWalks: announceWinner " );
 		  val result = winnerLatch.compareAndSet(false, true);
@@ -279,7 +283,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 /**
 	  * Called by verifyWinmner to print the verification info for the best place
 	  */
-	 public def verify_(ss:PlaceLocalHandle[ParallelSolverI(sz)])
+	 public def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)])
 	 {
 		 
 		  Utils.show("Solution",bestSolHere);
@@ -291,40 +295,53 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	  * Called by winning place to set the stats at place zero so they
 	  * can be printed out.
 	  */
-	 public def setStats_(ss:PlaceLocalHandle[ParallelSolverI(sz)])
+	 public def setStats_(ss:PlaceLocalHandle[IParallelSolver(sz)])
 	 {
 		  val winPlace = here.id;
 		  val time = time/1e9;
-		  val iters = solver.nbIterTot;
-		  val locmin = solver.nbLocalMinTot;
-		  val swaps = solver.nbSwapTot;
-		  val reset = solver.nbResetTot;
-		  val same = solver.nbSameVarTot;
-		  val restart = solver.nbRestart;
-		  val change = solver.nbChangeV;
-		  val singles = solver.bestCost % sz;
-		  val bp = (solver.bestCost-singles)/sz;
-		  val fr = solver.nbForceRestart;
-		  val target = solver.targetSucc;
-		  val cost = solver.bestCost;
+		  // val iters = solver.nbIterTot;
+		  // val locmin = solver.nbLocalMinTot;
+		  // val swaps = solver.nbSwapTot;
+		  // val reset = solver.nbResetTot;
+		  // val same = solver.nbSameVarTot;
+		  // val restart = solver.nbRestart;
+		  // val change = solver.nbChangeV;
+		  // val singles = solver.bestCost % sz;
+		  // val bp = (solver.bestCost-singles)/sz;
+		  // val fr = solver.nbForceRestart;
+		  // val target = solver.targetSucc;
+		  // val cost = solver.bestCost;
+		  val c = new CSPStats();
+		  solver.reportStats(c);
 		  
 		  val head = here.id % nTeams;
 		  val gR = at(Place(head)) ss().getGroupReset();
 		  //Console.OUT.println("\n\nGroup "+head+" Reset "+gReset);
 		  
-		  val gReset = (fr > gR)? fr : gR;
+		  val gReset = (c.forceRestart > gR)? c.forceRestart : gR;
 		  
-		  val fft = solver.bestCost - tcost;
+		  val fft = c.cost - tcost;
+		  
+		  c.team = winPlace as Int;
+		  c.groupR = gR;
+		  c.fftarget = fft as Int;
 		  
 		  at (Place.FIRST_PLACE) /*async*/ 
-		  ss().setStats(cost, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
-					 bp as Int, singles as Int, gReset, target, fft);
+		  ss().setStats(c);
+		  //ss().setStats(cost, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
+					 //bp as Int, singles as Int, gReset, target, fft);
 	 }
 	 
 	 public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
 				fr : Int, bp:Int, sg:Int, gr:Int, tar:Boolean, fftar:Int)
 	 {
 		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr, tar, fftar);
+		  accStats(stats);
+	 }
+	 
+	 public def setStats(c:CSPStats)
+	 {
+		  stats.setStats(c);
 		  accStats(stats);
 	 }
 	 
@@ -384,10 +401,10 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 
 	 public def getCost():Int
 	 {
-		  return solver.bestCost;
+		  return solver.getBestCost();
 	 }
 	 
-	 public def verifyWinner(ss:PlaceLocalHandle[ParallelSolverI(sz)]):void
+	 public def verifyWinner(ss:PlaceLocalHandle[IParallelSolver(sz)]):void
 	 {
 		  // detect if no winner has been found
 		  // search best solution in all places
@@ -431,7 +448,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 	 /**
 	  * Inter Team Communication Functions
 	  * */
-	 public def interTeamActivity(st:PlaceLocalHandle[ParallelSolverI(sz)], seed:Long){
+	 public def interTeamActivity(st:PlaceLocalHandle[IParallelSolver(sz)], seed:Long){
 		  val r = new Random(seed);
 		  while (!interTeamKill) {
 				Console.OUT.println(" kill "+interTeamKill);
@@ -453,7 +470,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements ParallelSolverI {
 		  }
 	 }
 	 
-	 public def interTeamComm(ss:PlaceLocalHandle[ParallelSolverI(sz)], r:Random){
+	 public def interTeamComm(ss:PlaceLocalHandle[IParallelSolver(sz)], r:Random){
 		  //Logger.debug(()=>{"MW - interTeamComm : entering..."+nTeams});
 		  
 		  //Compare against a random team  (head node)
