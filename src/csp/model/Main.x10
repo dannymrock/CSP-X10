@@ -137,7 +137,6 @@ public class Main {
 		  /**
 		   *   Print Parameters
 		   */
-		  Console.OUT.println("Solver "+solverIn);
 		  Console.OUT.println("Problem "+problem+" size "+size+" File Path (SMTI):"+filePath); 
 		  Console.OUT.println("Solver: Mode "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
 		  Console.OUT.println("Target cost from "+(costFromF != 0 ? "file. " :
@@ -149,7 +148,7 @@ public class Main {
 		  Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum distance: "+minDistance+" Initial delay "+delayI+" ms. Per. Affected Places "+(affectedP*100)+"%");
 		  Console.OUT.println("Input seed "+inSeed+ " Input vector "+(inputPath.equals(".")?"not used":inputPath));
 		  Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );
-		  
+		  Console.OUT.println("Solver "+solverIn);
 		  /**
 		   *   Define basic values for each type of problem
 		   */

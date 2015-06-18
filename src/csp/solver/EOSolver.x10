@@ -63,7 +63,8 @@ implements ISolver
 	 // PDF for EO
 	 private val pdf = new Rail[Int](size, 0n);
 	 private val fit = new Rail[PairAS] (size); 
-	 private val cmp : (PairAS,PairAS) => Int = (a:PairAS,b:PairAS) => {return b.j - a.j ;};
+	 //Here i -> index   j->cost (fitness)
+	 private val cmp : (PairAS,PairAS) => Int = (a:PairAS,b:PairAS) => {return b.j - a.j ;}; 
 	 
 	 public def setSeed(seed:Long){
 		  this.seed = seed;
@@ -133,8 +134,8 @@ implements ISolver
 				
 				selectFirstVar( cop_, eoi );
 				//Console.OUT.print("maxI= "+maxI);
-				//minJ = selectVarMinConflict( cop_ );
-				newCost = selectSecondVar( cop_ , totalCost, eoi);
+				newCost = selectVarMinConflict( cop_, totalCost, eoi);
+				//newCost = selectSecondVar( cop_ , totalCost, eoi);
 				
 				cop_.swapVariables(eoi.getFirstV(), eoi.getSecondV()); //adSwap(maxI, minJ,csp);
 				nbSwap++;
@@ -279,17 +280,33 @@ implements ISolver
 	 private def selectFirstVar( cop_ : ModelAS, eoi: EOInfo){
 		  var i: Int =-1n;
 		  var cost: Int;
-		  var sVar: Int = 0n;
+		  var selIndex:Int=0n; 
 		  
 		  while((i = cop_.nextI(i)) as UInt < size as UInt) { //False if i < 0
 				cost = cop_.costOnVariable(i);
 				fit(i) = new PairAS(i as Int , cost);
 		  }
 		  //[PairAS]
-		  RailUtils.sort(fit, cmp);	  
+		  RailUtils.sort(fit, cmp);	
+		  
+		  
 		  val index = taupick();
-		  sVar = fit(index).i;
-		  eoi.setFirstV(sVar);
+ 
+		  // selIndex = fit(index).i;
+		  // eoi.setFirstV(selIndex);
+
+		  val selFit = fit(index).j;
+		  var nSameFit:Int = 0n;
+		  for(var k:Int=0n; k < size; k++){
+				if (fit(k).j < selFit)   // descending order
+					 break;
+				
+				if (fit(k).j == selFit && random.nextInt(nSameFit)==0n)
+					 selIndex = fit(k).i;
+		  }
+		  
+		  eoi.setFirstV(selIndex);
+		  		  
 	 } 
 	 
 	 /**
@@ -300,33 +317,33 @@ implements ISolver
 	  */
 	 private def selectVarMinConflict( csp : ModelAS, totalCost:Int, eoi:EOInfo) : Int {
 		  var j: Int;
-		  var x: Int;
-		  var flagOut:Boolean = false; 
-		  var minJ : Int = -1n;
-		  var nbEqJ:Int = 0n;
-		  var newCost:Int = totalCost;
-		  j = -1n;
+		  var cost: Int;
+		  var minJ : Int = 0n;
+		  var nSameMin:Int = 0n;
+		  var minCost:Int = Int.MAX_VALUE;
+		  
 		  val fv = eoi.getFirstV();
 		  
-		  while((j = csp.nextJ(fv, j, 0n)) as UInt < size as UInt) // false if j < 0 //solverP.exhaustive???
+		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
+		  
+		  for (j = 0n; j < size; j++)
 		  {	
-				//Console.OUT.println("swap "+j+"/"+maxI);
-				x = csp.costIfSwap(totalCost, j, fv);
-				//Console.OUT.println("swap "+j+"/"+maxI+"  Cost= "+x);
+				if (fv == j) continue;
 				
-				if (x < newCost){
-					 newCost = x;
+				cost = csp.costIfSwap(totalCost, j, fv);
+				//Console.OUT.println("J = "+ j+" cost "+ cost);
+					
+				if (cost < minCost){
+					 minCost = cost;
 					 minJ = j;
-					 // if (solverP.firstBest)
-					 // return lminJ;   
-				} else if (x == newCost){
-					 if (random.nextInt(++nbEqJ) == 0n)
-						  minJ = j;
+					 nSameMin = 1n;
+				} else if (cost == minCost && random.nextInt(++nSameMin) == 0n){
+					 minJ = j;
 				}
 		  }
-		  //Console.OUT.println("list_J = "+ listJnb);
+		  //Console.OUT.println("minJ = "+ minJ+" newCost "+ minCost+" totalcost "+ totalCost);
 		  eoi.setSecondV(minJ);
-		  return newCost;
+		  return minCost;
 	 }
 	 
 	 private def selectSecondVar( csp : ModelAS, totalCost:Int, eoi:EOInfo) : Int {
