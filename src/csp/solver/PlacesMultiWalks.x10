@@ -321,13 +321,14 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  val gReset = (c.forceRestart > gR)? c.forceRestart : gR;
 		  
 		  val fft = c.cost - tcost;
-		  
+		  c.time = time;
 		  c.team = winPlace as Int;
 		  c.groupR = gR;
 		  c.fftarget = fft as Int;
+		  c.explorer = 0n; //To notify that there was a solution
 		  
 		  at (Place.FIRST_PLACE) /*async*/ 
-		  ss().setStats(c);
+		      ss().setStats(c);
 		  //ss().setStats(cost, winPlace as Int, 0n, time, iters, locmin, swaps, reset, same, restart, change,fr, 
 					 //bp as Int, singles as Int, gReset, target, fft);
 	 }

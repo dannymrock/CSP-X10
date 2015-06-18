@@ -75,8 +75,6 @@ public class CSPStats{
 	 */
 	public def setStats(co : Long, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
 			fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean, fft:Int){
-	    //monitor.atomicBlock(()=> {
-	    	//Console.OUT.println(here+" set stats for: "+p);
 	        this.cost = co;
 	        this.team = p;
 	        this.explorer = e;
@@ -94,10 +92,6 @@ public class CSPStats{
 	        this.groupR = gr;
 	        this.target = target;
 	        this.fftarget = fft;
-	        
-	        
-	      //  Unit()
-	    //});
 	}
 	
 	public def setStats( c:CSPStats ){
@@ -126,30 +120,26 @@ public class CSPStats{
 	 * 	@param stats Object with solver data to accumulate 
 	 */
 	public def accStats(stats:CSPStats){
-	    //monitor.atomicBlock(() => {
-		 this.cost += stats.cost;
-	        this.time += stats.time;
-	        this.iters += stats.iters;
-	        this.locmin += stats.locmin;
-	        this.swaps += stats.swaps;
-	        this.reset += stats.reset;
-	        this.same += stats.same;
-	        this.restart += stats.restart;
-	        this.change += stats.change;
-	        this.forceRestart += stats.forceRestart;
-	        this.bp += stats.bp;
-	        this.singles += stats.singles;
-	        this.groupR += stats.groupR;
-	        
-	        if(stats.bp == 0n && stats.singles == 0n)
-	        	accPS++;
-	        
-	        if (stats.target)
-	      		ntarget++;
-	        
-	       // Unit()
-	   // });
-	        //Logger.info(()=>{"number of Perfect sol:"+accPM});
+	    this.cost += stats.cost;
+	    this.time += stats.time;
+	    this.iters += stats.iters;
+	    this.locmin += stats.locmin;
+	    this.swaps += stats.swaps;
+	    this.reset += stats.reset;
+	    this.same += stats.same;
+	    this.restart += stats.restart;
+	    this.change += stats.change;
+	    this.forceRestart += stats.forceRestart;
+	    this.bp += stats.bp;
+	    this.singles += stats.singles;
+	    this.groupR += stats.groupR;
+	    
+	    if(stats.bp == 0n && stats.singles == 0n)
+	    accPS++;
+	    
+	    if (stats.target)
+	    ntarget++;
+	    
 	}
 	
 	/**

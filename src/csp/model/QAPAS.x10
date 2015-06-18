@@ -54,16 +54,16 @@ public class QAPAS extends ModelAS
 	 // TODO: tune parameters
 	 private def initParameters(rLimit:Int)
 	 {
-		  solverParams.probSelectLocMin = 0n;//60n;
-		  solverParams.freezeLocMin = 0n;//length as Int; //5n;
+		  solverParams.probSelectLocMin = 60n;
+		  solverParams.freezeLocMin = length as Int; //5n;
 		  solverParams.freezeSwap = 0n;
-		  solverParams.resetLimit = length as Int;//1n;//2n;
+		  solverParams.resetLimit = 1n;//2n;
 		  solverParams.resetPercent = 4n; //25n;
 		  solverParams.restartLimit = rLimit;
 		  solverParams.restartMax = 0n;
 		  solverParams.baseValue = 0n;
-		  solverParams.exhaustive = false; //true;
-		  solverParams.firstBest = false;//true;
+		  solverParams.exhaustive = true;
+		  solverParams.firstBest = true;
 	 }
 	 
 	 /**
