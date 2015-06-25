@@ -110,6 +110,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	  
 	 }
 	 
+	 var divPoolSz:Int=4n;
+	 
 	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void{ 
 		  //Logger.debug(()=>{"Installing solver"});
 		  //val ss = st() as IParallelSolver(sz);
@@ -117,8 +119,15 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  //var nsize:Int = size;
 		  //solver = new ASSolverPermut( sz, nsize, ss, maxTime) as ISolver(sz);
 		  //solver = new EOSolver( sz, nsize, ss, maxTime) as ISolver(sz);
+		  
+		  val pStr = System.getenv("P");
+		  divPoolSz = (pStr==null)? 4n : StringUtil.parseInt(pStr);
+		  
+		  
 		  solver = solGen();
-		  commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, nTeams, changeProb); // check parameteres 
+		  //Console.OUT.println("Aqui");
+		  commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, 
+					 nTeams, changeProb,divPoolSz); // check parameteres 
 	 }
 	 
 	 var option : Long = 0;
@@ -162,7 +171,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  // verify if inter team comm is able, if the number of teams is greater than 1 and 
 		  //        if place(here) is a head node 
 		  if (interTeamInterval > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
-		  // if (interTeamInterval > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
+				//if (interTeamInterval > 0 && nTeams > 1n && here.id == 1) //node O to nteams
+				// if (interTeamInterval > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
 		  {
 				//val delay = random.nextLong(interTeamInterval);
 				//Logger.debug(()=>{" creating Inter-Team Activity"});
@@ -239,6 +249,10 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 
 	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Int):Boolean 
 	 = commM.getIPVector(csp_, myCost);
+	 
+	 @Inline public def getLM(csp_:ModelAS(sz), myCost:Int):Boolean 
+	 = commM.getLM(csp_, myCost);
+	
 	 public def communicate(totalCost:Int, variables:Rail[Int]{self.size==sz})
 	 {
 		  commM.communicate(totalCost, variables);
@@ -247,7 +261,11 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 @Inline public def intraTIRecv():Int = commM.intraTIRecv;
 	 @Inline public def intraTISend():Int = commM.intraTISend;
 	 
-	 //val monitor = new Monitor("PlacesMultiWalks"); 
+	 public def communicateLM(totalCost:Int, variables:Rail[Int]{self.size==sz})
+	 {
+		  commM.communicateLM(totalCost, variables);
+	 }
+	 	 
 	 public def kill()
 	 {
 		  if (solver != null) 
@@ -367,14 +385,22 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  commM.ep.tryInsertVector(cost, variables, place);
 	 }
 	 
+	 public def tryInsertLM(cost:Int, locMin:Rail[Int]{self.size==sz}, place:Int) 
+	 {
+		  commM.lmp.tryInsertVector(cost, locMin, place); 
+	 }
+	 
 	 public def getRandomConf():Maybe[CSPSharedUnit(sz)]=commM.ep.getRandomConf();
+	 public def getLMRandomConf():Maybe[CSPSharedUnit(sz)]=commM.lmp.getRandomConf();
+	 
 	 
 	 public def getBestConf():Maybe[CSPSharedUnit(sz)]=commM.ep.getBestConf();
 	 
 	 public def clear()
 	 {
 		  winnerLatch.set(false);
-		  commM.restartPool();
+		  commM.ep.clear();
+		  commM.lmp.clear();
 		  stats.clear();
 		  bestC.clear();
 		  solver.clear();
@@ -452,7 +478,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 public def interTeamActivity(st:PlaceLocalHandle[IParallelSolver(sz)], seed:Long){
 		  val r = new Random(seed);
 		  while (!interTeamKill) {
-				Console.OUT.println(" kill "+interTeamKill);
+				Logger.debug(()=>{" kill "+interTeamKill});
 				
 				if (!System.sleep(interTeamInterval)){ 
 					 //Logger.info(()=>"interTeamActivity error: cannot execute sleep");
@@ -474,18 +500,39 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 public def interTeamComm(ss:PlaceLocalHandle[IParallelSolver(sz)], r:Random){
 		  //Logger.debug(()=>{"MW - interTeamComm : entering..."+nTeams});
 		  
-		  //Compare against a random team  (head node)
+		  //1. Compare local against a random team  (head node)
 		  //The Head node for each team is the node with id==team_number
 		  var remote : Long = r.nextLong(nTeams); 
 		  while (here.id == remote){
 				remote = r.nextLong(nTeams);
 		  }
 		  
+		  //2. Compare only two random teams each time
+		  // var head1 : Long = r.nextLong(nTeams); 
+		  // var head2 : Long = r.nextLong(nTeams); 
+		  // while (head1 == head2){
+				// head2 = r.nextLong(nTeams);
+		  // }
+		  
+		  //3. Select the worst Team
+		  // var worstTeam:Long = -1;
+		  // var worstCost:Int = Int.MIN_VALUE;
+		  // for (head in 1..nTeams) {
+				// val conf = at(Place(head)) ss().getBestConf();
+				// if(conf == null) continue;
+				// if (conf().cost > worstCost){
+				// 	 worstTeam = head;
+				// 	 worstCost = conf().cost;
+				// }
+		  // }
+		  // if (worstTeam == -1) return;
+		  
 		  //val vremote = remote;
 		  //Logger.info(()=> "MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
 		  // get current configuration and cost from local and  remote Team
 		  //if(interTeamKill) return;
 		  
+		  // 1.
 		  val localConf = getBestConf();
 		  //compute distance between Teams
 		  if( localConf == null) {
@@ -497,26 +544,52 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 				//Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
 				return;
 		  }
+		  val dis = csp_.distance(localConf().vector, remoteConf().vector);
+		  val rem = remote;
+		  Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis}); 
+		  
+		  // 2. 
+		  // val remote1 = at(Place(head1)) ss().getBestConf();
+		  // if(remote1 == null) {
+				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
+				// return;
+		  // }
+		  // val remote2 = at(Place(head2)) ss().getBestConf();
+		  // if(remote2 == null) {
+				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
+				// return;
+		  // }
 		  
 		  //compute distance between Teams
-		  val dis = csp_.distance(localConf().vector, remoteConf().vector);
+		  // val dis = csp_.distance(remote1().vector, remote2().vector);
 		  
+		  // val h1 = head1;
+		  // val h2 = head2;
+		  // Logger.info(()=>{"MW - interTeamComm : distance between "+h1+" and "+h2+" is= "+dis});
 		  
 		  if (dis > maxDis) maxDis = dis;
 		  if (dis < minDis) minDis = dis;
 		  avgDis += dis;
 		  cDis++;
 		  
-		  val rem = remote;
-		  Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis});
-		  
 		  if (dis <= minDistance){ 
 				Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+localConf().cost+" remote cost "+remoteConf().cost);
 				val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
+				//Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+remote1().cost+" remote cost "+remote2().cost);
+				//val teamToRest = remote1().cost < remote2().cost ? head2 : head1;
+					
+		  //3.
+		  // val wT = worstTeam; val wC = worstCost;
+				// Logger.info(()=>"MW - interTeamComm : force Restart - worstTeam "+wT+" cost "+wC);
+				// val teamToRest = worstTeam;
+				
+				//val teamToRest = r.nextInt(nTeams);
+				
+
 				
 				// Count total group partial restart
 				at(Place(teamToRest)) ss().incGroupReset();
-				Console.OUT.println("reset team "+teamToRest);
+				Logger.info(()=>{"reset team "+teamToRest});
 				
 				for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){ //i < Place.MAX_PLACES
 					 //Restart the members of the team "res"
@@ -525,7 +598,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 					 if (r.nextDouble() <= affectedPer)
 						  at(Place(i)) ss().diversify();
 				}
-				at(Place(teamToRest)) ss().clearPool();
+				at(Place(teamToRest)) ss().clearIntPool();
 		  }
 	 }
 	 
@@ -537,8 +610,12 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  this.cGroupReset++;
 	 }
 	 
-	 public def clearPool():void{
-		  commM.restartPool();		
+	 public def clearIntPool():void{
+		  commM.ep.clear();		
+	 }
+	 
+	 public def clearDivPool():void{
+		  commM.lmp.clear();		
 	 }
 	 
 	 public def diversify():void{

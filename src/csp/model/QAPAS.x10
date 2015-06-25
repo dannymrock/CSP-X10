@@ -58,7 +58,7 @@ public class QAPAS extends ModelAS
 		  solverParams.freezeLocMin = length as Int; //5n;
 		  solverParams.freezeSwap = 0n;
 		  solverParams.resetLimit = 1n;//2n;
-		  solverParams.resetPercent = 4n; //25n;
+		  solverParams.resetPercent = 5n; //4n; //25n;
 		  solverParams.restartLimit = rLimit;
 		  solverParams.restartMax = 0n;
 		  solverParams.baseValue = 0n;

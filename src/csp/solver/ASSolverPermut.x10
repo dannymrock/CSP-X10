@@ -7,6 +7,7 @@ import x10.util.concurrent.AtomicBoolean;
 import csp.model.ModelAS;
 import x10.util.StringUtil; 
 import x10.util.RailUtils;
+import csp.util.Utils;
 
 
 /** ASSolverPermut is the implementation of Adaptive Search solver
@@ -113,6 +114,8 @@ public class ASSolverPermut(sz:Long) implements ISolver
 	 
 	 private solver:IParallelSolver(sz); 
 	 
+	 private var pSendLM:Double = 0.5;
+	 
 	 public def this(sz:Long, size:Int, solver:IParallelSolver(sz), mTime:Long):ASSolverPermut(sz){
 		  property(sz);
 		  mark = new Rail[Int] (size, 0n);
@@ -124,6 +127,11 @@ public class ASSolverPermut(sz:Long) implements ISolver
 		  this.size = size;
 		  this.solver=solver;
 		  fit = new Rail[PairAS] (size);
+		  
+		  val str = System.getenv("LM");
+		  if (str != null)
+				pSendLM = StringUtil.parseInt(str)/ 100.0;
+		  
 	 }
 	 
 	 public def setSeed(seed:Long){
@@ -274,9 +282,18 @@ public class ASSolverPermut(sz:Long) implements ISolver
 						  // }
 						  // }else{*/
 						  //Console.OUT.println("\tTOO MANY FROZEN VARS - RESET");
+						  //Utils.show("Local Min : ",csp_.getVariables());
+						  //Console.OUT.println("cost = "+totalCost);
+						  
+						  // communicate Local Minimum
+						  if (random.nextDouble() < pSendLM)
+								solver.communicateLM( totalCost, csp_.getVariables());
+						  
 						  doReset(solverP.nbVarToReset,csp_);//doReset(nb_var_to_reset,csp);
 						  //Main.show("after reset= ",csp.variables);
 						  //}
+						  
+						  //Utils.show("after reset= ",csp_.getVariables());
 					 }
 				}else {
 					 mark(maxI) = nbSwap + solverP.freezeSwap; //Mark(maxI, ad.freeze_swap);
@@ -364,8 +381,20 @@ public class ASSolverPermut(sz:Long) implements ISolver
 					 Logger.info(()=>{"   ASSolverPermut : force Restart"});
 					 forceRestart = false;
 					 nbForceRestart++;
-					 restartVar(csp_);
+					 //restartVar(csp_);
+					 
+					 val result = solver.getLM(csp_, totalCost );
+					 //Utils.show("new conf: ", csp_.getVariables());
+					 if (result){
+						  //nbChangeV++;
+						  mark.clear();
+						  totalCost = csp_.costOfSolution(true);
+						  doReset(nbVarReset as Int , csp_);
+						  bestSent = true;
+						  //Console.OUT.println("Changing vector in "+ here);
+					 }
 					 continue;
+					 // get a conf from the Local Min Pool
 				}
 				
 				if (forceReset){
@@ -761,7 +790,7 @@ public class ASSolverPermut(sz:Long) implements ISolver
 		  nbInPlateau = 0n;
 		  
 		  //Not sure if this is necessary
-		  solver.clearPool();//??? Restart only the pool		
+		  solver.clearIntPool();//??? Restart only the pool		
 		  
 		  mark.clear();
 		  //nbRestart++;			

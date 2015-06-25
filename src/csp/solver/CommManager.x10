@@ -11,7 +11,7 @@ import x10.util.StringUtil;
  * Every place has an ASSolverPermutRW. This points to an CommManager.
  * comm is stored in ASSolverPermutRW.
  */
-public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
+public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*/) {
 	
 	
 	public static USE_PLACES  = 0n;
@@ -26,7 +26,11 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	
 	/**elite pool
 	 */
-	val ep = new ElitePool( sz, poolSize); // : ElitePool; 
+	val ep = new ElitePool( sz, intPoolSize); // : ElitePool;
+	
+	/** Local Minimum pool
+	 */
+	val lmp = new ElitePool( sz, divPoolSize);
 	
 	/** Solver use activities or places */
 	var solverMode : Int;
@@ -61,9 +65,9 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	val solvers:PlaceLocalHandle[IParallelSolver(sz)];
 	
 	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[IParallelSolver(sz)], 
-	        intraTIRecv : Int, intraTISend : Int, interTeamI : Int ,  poolSize: Int, teamsNumber : Int,
-	        changeProb:Int){
-		property(sz, poolSize);
+	        intraTIRecv : Int, intraTISend : Int, interTeamI : Int ,  intPoolSize: Int, teamsNumber : Int,
+	        changeProb:Int,  divPoolSize: Int){
+		property(sz, intPoolSize, divPoolSize);
 		solvers = ss;
 		//ep = new ElitePool( sz, poolSize, ss); 
 	    solverMode = solverModeIn;
@@ -92,6 +96,7 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	
 	public def setSeed(seed:Long){
 		ep.setSeed(seed);
+		lmp.setSeed(seed);
 		random = new Random(seed);
 	}
 	
@@ -106,37 +111,74 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	 * 
 	 */
 	public def communicate(totalCost : Int, variables : Rail[Int]{self.size==sz} ) {
-		Logger.debug(()=>" communicate: entering.");
-	    val placeid = here.id as Int;
-	    val ss = solvers;
-	    if (solverMode == USE_PLACES) {
-	    	/************************** Comm Places *******************************/
-	    	//Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
-	    	Logger.debug(()=>"CommManager: solver mode -> Places.");
-	    	
-	    	//val variables = csp.variables; 
-	    	
-	    	if (Place(myTeamId)==here){
-	    		Logger.debug(()=>"CommManager: try to insert in local place: "+here);
-	    		ep.tryInsertVector( totalCost , variables, placeid);
-	    	}else{
-	    		Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
-	    		at(Place(myTeamId)) async ss().tryInsertVector( totalCost , variables, placeid);
-	    	}
-	    	//Debug
-	    	// if(here.id  == myGryoupId){ //group heed
-	    	//   	Console.OUT.println("I'm "+myGroupId+" head group, here my pool Vectors");
-	    	//   	at(arrayRefs(myGroupId))arrayRefs(myGroupId)().printVectors();
-	    	// }
-	    	/*********************************************************/
-	    }else if (solverMode == USE_ACTIVITIES){
-	    	Logger.debug(()=>"CommManager: solver mode: Activities.");
-	    	Logger.debug(()=>"CommManager: try to insert in local place. ");
-	    	ep.tryInsertVector( totalCost , variables, placeid);
-	    }else{
-	        Console.OUT.println("ERROR: Unknown solver mode");
-	    }
-	    return;
+		 Logger.debug(()=>" communicate: entering.");
+		 val placeid = here.id as Int;
+		 val ss = solvers;
+		 if (solverMode == USE_PLACES) {
+			  /************************** Comm Places *******************************/
+			  //Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
+			  Logger.debug(()=>"CommManager: solver mode -> Places.");
+			  
+			  //val variables = csp.variables; 
+			  
+			  if (Place(myTeamId)==here){
+					Logger.debug(()=>"CommManager: try to insert in local place: "+here);
+					ep.tryInsertVector( totalCost , variables, placeid);
+			  }else{
+					Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
+					at(Place(myTeamId)) async ss().tryInsertVector( totalCost , variables, placeid);
+			  }
+			  //Debug
+			  // if(here.id as Int == myTeamId ){ //group head
+					// Console.OUT.println("I'm "+myTeamId+" head group, here my ELITE pool Vectors");
+					// ep.printVectors();
+			  // }
+			  /*********************************************************/
+		 }else if (solverMode == USE_ACTIVITIES){
+			  Logger.debug(()=>"CommManager: solver mode: Activities.");
+			  Logger.debug(()=>"CommManager: try to insert in local place. ");
+			  ep.tryInsertVector( totalCost , variables, placeid);
+		 }else{
+			  Console.OUT.println("ERROR: Unknown solver mode");
+		 }
+		 return;
+	}
+	
+	/**
+	 *  Receive Local Minimum Confs. from Team member
+	 */
+	public def communicateLM(totalCost : Int, variables : Rail[Int]{self.size==sz} ) {
+		 Logger.debug(()=>" communicate: entering.");
+		 val placeid = here.id as Int;
+		 val ss = solvers;
+		 if (solverMode == USE_PLACES) {
+			  /************************** Comm Places *******************************/
+			  //Console.OUT.println("Solver Mode USE_PLACES, communication interval= "+commI);
+			  Logger.debug(()=>"CommManager: solver mode -> Places.");
+			  
+			  //val variables = csp.variables; 
+			  
+			  if (Place(myTeamId)==Place(1)){
+					Logger.debug(()=>"CommManager: try to insert in local place: "+here);
+					lmp.tryInsertLM( totalCost , variables, placeid);
+			  }else{
+					Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
+					at(Place(1)) ss().tryInsertLM( totalCost , variables, placeid);
+			  }
+			  //Debug
+			  // if(here.id == 1 ){ //group head
+			  //   	Console.OUT.println("I'm "+myTeamId+" head group, here my Local MIN pool Vectors");
+			  //   	lmp.printVectors();
+			  // }
+			  /*********************************************************/
+		 }else if (solverMode == USE_ACTIVITIES){
+			  Logger.debug(()=>"CommManager: solver mode: Activities.");
+			  Logger.debug(()=>"CommManager: try to insert in local place. ");
+			  ep.tryInsertVector( totalCost , variables, placeid);
+		 }else{
+			  Console.OUT.println("ERROR: Unknown solver mode");
+		 }
+		 return;
 	}
 	
 	/**
@@ -146,39 +188,69 @@ public class CommManager(sz:Long, poolSize:Int/*, seed:Long*/) {
 	 * 
 	 */
 	public def getIPVector(csp_ : ModelAS(sz), myCost : Int):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
-		// if (commOption == NO_COMM) return false;
-		Logger.debug(()=> "CommManager: getIPVector: entering.");
-		var a : Maybe[CSPSharedUnit(sz)];
-		if (solverMode == USE_PLACES) {
-			Logger.debug(()=>"CommManager: getIPVector solver mode: Places.");
-			val place = Place(myTeamId);
-			val ss=solvers;
-			
-			if (place == here )
-				a = ep.getRandomConf();
-			else{
-				a = at(place) ss().getRandomConf();
-			}
-			//if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
-		}else if (solverMode == USE_ACTIVITIES){
-			Logger.debug(()=>"CommManager: getIPVector solver mode: Act.");
-			a = ep.getRandomConf();
-		}else{
-			a= null;
-			Console.OUT.println("ERROR: Unknown solver mode");
-		}
-//		if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < changeProb ){
-	   if ( a!=null && myCost  > a().cost * deltaFact &&  random.nextInt(100n) < changeProb ){
-			//if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < 95){					 
-			csp_.setVariables(a().vector);
-			return true; 
-		}
-		return false;
+		 // if (commOption == NO_COMM) return false;
+		 Logger.debug(()=> "CommManager: getIPVector: entering.");
+		 var a : Maybe[CSPSharedUnit(sz)];
+		 if (solverMode == USE_PLACES) {
+			  Logger.debug(()=>"CommManager: getIPVector solver mode: Places.");
+			  val place = Place(myTeamId);
+			  val ss=solvers;
+			  
+			  if (place == here )
+					a = ep.getRandomConf();
+			  else{
+					a = at(place) ss().getRandomConf();
+			  }
+			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
+		 }else if (solverMode == USE_ACTIVITIES){
+			  Logger.debug(()=>"CommManager: getIPVector solver mode: Act.");
+			  a = ep.getRandomConf();
+		 }else{
+			  a= null;
+			  Console.OUT.println("ERROR: Unknown solver mode");
+		 }
+		 //		if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < changeProb ){
+		 if ( a!=null && myCost  > a().cost * deltaFact &&  random.nextInt(100n) < changeProb ){
+			  //if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < 95){					 
+			  csp_.setVariables(a().vector);
+			  return true; 
+		 }
+		 return false;
+	}
+	
+	
+	/**
+	 * 
+	 */
+	public def getLM(csp_ : ModelAS(sz), myCost : Int):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
+		 Logger.debug(()=> "CommManager: getLM: entering.");
+		 var a : Maybe[CSPSharedUnit(sz)];
+		 if (solverMode == USE_PLACES) {
+			  Logger.debug(()=>"CommManager: getLM solver mode: Places.");
+			  val place = Place(myTeamId);
+			  val ss=solvers;
+			  
+			  if (place == Place(1) )
+					a = lmp.getRandomConf();
+			  else{
+					a = at(Place(1)) ss().getLMRandomConf();
+			  }
+			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
+		 }else{
+			  a= null;
+			  Console.OUT.println("ERROR: Unknown solver mode");
+		 }
+		 if (a != null){
+			  csp_.setVariables(a().vector);
+			  return true; 
+		 }
+		 return false;
 	}
 	
 	public def restartPool(){
 		Logger.debug(()=>"CommManager: clear Pool.");
 		ep.clear();
+		lmp.clear();
 	}
 	
 	

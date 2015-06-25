@@ -29,13 +29,23 @@ public interface IParallelSolver {
      * else return false.
      */
     def getIPVector(csp_:ModelAS(sz), myCost:Int):Boolean;
+    def getLM(csp_:ModelAS(sz), myCost:Int):Boolean;
 
+    
     /**
      * Send this configuration (cost, current assignment of values to variables) to
      * communication partner(s).
      */
     def communicate(totalCost:Int, variables:Valuation(sz)):void;
-
+    
+    /**
+     * Send Local Minimum configuration (cost, assignment of values to variables) to
+     * communication partner(s).
+     */
+    def communicateLM(totalCost:Int, variables:Valuation(sz)):void;
+    
+    def tryInsertLM(cost:Int, locMin:Rail[Int]{self.size==sz}, place:Int):void;
+  
     /**
      * Insert this configuration (sent from place) into the pool P at the current place,
      * if the cost is lower than the best cost in P.
@@ -73,6 +83,7 @@ public interface IParallelSolver {
     def setStats(c:CSPStats):void;
 
     def getRandomConf():Maybe[CSPSharedUnit(sz)];
+    def getLMRandomConf():Maybe[CSPSharedUnit(sz)];
     
     def getBestConf():Maybe[CSPSharedUnit(sz)];
 
@@ -96,7 +107,8 @@ public interface IParallelSolver {
  	def printGenAVG(count:Int, oF:Int, problem:Int):void ;
  
  	def clearSample():void;
- 	def clearPool():void;
+ 	def clearIntPool():void;
+ 	def clearDivPool():void;
  	def diversify():void;
 
  	def getGroupReset():Int;
