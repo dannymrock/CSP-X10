@@ -383,18 +383,22 @@ public class ASSolverPermut(sz:Long) implements ISolver
 					 nbForceRestart++;
 					 //restartVar(csp_);
 					 
+					 // get a conf from the Local Min Pool
 					 val result = solver.getLM(csp_, totalCost );
 					 //Utils.show("new conf: ", csp_.getVariables());
 					 if (result){
 						  //nbChangeV++;
 						  mark.clear();
 						  totalCost = csp_.costOfSolution(true);
-						  doReset(nbVarReset as Int , csp_);
+						  
+						  // Different number of moves each time 
+						  val resetM = random.nextInt(size / 4n);
+						  doReset(resetM , csp_);
+						  //doReset(nbVarReset as Int , csp_);
 						  bestSent = true;
 						  //Console.OUT.println("Changing vector in "+ here);
 					 }
 					 continue;
-					 // get a conf from the Local Min Pool
 				}
 				
 				if (forceReset){

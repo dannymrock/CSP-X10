@@ -61,10 +61,19 @@ implements ISolver
 	 private val maxTime = mTime;
 	 
 	 // PDF for EO
-	 private val pdf = new Rail[Int](size, 0n);
+	 private val pdf = new Rail[Double](size, 0.0);
 	 private val fit = new Rail[PairAS] (size); 
 	 //Here i -> index   j->cost (fitness)
 	 private val cmp : (PairAS,PairAS) => Int = (a:PairAS,b:PairAS) => {return b.j - a.j ;}; 
+	 
+	 val powFnc = (tau : Double, x : Int):Double => {
+		  return Math.pow(x, -tau);
+	 };
+	 val expFnc = (tau : Double, x : Int):Double => {
+		  return Math.exp(-tau * x);
+	 };
+
+	 
 	 
 	 public def setSeed(seed:Long){
 		  this.seed = seed;
@@ -85,7 +94,15 @@ implements ISolver
 		  //val tau = 1.0 + 1.0 / Math.log(size);
 		  //val tau = 1.5;
 		  //Console.OUT.println("tau "+tau);
-		  inittau( tau, size );
+		  
+		  val pStr = System.getenv("F");
+		  val pdfS = (pStr==null)? 1n : StringUtil.parseInt(pStr);
+		  
+		  if ( pdfS == 1n )
+				initPDF( tau, size, powFnc );
+		  else
+				initPDF( tau, size, expFnc );
+		  
 		  Logger.debug(()=>{"EOSolver"});
 
 		  
@@ -257,24 +274,45 @@ implements ISolver
 		  //Rail.copy(cop_.getVariables(),bestConf as Valuation(sz));
 		  
 		  return bestCost;
-	 }
-	 
-	 
+	 }	 
 
-	 private def inittau(tau:Double, nv:Double){
-		  var i:Int;
-		  var a:Double,b:Double;
+	 private def initPDF(tau:Double, size:Int, fnc:(tau : Double, x : Int)=>Double ){
+		  // var i:Int;
+		  // var a:Double, b:Double;
+		  // a = (1 - Math.pow( nv + 1, 1 - tau ))/size as Double;
+		  // b = 1 / (1 - tau);
+		  // for (var k:Int=0n; k < size; k++){
+				// pdf(k) = (Math.pow(1 - k * a, b)) as Int;
+				// //Console.OUT.println("pdf="+k+" = "+pdf(k));
+		  // }
 		  
-		  a = (1 - Math.pow( nv + 1, 1 - tau ))/size as Double;
-		  b = 1 / (1 - tau);
-		  for (var k:Int=0n; k < size; k++){
-				pdf(k) = (Math.pow(1 - k * a, b)) as Int;
-				//Console.OUT.println("pdf="+k+" = "+pdf(k));
+		  var sum:Double = 0.0;
+		  var y:Double = 0.0;
+		  
+		  for (x in 1n..size){
+				y = fnc(tau, x);
+				if (y < 0)
+					 y = 0;
+				pdf(x) = y;
+				sum += y; 
 		  }
+		  for (x in 1n..size){
+				pdf(x) /= sum;
+		  }
+		  // for (x in 1n..size)
+				// Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 	 
-	 private def taupick():Int{
-		  return pdf(random.nextInt(size)) - 1n;
+	 private def pdfPick():Int {
+		  //return pdf(random.nextInt(size)) - 1n;
+		  var p:Double = random.nextDouble();
+		  var fx:Double;
+		  var x:Int = 0n;
+		  
+		  while((fx = pdf(++x)) < p){
+				p -= fx;
+		  }
+		  return x - 1n ;
 	 }
 	 
 	 private def selectFirstVar( cop_ : ModelAS, eoi: EOInfo){
@@ -290,20 +328,22 @@ implements ISolver
 		  RailUtils.sort(fit, cmp);	
 		  
 		  
-		  val index = taupick();
- 
+		  val index = pdfPick();
 		  // selIndex = fit(index).i;
 		  // eoi.setFirstV(selIndex);
 
 		  val selFit = fit(index).j;
+		  
 		  var nSameFit:Int = 0n;
 		  for(var k:Int=0n; k < size; k++){
 				if (fit(k).j < selFit)   // descending order
 					 break;
 				
-				if (fit(k).j == selFit && random.nextInt(nSameFit)==0n)
+				if (fit(k).j == selFit && random.nextInt(++nSameFit)==0n)
 					 selIndex = fit(k).i;
 		  }
+		  //Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
+		  
 		  
 		  eoi.setFirstV(selIndex);
 		  		  
