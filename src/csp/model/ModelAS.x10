@@ -8,6 +8,7 @@ import csp.solver.Valuation;
 import x10.util.Random;
 import x10.io.FileReader;
 import x10.io.File;
+import csp.solver.MovePermutation;
 
 
 
@@ -98,14 +99,17 @@ public class ModelAS(sz:Long, seed:Long) {
 	 * 	executed swap
 	 */
 	public def executedSwap(i1:Int, i2:Int):void{
-		//Console.OUT.println("Error executedSwap");
+		Console.OUT.println("Error no executedSwap implementation");
 	}
 	
 	
-	public def swapVariables(i:Int, j:Int):void{
-		val x = variables(i);
-		variables(i) = variables(j); 
-		variables(j) = x;
+	// public def swapVariables(move:MovePermutation):void{
+	// 	 val i = move.getFirst();
+	// 	 val j = move.getSecond();
+	public def swapVariables( i:Int, j:Int):void{
+		 val x = variables(i);
+		 variables(i) = variables(j); 
+		 variables(j) = x;
 	}
 	
 	public def costOfSolution(shouldBeRecorded : Boolean):Int {

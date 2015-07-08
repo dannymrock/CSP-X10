@@ -99,7 +99,8 @@ public interface IParallelSolver {
         
     def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     	
- 	def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void;
+ 	//def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void;
+    def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>RandomSearch(sz) ):void;
 
  	
  	def printStats(count:Int, oF:Int, problem:Int):void;

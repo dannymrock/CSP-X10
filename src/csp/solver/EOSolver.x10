@@ -144,19 +144,19 @@ implements ISolver
 		  var initialTime:Long = System.nanoTime();
 		  
 		  // Selection variables
-		  val eoi = new EOInfo();
+		  val move = new MovePermutation(-1n, -1n);
 		  
 		  while( totalCost != 0n ){
 				nbIter++;
 				
-				selectFirstVar( cop_, eoi );
+				selectFirstVar( cop_, move );
 				//Console.OUT.print("maxI= "+maxI);
-				newCost = selectVarMinConflict( cop_, totalCost, eoi);
+				newCost = selectVarMinConflict( cop_, totalCost, move);
 				//newCost = selectSecondVar( cop_ , totalCost, eoi);
 				
-				cop_.swapVariables(eoi.getFirstV(), eoi.getSecondV()); //adSwap(maxI, minJ,csp);
+				cop_.swapVariables(move.getFirst(), move.getSecond()); //adSwap(maxI, minJ,csp);
 				nbSwap++;
-				cop_.executedSwap(eoi.getFirstV(), eoi.getSecondV());
+				cop_.executedSwap(move.getFirst(), move.getSecond());
 				totalCost = newCost; 
 				//Console.OUT.println("swap "+maxI+" <-> "+minJ);
 				 
@@ -216,8 +216,6 @@ implements ISolver
 						  //Console.OUT.println("Changing vector in "+ here);
 					 }
 				}
-				
-				
 				
 				/**
 				 *  Force Restart: Inter Team Communication
@@ -315,7 +313,7 @@ implements ISolver
 		  return x - 1n ;
 	 }
 	 
-	 private def selectFirstVar( cop_ : ModelAS, eoi: EOInfo){
+	 private def selectFirstVar( cop_ : ModelAS, move: MovePermutation){
 		  var i: Int =-1n;
 		  var cost: Int;
 		  var selIndex:Int=0n; 
@@ -345,7 +343,7 @@ implements ISolver
 		  //Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
 		  
 		  
-		  eoi.setFirstV(selIndex);
+		  move.setFirst(selIndex);
 		  		  
 	 } 
 	 
@@ -355,14 +353,14 @@ implements ISolver
 	  * 	@param csp problem model
 	  * 	@return the index of the variable with minimum individual cost if swap
 	  */
-	 private def selectVarMinConflict( csp : ModelAS, totalCost:Int, eoi:EOInfo) : Int {
+	 private def selectVarMinConflict( csp : ModelAS, totalCost:Int, move:MovePermutation) : Int {
 		  var j: Int;
 		  var cost: Int;
 		  var minJ : Int = 0n;
 		  var nSameMin:Int = 0n;
 		  var minCost:Int = Int.MAX_VALUE;
 		  
-		  val fv = eoi.getFirstV();
+		  val fv = move.getFirst();
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
@@ -382,14 +380,14 @@ implements ISolver
 				}
 		  }
 		  //Console.OUT.println("minJ = "+ minJ+" newCost "+ minCost+" totalcost "+ totalCost);
-		  eoi.setSecondV(minJ);
+		  move.setSecond(minJ);
 		  return minCost;
 	 }
 	 
-	 private def selectSecondVar( csp : ModelAS, totalCost:Int, eoi:EOInfo) : Int {
+	 private def selectSecondVar( csp : ModelAS, totalCost:Int, move:MovePermutation) : Int {
 		  val randomJ = random.nextInt(size);
-		  val newCost = csp.costIfSwap(totalCost, randomJ, eoi.getFirstV());	 
-		  eoi.setSecondV(randomJ);
+		  val newCost = csp.costIfSwap(totalCost, randomJ, move.getFirst());	 
+		  move.setSecond(randomJ);
 		  return newCost; 
 	 }
 	 
@@ -409,33 +407,6 @@ implements ISolver
 		  forceReset = true;
 	 }
 	 
-	 // public def restartVar(csp : ModelAS){
-		//   //Logger.info(()=>"ASSolver Permut: Restart");
-		//   csp.initialize(0n); // Random Permut
-		//   totalCost = csp.costOfSolution(true);
-		//   bestOfBest = x10.lang.Int.MAX_VALUE ;
-		//   Rail.copy(csp.getVariables() as Valuation(sz),bestConf as Valuation(sz));
-		//   bestCost = totalCost;
-		//   bestSent = false;
-		//   nbInPlateau = 0n;
-		//   
-		//   //Not sure if this is necessary
-		//   solver.clearPool();//??? Restart only the pool		
-		//   
-		//   //nbRestart++;			
-		//   //Update Total statistics
-		//   nbIterTot += nbIter;
-		//   nbResetTot += nbReset;        
-		//   nbSwapTot += nbSwap;
-		//   nbSameVarTot += nbSameVar;
-		//   nbLocalMinTot += nbLocalMin; 
-		//   //Restart local var
-		//   nbSwap = 0n;
-		//   nbIter = 0n;
-		//   nbSameVar = 0n;
-		//   nbLocalMin = 0n;
-		//   nbReset = 0n;
-	 // }
 	 
 	 /**
 	  * 	Return the array of variables with the best cost

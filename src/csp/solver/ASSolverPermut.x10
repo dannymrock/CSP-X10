@@ -851,7 +851,5 @@ public class ASSolverPermut(sz:Long) implements ISolver
 		  c.target = targetSucc;
 		  c.cost = bestCost;
 	 }
-
-
 }
 public type ASSolverPermut(s:Long) = ASSolverPermut{self.sz==s};

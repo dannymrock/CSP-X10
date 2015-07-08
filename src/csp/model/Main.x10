@@ -19,6 +19,9 @@ import x10.util.StringBuilder;
 import csp.solver.ISolver;
 import csp.solver.ASSolverPermut;
 import csp.solver.EOSolver;
+import csp.solver.RandomSearch;
+import csp.solver.EOSearch;
+import csp.solver.AdaptiveSearch;
 
 public class Main {
 	 
@@ -56,16 +59,28 @@ public class Main {
 	 public static val HOSPITAL_RESIDENT_PROBLEM = 7n;
 	 public static val QA_PROBLEM = 8n;
 	 
+	 // public static struct Solver(kind:Int) 
+	 // {
+		//   public def make( size : Long, nsize : Int, ss : IParallelSolver(size), maxTime : Long) 
+		//   : ISolver(size) 
+		//   {
+		// 		if (kind == AS_SOL) 
+		// 			 return new ASSolverPermut( size, nsize, ss , maxTime) ;
+		// 		if (kind == EO_SOL) 
+		// 			 return new EOSolver( size, nsize, ss, maxTime);
+		// 		return new ASSolverPermut( size, nsize, ss, maxTime);
+		//   }
+	 // }
 	 public static struct Solver(kind:Int) 
 	 {
 		  public def make( size : Long, nsize : Int, ss : IParallelSolver(size), maxTime : Long) 
-		  : ISolver(size) 
+		  : RandomSearch(size) 
 		  {
 				if (kind == AS_SOL) 
-					 return new ASSolverPermut( size, nsize, ss , maxTime) ;
+					 return new AdaptiveSearch( size, nsize, ss , maxTime) ;
 				if (kind == EO_SOL) 
-					 return new EOSolver( size, nsize, ss, maxTime);
-				return new ASSolverPermut( size, nsize, ss, maxTime);
+					 return new EOSearch( size, nsize, ss, maxTime);
+				return new RandomSearch( size, nsize, maxTime);
 		  }
 	 }
 	 
@@ -247,7 +262,8 @@ public class Main {
 		  
 		  val sparam = solParam;
 		  //val ss = solvers() as IParallelSolver(vectorSz);
-		  val solGen = ():ISolver(vectorSz)=>Solver(sparam).make( vectorSz, size, solvers() as IParallelSolver(vectorSz), maxTime );
+		  //val solGen = ():ISolver(vectorSz)=>Solver(sparam).make( vectorSz, size, solvers() as IParallelSolver(vectorSz), maxTime );
+		  val solGen = ():RandomSearch(vectorSz)=>Solver(sparam).make( vectorSz, size, solvers() as IParallelSolver(vectorSz), maxTime );
 		  
 		  /**
 		   *  Install solver data structures on every available place

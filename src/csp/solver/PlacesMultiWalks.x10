@@ -40,7 +40,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 // Shared state, accessible from any place, via at(
 	 var csp_:ModelAS(sz);
 	 //var solver:ASSolverPermut(sz);
-	 var solver:ISolver(sz);
+	 //var solver:ISolver(sz);
+	 var solver:RandomSearch(sz);
 	 
 	 var time:Long;	
 	 val intraTIRecv : Int;
@@ -112,8 +113,9 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 
 	 var divPoolSz:Int=4n;
 	 
-	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void{ 
-		  //Logger.debug(()=>{"Installing solver"});
+	 //public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void{ 
+	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>RandomSearch(sz) ):void{
+	 //Logger.debug(()=>{"Installing solver"});
 		  //val ss = st() as IParallelSolver(sz);
 		  //val size = sz as Int;
 		  //var nsize:Int = size;
