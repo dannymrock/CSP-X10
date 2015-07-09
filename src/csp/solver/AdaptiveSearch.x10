@@ -416,16 +416,16 @@ public class AdaptiveSearch extends RandomSearch {
 		  }
 	 }	
 	 
+	 /**
+	  *  Update the cost for the optimization variables
+	  *  Reimplemente here to include communication flag "best send"
+	  */
 	 protected def updateCosts(cop : ModelAS){
-		  /**
-		   *  optimization
-		   */
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
 				
-				// TO communicate
-				bestSent = false;
+				bestSent = false; // new best found, I must send it!
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished

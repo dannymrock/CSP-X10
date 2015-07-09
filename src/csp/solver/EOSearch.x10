@@ -58,9 +58,6 @@ public class EOSearch extends RandomSearch {
 		  
 		  val tStr = System.getenv("T");
 		  val tau = (tStr==null)? (1.0 + 1.0 / Math.log(size)) : StringUtil.parseLong(tStr)/100.0;
-		  // EO
-		  //val tau = 1.0 + 1.0 / Math.log(size);
-		  //val tau = 1.5;
 		  //Console.OUT.println("tau "+tau);
 		  
 		  val pStr = System.getenv("F");
@@ -76,15 +73,6 @@ public class EOSearch extends RandomSearch {
 	 }
 	 
 	 private def initPDF(tau:Double, size:Int, fnc:(tau : Double, x : Int)=>Double ){
-		  // var i:Int;
-		  // var a:Double, b:Double;
-		  // a = (1 - Math.pow( nv + 1, 1 - tau ))/size as Double;
-		  // b = 1 / (1 - tau);
-		  // for (var k:Int=0n; k < size; k++){
-		  // pdf(k) = (Math.pow(1 - k * a, b)) as Int;
-		  // //Console.OUT.println("pdf="+k+" = "+pdf(k));
-		  // }
-		  
 		  var sum:Double = 0.0;
 		  var y:Double = 0.0;
 		  
@@ -125,15 +113,10 @@ public class EOSearch extends RandomSearch {
 		  }
 		  //[PairAS]
 		  RailUtils.sort(fit, cmp);	
-		  
-		  
 		  val index = pdfPick();
-		  // selIndex = fit(index).i;
-		  // eoi.setFirstV(selIndex);
-
 		  val selFit = fit(index).j;
-		  
 		  var nSameFit:Int = 0n;
+
 		  for(var k:Int=0n; k < size; k++){
 				if (fit(k).j < selFit)   // descending order
 					 break;
@@ -142,10 +125,7 @@ public class EOSearch extends RandomSearch {
 					 selIndex = fit(k).i;
 		  }
 		  //Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
-		  
-		  
 		  move.setFirst(selIndex);
-		  
 	 } 
 	 
 	 /**
@@ -157,31 +137,29 @@ public class EOSearch extends RandomSearch {
 	 private def selectVarMinConflict( csp : ModelAS, move:MovePermutation) : Int {
 		  var j: Int;
 		  var cost: Int;
-		  var minJ : Int = 0n;
+		  var second : Int = 0n;
 		  var nSameMin:Int = 0n;
 		  var minCost:Int = Int.MAX_VALUE;
-		  
-		  val fv = move.getFirst();
+		  val first = move.getFirst();
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
 		  for (j = 0n; j < size; j++)
 		  {	
-				if (fv == j) continue;
-				
-				cost = csp.costIfSwap(this.currentCost, j, fv);
+				if (first == j) continue;
+				cost = csp.costIfSwap(this.currentCost, j, first);
 				//Console.OUT.println("J = "+ j+" cost "+ cost);
 				
 				if (cost < minCost){
 					 minCost = cost;
-					 minJ = j;
+					 second = j;
 					 nSameMin = 1n;
 				} else if (cost == minCost && random.nextInt(++nSameMin) == 0n){
-					 minJ = j;
+					 second = j;
 				}
 		  }
 		  //Console.OUT.println("minJ = "+ minJ+" newCost "+ minCost+" totalcost "+ totalCost);
-		  move.setSecond(minJ);
+		  move.setSecond(second);
 		  return minCost;
 	 }
 	 
@@ -220,16 +198,16 @@ public class EOSearch extends RandomSearch {
 		  }
 	 }	
 	 
+	 /**
+	  *  Update the cost for the optimization variables
+	  *  Reimplemente here to include communication flag "best send"
+	  */
 	 protected def updateCosts(cop : ModelAS){
-		  /**
-		   *  optimization
-		   */
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
 				
-				// TO communicate
-				bestSent = false;
+				bestSent = false; // new best found, I must send it!
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished
