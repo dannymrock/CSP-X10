@@ -1,8 +1,8 @@
 package csp.solver;
-import csp.model.ASSolverParameters;
 import x10.util.StringUtil;
 import csp.model.ModelAS;
 import csp.util.Logger;
+import csp.model.ParamManager;
 
 /**
  * Class AdaptiveSearch
@@ -10,8 +10,6 @@ import csp.util.Logger;
 public class AdaptiveSearch extends RandomSearch {
 	 
 	 private val mark : Rail[Int]; 
-	 private val solverP = new ASSolverParameters();
-	 
 	 //private var maxI : Int;		
 	 //private var minJ : Int;
 	 
@@ -19,28 +17,27 @@ public class AdaptiveSearch extends RandomSearch {
 	 private var listJnb : Int;
 	 
 	 private val listIJ : Rail[MovePermutation];
-	 private val listI : Rail[Int];
+	 private val listI : Rail[Long];
 	 
-	 private var nbVarMarked : Int = 0n; 
+	 private var nVarMarked : Int = 0n; 
 	 
 	 /**	Statistics	*/
-	 private var nbRestart : Int = 0n;
-	 private var nbForceRestart : Int = 0n;
-	 private var nbReset : Int;
-	 private var nbSameVar : Int;
-	 private var nbLocalMin : Int;
+	 private var nForceRestart : Int = 0n;
+	 private var nReset : Int;
+	 private var nSameVar : Int;
+	 private var nLocalMin : Int;
 	 /** Number time to change vector due to communication */ 
-	 private var nbChangeV : Int = 0n;
+	 private var nChangeV : Int = 0n;
 	 
 	 /** Total Statistics */
-	 private var nbResetTot : Int;	
-	 private var nbSameVarTot : Int;
-	 private var nbLocalMinTot : Int; 
+	 private var nResetTot : Int;	
+	 private var nSameVarTot : Int;
+	 private var nLocalMinTot : Int; 
 	 
-	 private var nbInPlateau:Int; 
+	 private var nInPlateau:Int; 
 	 
 	 /** For Exhaustive search */
-	 private var nbListIJ : Int;
+	 private var nListIJ : Int;
 	 
 	 private solver:IParallelSolver(sz); 
 	 
@@ -48,16 +45,41 @@ public class AdaptiveSearch extends RandomSearch {
 	 
 	 private var bestSent:Boolean=false;
 	 
-	 public def this(sz:Long, size:Int, solver:IParallelSolver(sz), mTime:Long){
-		  super(sz, size, mTime);
-		  this.mark = new Rail[Int] (this.size, 0n);
-		  this.listIJ = new Rail[MovePermutation](this.size);
-		  this.listI = new Rail[Int](this.size, 0n);
+	 /** Parameters of the AS solver */
+	 private var nVarToReset:Long;
+	 private var resetPercent:Int;
+	 private val exhaustive:Boolean; 
+	 private val freezeLocMin:Int;
+	 private val freezeSwap:Int;
+	 private val resetLimit:Int;
+	 private val probSelectLocMin:Int;
+	 private val firstBest:Boolean;
+	 
+	 
+	 public def this(sz:Long, vSize:Long, solver:IParallelSolver(sz), opts:ParamManager){
+		  super(sz, vSize, opts);
+		  this.mark = new Rail[Int] (this.vectorSize, 0n);
+		  this.listIJ = new Rail[MovePermutation](this.vectorSize);
+		  this.listI = new Rail[Long](this.vectorSize, 0);
 		  this.solver = solver;
 		  
 		  val str = System.getenv("LM");
 		  if (str != null)
 				pSendLM = StringUtil.parseInt(str)/ 100.0;
+		  
+		  // Set parameters from the ParamManager object
+		  this.nVarToReset = opts("--AS_varToReset",-1);
+		  this.resetPercent = opts("--AS_resetPer",10n);
+		  this.exhaustive = opts("--AS_exhaustive");
+		  this.freezeLocMin = opts("--AS_freezeLocMin",5n);
+		  this.freezeSwap = opts("--AS_freezeSwap",5n);
+		  this.resetLimit = opts("--AS_resetLimit",5n);
+		  this.probSelectLocMin = opts("--AS_probSelecLocMin", 0n);
+		  this.firstBest = opts("--AS_firstBest");
+		  
+		  Console.OUT.println("Parameters AS: nVarToReset="+nVarToReset+" resetPercent="+resetPercent+
+					 " exhaustive="+exhaustive+" freezeLocMin="+freezeLocMin+" freezeSwap="+freezeSwap+
+					 " resetLimit="+resetLimit+" probSelectLocMin="+probSelectLocMin+" firstBest="+firstBest);
 	 }
 	 
 	 
@@ -65,13 +87,12 @@ public class AdaptiveSearch extends RandomSearch {
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  Logger.debug(()=>{"ASSolver"});
-		  cop_.setParameters(solverP);
 		  
-		  if (solverP.nbVarToReset == -1n){
-				solverP.nbVarToReset = (((size * solverP.resetPercent) + (100n) - 1n) / (100n));
-				if (solverP.nbVarToReset < 2n){
-					 solverP.nbVarToReset = 2n;
-					 Logger.debug(()=>{"increasing nb var to reset since too small, now = "+ solverP.nbVarToReset});
+		  if (this.nVarToReset == -1){
+				this.nVarToReset = (((this.vectorSize * resetPercent as Long) + 99) / 100);
+				if (this.nVarToReset < 2){
+					 this.nVarToReset = 2;
+					 Logger.debug(()=>{"increasing nb var to reset since too small, now = "+ this.nVarToReset});
 				}
 		  }
 		  
@@ -82,17 +103,17 @@ public class AdaptiveSearch extends RandomSearch {
 		  mark.clear();
 		  listI.clear();
 		  
-		  nbRestart = 0n;
-		  nbSameVar = 0n;
-		  nbLocalMin = 0n;
-		  nbReset = 0n;
-		  nbChangeV = 0n;
-		  nbInPlateau = 0n;
+		  nRestart = 0n;
+		  nSameVar = 0n;
+		  nLocalMin = 0n;
+		  nReset = 0n;
+		  nChangeV = 0n;
+		  nInPlateau = 0n;
 		  
-		  nbResetTot = 0n;	
-		  nbSameVarTot = 0n;
-		  nbLocalMinTot = 0n; 
-		  nbForceRestart = 0n;
+		  nResetTot = 0n;	
+		  nSameVarTot = 0n;
+		  nLocalMinTot = 0n; 
+		  nForceRestart = 0n;
 		  bestSent = false;
 	 }
 	 
@@ -101,63 +122,51 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  To be overwrited for each child class (solver) 
 	  */
 	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Int{
-		  
 		  var newCost:Int = -1n;
 		  
-		  if (this.nbIter >= solverP.restartLimit){
-				if(this.nbRestart < solverP.restartMax){
-					 //restart
-					 //forceRestartalse;
-					 this.restart = true;
-					 return this.currentCost;	 
-				}
-				//Console.OUT.println("Not solution found");
-				// End solving process
-				this.kill = true;
-				return this.currentCost;
-		  }
 		  
-		  if( !solverP.exhaustive ){
+		  if( !this.exhaustive ){
 				selectVarHighCost( cop_ , move );
 				newCost = selectVarMinConflict( cop_, move );
+				
 				//Console.OUT.println("maxI "+maxI+"  minJ "+minJ+" cost "+totalCost+"  newCost "+newCost);
 		  } else {
 				newCost = selectVarsToSwap( cop_, move );
 				//Console.OUT.println("maxI= "+maxI+"  minJ= "+minJ);
 		  }
 		  //Logger.debug(()=>{"----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap});
-		  //Console.OUT.println("----- iter no: "+nbIter+", cost: "+totalCost+", nb marked: "+nbVarMarked+" ---, nb_swap= "+nbSwap);
+		  //Console.OUT.println("----- iter no: "+nIter+", cost: "+currentCost+", n marked: "+nVarMarked+" ---, n_swap= "+nSwap);
 		  
 		  if (currentCost != newCost) {
-				if (nbInPlateau > 1n) {
+				if (nInPlateau > 1n) {
 					 //Console.OUT.println("end of plateau, length: "+ nbInPlateau);
 				}
-				nbInPlateau = 0n;
+				nInPlateau = 0n;
 		  }
 		  //if (newCost < bestCost) bestCost = newCost;
 		  
-		  nbInPlateau++;
+		  nInPlateau++;
 		  
 		  //if (minJ == -1n) continue;
 		  
 		  if (move.getFirst() == move.getSecond()) {
-				this.nbLocalMin++;
-				mark(move.getFirst()) = this.nbSwap + solverP.freezeLocMin; //Mark(maxI, freeze_loc_min);
-				//Console.OUT.println("nbVarMarked "+nbVarMarked+"solverP.resetLimit= "+solverP.resetLimit);
-				if (this.nbVarMarked + 1 >= solverP.resetLimit)
+				this.nLocalMin++;
+				mark(move.getFirst()) = this.nSwap + this.freezeLocMin; //Mark(maxI, freeze_loc_min);
+				//Console.OUT.println("nVarMarked "+nVarMarked+"resetLimit= "+solverP.resetLimit);
+				if (this.nVarMarked + 1 >= this.resetLimit)
 				{				
 					 // communicate Local Minimum
 					// if (random.nextDouble() < pSendLM)
-						  solver.communicateLM( this.currentCost, cop_.getVariables());
+						//  solver.communicateLM( this.currentCost, cop_.getVariables());
 					 
-					 doReset(solverP.nbVarToReset, cop_);//doReset(nb_var_to_reset,csp);
+					 doReset(this.nVarToReset, cop_);//doReset(nb_var_to_reset,csp);
 					 //Utils.show("after reset= ",csp_.getVariables());
 				}
 		  }else {
-				mark(move.getFirst()) = this.nbSwap + solverP.freezeSwap; //Mark(maxI, ad.freeze_swap);
-				mark(move.getSecond()) = this.nbSwap + solverP.freezeSwap; //Mark(minJ, ad.freeze_swap);
+				mark(move.getFirst()) = this.nSwap + this.freezeSwap; //Mark(maxI, ad.freeze_swap);
+				mark(move.getSecond()) = this.nSwap + this.freezeSwap; //Mark(minJ, ad.freeze_swap);
 				cop_.swapVariables(move.getFirst(), move.getSecond()); //adSwap(maxI, minJ,csp);
-				nbSwap++;
+				nSwap++;
 				cop_.executedSwap(move.getFirst(), move.getSecond());
 				this.currentCost = newCost;
 				//Console.OUT.println("swap "+maxI+" <-> "+minJ);
@@ -173,20 +182,20 @@ public class AdaptiveSearch extends RandomSearch {
 		  mark.clear();
 		  //nbRestart++;			
 		  //Update Total statistics
-		  nbResetTot += nbReset;        
-		  nbSameVarTot += nbSameVar;
-		  nbLocalMinTot += nbLocalMin; 
+		  nResetTot += nReset;        
+		  nSameVarTot += nSameVar;
+		  nLocalMinTot += nLocalMin; 
 		  //Restart local var
-		  nbSameVar = 0n;
-		  nbLocalMin = 0n;
-		  nbReset = 0n;
+		  nSameVar = 0n;
+		  nLocalMin = 0n;
+		  nReset = 0n;
 	 }
 	 
-	 private def doReset(n:Int, cop_ : ModelAS ) {
+	 private def doReset(n:Long, cop_ : ModelAS ) {
 		  var cost : Int = -1n;		//reset(n, csp);
 		  cost = cop_.reset( n, currentCost );
 		  mark.clear();
-		  nbReset++;
+		  nReset++;
 		  //Console.OUT.println("Do reset...: "+ nbReset);
 		  currentCost = (cost < 0n) ? cop_.costOfSolution(true) : cost; //Arg costofsol(1)
 	 }
@@ -202,15 +211,15 @@ public class AdaptiveSearch extends RandomSearch {
 	  * 	@param move object (permutation)
 	  */
 	 private def selectVarHighCost( cop_ : ModelAS , move:MovePermutation){
-		  var i: Int =-1n;
+		  var i: Long =-1;
 		  var maxCost: Int = 0n;
-		  var maxVar:Int = -1n;
+		  var maxVar:Long = -1;
 		  
 		  this.listInb = 0n; //Number of elements
-		  this.nbVarMarked = 0n; 
-		  while((i = cop_.nextI(i)) as UInt < this.size as UInt) { //False if i < 0
-				if (this.nbSwap < this.mark(i)) {
-					 this.nbVarMarked++;
+		  this.nVarMarked = 0n; 
+		  while((i = cop_.nextI(i)) as ULong < this.vectorSize as ULong) { //False if i < 0
+				if (this.nSwap < this.mark(i)) {
+					 this.nVarMarked++;
 					 continue;
 				}
 				val x = cop_.costOnVariable(i);
@@ -224,14 +233,14 @@ public class AdaptiveSearch extends RandomSearch {
 				}
 		  }
 		  if (this.listInb == 0n) // all variables are OK but the global cost is > 0 (can occur in SMTI with no BP but singles)
-				maxVar = random.nextInt(this.size);
+				maxVar = random.nextLong(this.vectorSize);
 		  else {
 		      // select a maxCost variable from array
 				val sel = random.nextInt(this.listInb);
 				//Console.OUT.println("listInb "+listInb+ " x "+x+" listI(x) "+listI(x));
 				maxVar = this.listI(sel); //This maxI must be local or only returns the value
 		  }
-		  this.nbSameVar += this.listInb;
+		  this.nSameVar += this.listInb;
 		  
 		  move.setFirst(maxVar);
 	 }
@@ -244,12 +253,12 @@ public class AdaptiveSearch extends RandomSearch {
 	  * 	@return new cost of the possible move
 	  */
 	 private def selectVarMinConflict( cop : ModelAS, move:MovePermutation ) : Int {
-		  var j: Int;
+		  var j: Long;
 		  var cost: Int;
 		  var flagOut:Boolean = false; 
-		  var second : Int = -1n;
+		  var second : Long = -1;
 		  var nCost:Int;
-		  var first:Int = move.getFirst();
+		  var first:Long = move.getFirst();
 		  
 		  do {
 				flagOut = false;
@@ -257,22 +266,22 @@ public class AdaptiveSearch extends RandomSearch {
 				nCost = this.currentCost;
 				j = -1n;
 				
-				while((j = cop.nextJ(first, j, 0n)) as UInt < this.size as UInt) // false if j < 0 //solverP.exhaustive???
+				while((j = cop.nextJ(first, j, false)) as ULong < this.vectorSize as ULong) // false if j < 0 //solverP.exhaustive???
 				{	
-					 if (this.nbSwap < this.mark(j)) {
+					 if (this.nSwap < this.mark(j)) {
 						  continue;
 					 }
 					 //Console.OUT.println("swap "+j+"/"+maxI);
 					 cost = cop.costIfSwap(this.currentCost, j, first);
 					 //Console.OUT.println("swap "+j+"/"+maxI+"  Cost= "+x);
 					 
-					 if (solverP.probSelectLocMin <= 100n && j == first) continue;
+					 if (this.probSelectLocMin <= 100n && j == first) continue;
 					 
 					 if (cost < nCost){
 						  this.listJnb = 1n;
 						  nCost = cost;
 						  second = j;
-						  if (solverP.firstBest){
+						  if (this.firstBest){
 								move.setSecond(second);
 								return nCost;
 						  }
@@ -282,9 +291,9 @@ public class AdaptiveSearch extends RandomSearch {
 					 }
 				}
 				
-				if (solverP.probSelectLocMin <= 100n) {
+				if (this.probSelectLocMin <= 100n) {
 					 if (nCost >= this.currentCost && 
-								(random.nextInt(100n) < solverP.probSelectLocMin 
+								(random.nextInt(100n) < this.probSelectLocMin 
 										  ||(this.listInb <= 1n && this.listJnb <= 1n))) {
 						  second = first;
 						  move.setSecond(second);
@@ -292,11 +301,15 @@ public class AdaptiveSearch extends RandomSearch {
 					 }
 					 
 					 if (this.listJnb == 0n) {
+						  
+						  // TODO: Do this only once!!!
 						  //Console.OUT.println("listInb= "+listInb);
-						  this.nbIter++;
+						  this.nIter++;
 						  val sel = random.nextInt(this.listInb);
-						  second = listI(sel);
+						  first = listI(sel);
+						  move.setFirst(first);
 						  flagOut = true;
+						  
 					 }
 				}
 		  } while(flagOut);
@@ -312,28 +325,28 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  @return new cost of the possible move
 	  */
 	 private def selectVarsToSwap(cop : ModelAS, move:MovePermutation):Int {
-		  var first : Int;
-		  var second : Int;
+		  var first : Long;
+		  var second : Long;
 		  //var x : Int;
 		  
-		  this.nbListIJ = 0n;
+		  this.nListIJ = 0n;
 		  var nCost: Int = x10.lang.Int.MAX_VALUE ;
-		  this.nbVarMarked = 0n;
+		  this.nVarMarked = 0n;
 		  
 		  //Console.OUT.println("TC =>"+totalCost);
 		  
 		  first = -1n;
-		  //while(++i < size) { // false if i < 0
-		  while((first = cop.nextI(first))as UInt < this.size as UInt) {
-				if ( this.nbSwap < this.mark(first) ) {
-					 this.nbVarMarked++;
+		  //while(++i < vectorSize) { // false if i < 0
+		  while((first = cop.nextI(first))as ULong < this.vectorSize as ULong) {
+				if ( this.nSwap < this.mark(first) ) {
+					 this.nVarMarked++;
 					 continue;
 				}
 				//j = i; 
 				second = -1n;
-				//while(++j < size) {
-				while((second = cop.nextJ(first, second, first + 1n ))as UInt < this.size as UInt ){
-					 if ( this.nbSwap < this.mark(second) ) {
+				//while(++j < vectorSize) {
+				while((second = cop.nextJ(first, second, true))as ULong < this.vectorSize as ULong ){
+					 if ( this.nSwap < this.mark(second) ) {
 						  continue;
 					 }
 					 //Console.OUT.println("SWAP "+i+" <-> "+j);
@@ -343,43 +356,43 @@ public class AdaptiveSearch extends RandomSearch {
 					 if (x <= nCost) {
 						  if (x < nCost) {
 								nCost = x;
-								this.nbListIJ = 0n;
-								if (solverP.firstBest == true && x < this.currentCost) {
+								this.nListIJ = 0n;
+								if (this.firstBest == true && x < this.currentCost) {
 									 move.setFirst(first);
 									 move.setSecond(second);
 									 return nCost; 
 								}
 						  }
-						  this.listIJ(this.nbListIJ) = new MovePermutation(first,second);
-						  this.nbListIJ = (this.nbListIJ + 1n) % this.size;
+						  this.listIJ(this.nListIJ) = new MovePermutation(first,second);
+						  this.nListIJ = ((this.nListIJ + 1) % this.vectorSize) as Int;
 					 }
 				}
 		  }
 		  
-		  this.nbSameVar += this.nbListIJ;
+		  this.nSameVar += this.nListIJ;
 		  
 		  if (nCost >= this.currentCost) {
-				if (this.nbListIJ == 0n || 
-						  (( solverP.probSelectLocMin <= 100n) 
-									 && random.nextInt(100n) < solverP.probSelectLocMin)) {
+				if (this.nListIJ == 0n || 
+						  (( this.probSelectLocMin <= 100n) 
+									 && random.nextInt(100n) < this.probSelectLocMin)) {
 					 var i:Int;
-					 for(i = 0n; this.nbSwap < mark(i); i++)
+					 for(i = 0n; this.nSwap < mark(i); i++)
 					 {}
 					 move.setFirst(i);
 					 move.setSecond(i);
 					 return nCost;//goto end;
 				}
 				
-				var lm:Int;
-				if (!(solverP.probSelectLocMin <= 100n) 
-						  && (lm = random.nextInt(this.nbListIJ + this.size)) < this.size) {
+				var lm:Long;
+				if (!(this.probSelectLocMin <= 100n) 
+						  && (lm = random.nextLong(this.nListIJ + this.vectorSize)) < this.vectorSize) {
 					 move.setFirst(lm);
 					 move.setSecond(lm);
 					 return nCost;//goto end;
 				}
 		  }
 		  
-		  val sel = random.nextInt(this.nbListIJ);
+		  val sel = random.nextInt(this.nListIJ);
 		  move.setFirst(listIJ(sel).getFirst());
 		  move.setSecond(listIJ(sel).getSecond());
 		  return nCost;
@@ -395,7 +408,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  /**
 		   *  Interaction with other places
 		   */
-		  if( solver.intraTISend() != 0n && nbIter % solver.intraTISend() == 0n){        //here.id as Int ){
+		  if( solver.inTeamReportI() != 0n && nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
 				if(!bestSent){ 
 					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
 					 bestSent = true;
@@ -404,10 +417,10 @@ public class AdaptiveSearch extends RandomSearch {
 				}
 		  }
 		  
-		  if(solver.intraTIRecv() != 0n && this.nbIter % solver.intraTIRecv() == 0n){        //here.id as Int ){
+		  if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
 				val result = solver.getIPVector(cop_, this.currentCost );
 				if (result){
-					 this.nbChangeV++;
+					 this.nChangeV++;
 					 this.mark.clear();
 					 this.currentCost = cop_.costOfSolution(true);
 					 bestSent = true;

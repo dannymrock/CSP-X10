@@ -14,7 +14,7 @@ import csp.solver.Valuation;
 
 public class CostasAS extends ModelAS{  
 	
-	var size2:Long;
+	var halfSize:Long;
 	var sizeSq:Long;
 	/** nb occurrences of each diff (translated) */
 	val nbOcc : Rail[Int];		/* diff are in -(size-1)..-1 1..size-1 */
@@ -34,48 +34,41 @@ public class CostasAS extends ModelAS{
 	
 	val toAdd : Rail[Int];
 	
-	//val length2reg : Region(1);
+	//val doubleSizereg : Region(1);
 	
-	val length2 : Long;
+	val doubleSize : Long;
 	/**
 	 * 	Constructor
-	 *  @param lengthProblem Number of variables of the problem
+	 *  @param sizeProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of the problem
 	 */
-	def this (lengthProblem : Long, seed : Long, rLimit:Int, inv:String) : CostasAS(lengthProblem) {
-		super(lengthProblem, seed, inv);
-		size2 = (lengthProblem - 1n) / 2n;		
-		sizeSq = lengthProblem * lengthProblem;
-		//length2reg = 0..((length * 2)-1);
-		length2 = lengthProblem * 2n;
+	def this (sizeProblem : Long, seed : Long, opts:ParamManager) : CostasAS(sizeProblem) {
+		super(sizeProblem, seed, opts);
 		
-		nbOcc = new Rail[Int] (length2 , 0n);
-		first =  new Rail[Int] (length2 , 0n);
+		halfSize = (sizeProblem - 1n) / 2n;		
+		sizeSq = sizeProblem * sizeProblem;
+		doubleSize = sizeProblem * 2n;
+		
+		nbOcc = new Rail[Int] (doubleSize , 0n);
+		first =  new Rail[Int] (doubleSize , 0n);
 		toAdd = new Rail[Int](10);
-		initParameters(rLimit);
 		Logger.info(()=>{"Starting CAP"});
+		
+		toAdd(0) = 1n; toAdd(1) = 2n; toAdd(2) = size - 2n; toAdd(3) = size - 3n;
 	}
 
-	/**
-	 * 	initParameters() 
-	 *  Set Initial values for the problem
-	 */
-	private def initParameters(rLimit:Int){
-		solverParams.probSelectLocMin = 50n;
-		solverParams.freezeLocMin = 1n;
-		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = 1n;
-		//solverParams.resetLimit = 2n;
-		solverParams.resetPercent = 5n;
-		solverParams.restartLimit = rLimit;
-		solverParams.restartMax = 0n;
-		solverParams.baseValue = 1n;
-		solverParams.exhaustive = false;
-		solverParams.firstBest = false;
-		
-		toAdd(0) = 1n; toAdd(1) = 2n; toAdd(2) = length - 2n; toAdd(3) = length - 3n;
-	} 
-	
+	// 	solverParams.probSelectLocMin = 50n;
+	// 	solverParams.freezeLocMin = 1n;
+	// 	solverParams.freezeSwap = 0n;
+	// 	solverParams.resetLimit = 1n;
+	// 	//solverParams.resetLimit = 2n;
+	// 	solverParams.resetPercent = 5n;
+	// 	solverParams.restartLimit = rLimit;
+	// 	solverParams.restartMax = 0n;
+	// 	solverParams.baseValue = 1n;
+	// 	solverParams.exhaustive = false;
+	// 	solverParams.firstBest = false;
+
 	/**
 	 * 	Computes the cost of the solution
 	 * 	@param err vector of error on variables (if null don't update object err vector)
@@ -103,7 +96,7 @@ public class CostasAS extends ModelAS{
 			do
 			{
 				diff = variables( i - dist ) - variables(i);
-				diffTranslated = diff + length;
+				diffTranslated = diff + size;
 				nbOcc(diffTranslated) = nbOcc(diffTranslated) + 1n;
 				nb = nbOcc(diffTranslated);
 
@@ -128,8 +121,8 @@ public class CostasAS extends ModelAS{
 
 				if (nb > 1)
 					r += penalty;
-			}while(++i < length);
-		}while(++dist <= size2);
+			}while(++i < size);
+		}while(++dist <= halfSize);
 		return r;
 	}
 	/**
@@ -137,7 +130,7 @@ public class CostasAS extends ModelAS{
 	 * 	@param i variable
 	 * 	@return cost of variable i
 	 */
-	public def costOnVariable( var i : Int ) : Int
+	public def costOnVariable( i:Long ) : Int
 	{
 		return err(i);
 	}
@@ -147,9 +140,9 @@ public class CostasAS extends ModelAS{
 	 * 	@param i1 not used
 	 * 	@param i2 not used
 	 */
-	public def executedSwap(i1 : Int, i2 : Int)
+	public def executedSwap(i1:Long, i2:Long)
 	{
-		cost(err);//err );
+		cost(err);
 	}
 	
 	/**
@@ -170,7 +163,7 @@ public class CostasAS extends ModelAS{
 	 * 	@param i2 second variable to swap
 	 * 	@return cost if swap
 	 */
-	public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
+	public def costIfSwap( currentCost:Int, i1:Long, i2:Long ) : Int
 	{
 		var x : Int;
 		var r : Int;
@@ -194,7 +187,7 @@ public class CostasAS extends ModelAS{
 	 * 	@param totalCost
 	 * 	@return the new cost or -1 if unknown or some other data are not updated
 	 */
-	public def reset(n : Int, totalCost : Int) : Int
+	public def reset( n:Long, totalCost:Int ) : Int
 	{
 		var i : Int;
 		var j : Int;
@@ -209,7 +202,7 @@ public class CostasAS extends ModelAS{
 
 		Rail.copy( variables , saveSol ); //memcpy(save_sol, sol, size_bytes);
 
-		for(i = 0n; i < length; i++) /* collect most erroneous vars */
+		for(i = 0n; i < size; i++) /* collect most erroneous vars */
 		{
 			if (err(i) > max)
 			{
@@ -229,7 +222,7 @@ public class CostasAS extends ModelAS{
 		 */
 		
 		// #if 1
-		for(k = 0n; k < length; k++)
+		for(k = 0n; k < size; k++)
 		{
 			/* we need a random here to avoid to be trapped in the same "bests" chain (see best_cost) */
 			
@@ -256,7 +249,7 @@ public class CostasAS extends ModelAS{
 			/* the following test is not precise (could be different),
 			 * we only want to avoid to do both left and right shift for efficiency reasons */
 			
-			if (imax < size2)
+			if (imax < halfSize)
 			{ /* shift left 1 cell */
 				Rail.copy(saveSol, i as Long + 1L, variables, i as Long, sz as Long);//memcpy(sol + i, save_sol + i + 1, sz);
 				variables(j) = saveSol(i);
@@ -297,9 +290,9 @@ public class CostasAS extends ModelAS{
 		// #if 1
 		for(j = 0n; (k = toAdd(j)) != 0n; j++)
 		{
-			for(i = 0n; i < length; i++)
-				if ((variables(i) = saveSol(i) + k) > length)
-					variables(i) -= length;
+			for(i = 0n; i < size; i++)
+				if ((variables(i) = saveSol(i) + k) > size)
+					variables(i) -= size;
 
 			if ((cost = cost(null)) < costToExit)
 				return -1n; /* -1 because the err[] is not up-to-date */
@@ -329,7 +322,7 @@ public class CostasAS extends ModelAS{
 		var nbErr : Int = nbMax; /* NB nb_max has been dec (see above) - thus we forget cur "imax" */
 		if (nbErr < 3n ) //NB_OF_ERR_VARS_TO_TRY) /* add other erroneous vars in i_err[] */
 		{
-			for(i = 0n; i < length; i++)
+			for(i = 0n; i < size; i++)
 				if (err(i) > 0n && err(i) < max)
 					iErr(nbErr++) = i;
 			var auxArray : Rail[Int] = new Rail[Int](nbErr - nbMax + 1n);
@@ -346,8 +339,8 @@ public class CostasAS extends ModelAS{
 			if (imax == 0n || /*imax == size - 1 ||*/ r.randomDouble() < 0.33333333333)
 				continue;
 			
-			Rail.copy(saveSol, imax as Long, variables, 0, (length - imax) as Long); //memcpy(sol, save_sol + imax, (size - imax) * sizeof(int));
-			Rail.copy(saveSol, 0, variables, (length - imax) as Long, imax as Long); //memcpy(sol + size - imax, save_sol, imax * sizeof(int));
+			Rail.copy(saveSol, imax as Long, variables, 0, (size - imax) as Long); //memcpy(sol, save_sol + imax, (size - imax) * sizeof(int));
+			Rail.copy(saveSol, 0, variables, (size - imax) as Long, imax as Long); //memcpy(sol + size - imax, save_sol, imax * sizeof(int));
 			
 			if ((cost = cost(null)) < costToExit) /* only if it is a var with max error */
 				return -1n; /* -1 because the err[] is not up-to-date */
@@ -375,7 +368,7 @@ public class CostasAS extends ModelAS{
 
 		//Check Permutation
 		val permutV = new Rail[Int](sz, 0n);
-		val baseV = solverParams.baseValue;
+		val baseV = this.baseValue;
 		for (mi in conf.range()){
 			val value = conf(mi);
 			permutV(value-baseV)++;
@@ -385,21 +378,21 @@ public class CostasAS extends ModelAS{
 		}
 		
 		
-		for(i = 1n; i < length; i++)
+		for(i = 1n; i < size; i++)
 		{
 			nbOcc.clear();
-			for(j = i; j < length; j++)
+			for(j = i; j < size; j++)
 			{
 				d = conf(j - i) - conf(j);
-				nbOcc(d + length) = nbOcc(d + length) + 1n;
+				nbOcc(d + size) = nbOcc(d + size) + 1n;
 			}
 			
-			for(d = 1n; d < 2n * length; d++)
+			for(d = 1n; d < 2n * size; d++)
 			{
 				var nr:Int = nbOcc(d);
 				if (nr > 1)
 				{
-					var dist:Int = d - length;
+					var dist:Int = d - size;
 					Console.OUT.println("ERROR at row "+i+": distance "+dist+" appears "+nr+" times");
 					r = 0n;
 				}

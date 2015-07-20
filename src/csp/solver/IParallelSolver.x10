@@ -57,8 +57,8 @@ public interface IParallelSolver {
      *
      */
 
-    def intraTIRecv():Int;
-    def intraTISend():Int;
+    def inTeamReportI():Int;
+    def inTeamUpdateI():Int;
 
 
     /**

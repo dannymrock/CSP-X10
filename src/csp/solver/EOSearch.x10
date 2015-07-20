@@ -3,6 +3,7 @@ import csp.model.ModelAS;
 import x10.util.StringUtil;
 import x10.util.RailUtils;
 import csp.util.Logger;
+import csp.model.ParamManager;
 
 /**
  * Class EOSearch
@@ -13,26 +14,34 @@ public class EOSearch extends RandomSearch {
 	 private var nbChangeV : Int = 0n;
 	 
 	 // PDF for EO
-	 private val pdf = new Rail[Double](size, 0.0);
-	 private val fit = new Rail[PairAS] (size); 
+	 private val pdf:Rail[Double];
+	 private val fit:Rail[PairAS];
 	 //Here i -> index   j->cost (fitness)
 	 private val cmp : (PairAS,PairAS) => Int = (a:PairAS,b:PairAS) => {return b.j - a.j ;}; 
 	 
 
-	 val powFnc = (tau : Double, x : Int):Double => {
+	 val powFnc = (tau : Double, x : Long):Double => {
 		  return Math.pow(x, -tau);
 	 };
-	 val expFnc = (tau : Double, x : Int):Double => {
+	 val expFnc = (tau : Double, x : Long):Double => {
 		  return Math.exp(-tau * x);
 	 };
 	 
 	 // Communication Variables
 	 private var bestSent:Boolean=false;
 	 private solver:IParallelSolver(sz);
+	 private val tau:Double;
+	 private val pdfS:Int;
 	 
-	 public def this(sz:Long, size:Int, solver:IParallelSolver(sz), mTime:Long){
-		  super(sz, size, mTime);
+	 public def this(sz:Long, vectorSize:Long, solver:IParallelSolver(sz), opts:ParamManager){
+		  super(sz, vectorSize, opts);
+		  this.pdf = new Rail[Double] (this.vectorSize, 0.0);
+		  fit = new Rail[PairAS] (this.vectorSize); 
 		  this.solver = solver;
+		  
+		  // Parameters
+		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(vectorSize)));
+		  this.pdfS = opts("--EO_pdf", 1n);
 	 }
 	 
 	 
@@ -48,7 +57,7 @@ public class EOSearch extends RandomSearch {
 		  currentCost = selectVarMinConflict( cop_, move);
 		  //newCost = selectSecondVar( cop_ , totalCost, eoi);
 		  cop_.swapVariables(move.getFirst(), move.getSecond()); //adSwap(maxI, minJ,csp);
-		  nbSwap++;
+		  nSwap++;
 		  cop_.executedSwap(move.getFirst(), move.getSecond());
 		  return currentCost;
 	 }
@@ -56,42 +65,42 @@ public class EOSearch extends RandomSearch {
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
-		  val tStr = System.getenv("T");
-		  val tau = (tStr==null)? (1.0 + 1.0 / Math.log(size)) : StringUtil.parseLong(tStr)/100.0;
+		  // val tStr = System.getenv("T");
+		  // val tau = (tStr==null)? (1.0 + 1.0 / Math.log(vectorSize)) : StringUtil.parseLong(tStr)/100.0;
 		  //Console.OUT.println("tau "+tau);
 		  
-		  val pStr = System.getenv("F");
-		  val pdfS = (pStr==null)? 1n : StringUtil.parseInt(pStr);
+		  // val pStr = System.getenv("F");
+		  // val pdfS = (pStr==null)? 1n : StringUtil.parseInt(pStr);
 		  
-		  if ( pdfS == 1n )
-				initPDF( tau, size, powFnc );
+		  if ( this.pdfS == 1n )
+				initPDF( this.tau, this.vectorSize, this.powFnc );
 		  else
-				initPDF( tau, size, expFnc );
+				initPDF( this.tau, this.vectorSize, this.expFnc );
 		  
 		  Logger.debug(()=>{"EOSolver"});
 
 	 }
 	 
-	 private def initPDF(tau:Double, size:Int, fnc:(tau : Double, x : Int)=>Double ){
+	 private def initPDF(tau:Double, vectorSize:Long, fnc:(tau : Double, x : Long)=>Double ){
 		  var sum:Double = 0.0;
 		  var y:Double = 0.0;
 		  
-		  for (x in 1n..size){
+		  for (x in 1n..vectorSize){
 				y = fnc(tau, x);
 				if (y < 0)
 					 y = 0;
 				pdf(x) = y;
 				sum += y; 
 		  }
-		  for (x in 1n..size){
+		  for (x in 1n..vectorSize){
 				pdf(x) /= sum;
 		  }
-		  // for (x in 1n..size)
+		  // for (x in 1n..vectorSize)
 		  // Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 	 
 	 private def pdfPick():Int {
-		  //return pdf(random.nextInt(size)) - 1n;
+		  //return pdf(random.nextInt(vectorSize)) - 1n;
 		  var p:Double = random.nextDouble();
 		  var fx:Double;
 		  var x:Int = 0n;
@@ -103,11 +112,11 @@ public class EOSearch extends RandomSearch {
 	 }
 	 
 	 private def selectFirstVar( cop_ : ModelAS, move:MovePermutation){
-		  var i: Int =-1n;
+		  var i: Long =-1n;
 		  var cost: Int;
 		  var selIndex:Int=0n; 
 		  
-		  while((i = cop_.nextI(i)) as UInt < size as UInt) { //False if i < 0
+		  while((i = cop_.nextI(i)) as ULong < vectorSize as ULong) { //False if i < 0
 				cost = cop_.costOnVariable(i);
 				fit(i) = new PairAS(i as Int , cost);
 		  }
@@ -117,7 +126,7 @@ public class EOSearch extends RandomSearch {
 		  val selFit = fit(index).j;
 		  var nSameFit:Int = 0n;
 
-		  for(var k:Int=0n; k < size; k++){
+		  for(var k:Int=0n; k < vectorSize; k++){
 				if (fit(k).j < selFit)   // descending order
 					 break;
 				
@@ -132,19 +141,20 @@ public class EOSearch extends RandomSearch {
 	  * 	selectVarMinConflict( csp : ModelAS) : Int
 	  * 	Computes swap and selects the minimum of cost if swap
 	  * 	@param csp problem model
-	  * 	@return the index of the variable with minimum individual cost if swap
+	  *   @param move object
+	  * 	@return the cost of the best move
 	  */
 	 private def selectVarMinConflict( csp : ModelAS, move:MovePermutation) : Int {
-		  var j: Int;
+		  var j: Long;
 		  var cost: Int;
-		  var second : Int = 0n;
+		  var second : Long = 0;
 		  var nSameMin:Int = 0n;
 		  var minCost:Int = Int.MAX_VALUE;
 		  val first = move.getFirst();
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
-		  for (j = 0n; j < size; j++)
+		  for (j = 0; j < vectorSize; j++)
 		  {	
 				if (first == j) continue;
 				cost = csp.costIfSwap(this.currentCost, j, first);
@@ -164,7 +174,7 @@ public class EOSearch extends RandomSearch {
 	 }
 	 
 	 private def selectSecondVar( csp : ModelAS, totalCost:Int, move:MovePermutation) : Int {
-		  val randomJ = random.nextInt(size);
+		  val randomJ = random.nextLong(vectorSize);
 		  val newCost = csp.costIfSwap(totalCost, randomJ, move.getFirst());	 
 		  move.setSecond(randomJ);
 		  return newCost; 
@@ -178,7 +188,7 @@ public class EOSearch extends RandomSearch {
 		  /**
 		   *  Interaction with other places
 		   */
-		  if( solver.intraTISend() != 0n && nbIter % solver.intraTISend() == 0n){        //here.id as Int ){
+		  if( solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
 				if(!bestSent){ 
 					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
 					 bestSent = true;
@@ -187,7 +197,7 @@ public class EOSearch extends RandomSearch {
 				}
 		  }
 		  
-		  if(solver.intraTIRecv() != 0n && this.nbIter % solver.intraTIRecv() == 0n){        //here.id as Int ){
+		  if(solver.inTeamReportI() != 0n && this.nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
 				val result = solver.getIPVector(cop_, this.currentCost );
 				if (result){
 					 this.nbChangeV++;

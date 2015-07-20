@@ -13,9 +13,9 @@ public class QAPAS extends ModelAS
 	 // val d : Array_2[Long];
 	 
 	 /** flow matrix  **/
-	 val f : Rail[Rail[Int]];
+	 val flow : Rail[Rail[Int]];
 	 /** distances matrix **/
-	 val d : Rail[Rail[Int]];
+	 val dist : Rail[Rail[Int]];
 	 
 	 /** delta Matrix */
 	 val delta : Array_2[Long];
@@ -37,34 +37,49 @@ public class QAPAS extends ModelAS
 	 
 	 //val sizeM : Long;
 	 
-	 def this (size :Long , seed : Long, mF:Rail[Rail[Int]], mD:Rail[Rail[Int]], 
-				restLimit : Int, inV : String):QAPAS(size)
+	// val problemFile:String;
+	 
+	 //static val NO_FILE = "no_file_provided";
+	 
+	 def this (size :Long , seed : Long, opts:ParamManager, mf:Rail[Rail[Int]],
+	 md:Rail[Rail[Int]] ):QAPAS(size)
 	 {
-		  super(size, seed, inV);
+		  super(size, seed, opts);
 		  
-		  f = mF;
-		  d = mD;
+		  // this.problemFile = opts("-f", NO_FILE);
+		  // if (problemFile.equals(NO_FILE))
+				// Console.OUT.println("ERROR: no problem file provided in QAP");
+		  
+		  // TODO: Load from file size here
+		  
+		  //flow = new Rail[Rail[Int]](size, (Long) => new Rail[Int]( size, 0n ));
+		  //dist = new Rail[Rail[Int]](size, (Long) => new Rail[Int]( size, 0n ));
+		  
+		  flow = mf;
+		  dist = md;
+		  
+		  //loadData(problemFile, flow, dist);
 		  
 		  delta = new Array_2 [Long](size, size , 0);
 		  //printMatrices();
-		  initParameters(restLimit);
 	 }
 	 
 	 
-	 // TODO: tune parameters
-	 private def initParameters(rLimit:Int)
-	 {
-		  solverParams.probSelectLocMin = 60n;
-		  solverParams.freezeLocMin = length as Int; //5n;
-		  solverParams.freezeSwap = 0n;
-		  solverParams.resetLimit = 1n;//2n;
-		  solverParams.resetPercent = 5n; //4n; //25n;
-		  solverParams.restartLimit = rLimit;
-		  solverParams.restartMax = 0n;
-		  solverParams.baseValue = 0n;
-		  solverParams.exhaustive = true;
-		  solverParams.firstBest = true;
-	 }
+	 
+	 // // TODO: tune parameters
+	 // private def initParameters(rLimit:Int)
+	 // {
+		//   solverParams.probSelectLocMin = 60n;
+		//   solverParams.freezeLocMin = size as Int; //5n;
+		//   solverParams.freezeSwap = 0n;
+		//   solverParams.resetLimit = 1n;//2n;
+		//   solverParams.resetPercent = 5n; //4n; //25n;
+		//   solverParams.restartLimit = rLimit;
+		//   solverParams.restartMax = 0n;
+		//   solverParams.baseValue = 0n;
+		//   solverParams.exhaustive = true;
+		//   solverParams.firstBest = true;
+	 // }
 	 
 	 /**
 	  *  Compute the cost difference if elements i and j are permuted
@@ -75,17 +90,17 @@ public class QAPAS extends ModelAS
 		  var pj : Long = variables(j) as Long;
 		  var k : Long, pk :Long;
 		  var dis : Long =
-				(f(i)(i) - f(j)(j)) * (d(pj)(pj) - d(pi)(pi)) +
-				(f(i)(j) - f(j)(i)) * (d(pj)(pi) - d(pi)(pj));
+				(flow(i)(i) - flow(j)(j)) * (this.dist(pj)(pj) - this.dist(pi)(pi)) +
+				(flow(i)(j) - flow(j)(i)) * (this.dist(pj)(pi) - this.dist(pi)(pj));
 		  
-		  // for(k = 0; k < length; k++)
+		  // for(k = 0; k < size; k++)
 		  // {
 				// if (k != i && k != j)
 				// {
 				// 	 pk = variables(k);
 				// 	 dis +=
 				// 		  (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-				// 		  (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+				// 		  (f(i)(k) - this.flow(j)(k)) * (d(pj)(pk) - d(pi)(pk));
 				// }
 		  // }
 		  
@@ -93,23 +108,23 @@ public class QAPAS extends ModelAS
 		  {
 				pk = variables(k);
 				dis +=
-					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+					 (this.flow(k)(i) - this.flow(k)(j)) * (this.dist(pk)(pj) - this.dist(pk)(pi)) +
+					 (this.flow(i)(k) - this.flow(j)(k)) * (this.dist(pj)(pk) - this.dist(pi)(pk));
 		  }
 
 		  while(++k < j)
 		  {
 				pk = variables(k);
 				dis +=
-					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+					 (this.flow(k)(i) - this.flow(k)(j)) * (this.dist(pk)(pj) - this.dist(pk)(pi)) +
+					 (this.flow(i)(k) - this.flow(j)(k)) * (this.dist(pj)(pk) - this.dist(pi)(pk));
 		  }
-		  while(++k < length)
+		  while(++k < size)
 		  {
 				pk = variables(k);
 				dis +=
-					 (f(k)(i) - f(k)(j)) * (d(pk)(pj) - d(pk)(pi)) +
-					 (f(i)(k) - f(j)(k)) * (d(pj)(pk) - d(pi)(pk));
+					 (this.flow(k)(i) - this.flow(k)(j)) * (this.dist(pk)(pj) - this.dist(pk)(pi)) +
+					 (this.flow(i)(k) - this.flow(j)(k)) * (this.dist(pj)(pk) - this.dist(pi)(pk));
 		  }
 
 		  
@@ -131,10 +146,10 @@ public class QAPAS extends ModelAS
 		  
 		  
 		  return (delta(i,j) +
-		  (f(r)(i) - f(r)(j) + f(s)(j) - f(s)(i)) *
-		  (d(ps)(pi) - d(ps)(pj) + d(pr)(pj) - d(pr)(pi)) +
-		  (f(i)(r) - f(j)(r) + f(j)(s) - f(i)(s)) *
-		  (d(pi)(ps) - d(pj)(ps) + d(pj)(pr) - d(pi)(pr)));
+		  (this.flow(r)(i) - this.flow(r)(j) + this.flow(s)(j) - this.flow(s)(i)) *
+		  (this.dist(ps)(pi) - this.dist(ps)(pj) + this.dist(pr)(pj) - this.dist(pr)(pi)) +
+		  (this.flow(i)(r) - this.flow(j)(r) + this.flow(j)(s) - this.flow(i)(s)) *
+		  (this.dist(pi)(ps) - this.dist(pj)(ps) + this.dist(pj)(pr) - this.dist(pi)(pr)));
 	 }
 	 
 	 
@@ -144,24 +159,24 @@ public class QAPAS extends ModelAS
 		  var i : Long, j : Long;
 		  var r : Long  = 0;
 		  
-		  for(i = 0; i < length; i++)
-				for(j = 0; j < length; j++)
-					 r += f(i)(j) * d(variables(i))(variables(j));
+		  for(i = 0; i < size; i++)
+				for(j = 0; j < size; j++)
+					 r += this.flow(i)(j) * this.dist(variables(i))(variables(j));
 		  
 		  if (shouldBeRecorded)
-				for(i = 0; i < length; i++)
-					 for(j = i + 1; j < length; j++)
+				for(i = 0; i < size; i++)
+					 for(j = i + 1; j < size; j++)
 						  delta(i,j) = computeDelta(i, j);
 		  
 		  return r as Int;
 	 }
 	 
 	 
-	 public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
+	 public def costIfSwap(currentCost:Int, i1:Long, i2:Long) : Int
 	 {
 		  //return currentCost + delta(i1 as Int , i2 as Int) as Int;
-		  var i1v : Int = i1;
-		  var i2v : Int = i2;
+		  var i1v:Long = i1;
+		  var i2v:Long = i2;
 		  
 		  if (i1 > i2)
 		  {	
@@ -173,20 +188,20 @@ public class QAPAS extends ModelAS
 	 }
 	 
 	 
-	 public def executedSwap(var i1:Int, var i2:Int):void
+	 public def executedSwap(var i1:Long, var i2:Long):void
 	 {
-		  var temp : Int = variables(i1);
+		  var temp : Long = variables(i1);
 	
 		  if (i1 >= i2)
 		  {
-				var tmp : Int = i1;
+				var tmp : Long = i1;
 				i1 = i2;
 				i2 = tmp;
 		  }
 		  
 		  var i : Long, j : Long;
-		  for (i = 0; i < length; i++)
-				for (j = i + 1; j < length; j++)
+		  for (i = 0; i < size; i++)
+				for (j = i + 1; j < size; j++)
 					 if (i != (i1 as Long) && i != (i2 as Long) && j != (i1 as Long) && j != (i2 as Long))
 						  delta(i,j) = computeDeltaPart(i, j, i1, i2);
 					 else
@@ -199,14 +214,14 @@ public class QAPAS extends ModelAS
 	  * 	@param i This is the variable that we want to know the cost
 	  *  @return Int value with the cost of this variable
 	  */
-	 public def costOnVariable( i : Int ) : Int{
+	 public def costOnVariable( i : Long ) : Int{
 		  // val xr = xref(i);
 		  // val r = err_l_abs(xr.l) + err_c_abs(xr.c) + 
 		  // (xr.d1 ? err_d1_abs : 0n) + (xr.d2 ? err_d2_abs : 0n);		  
 		  
 		  var r : Int = Int.MIN_VALUE; 
 		  
-		  for (var j:Int = 0n; j < length; j++)
+		  for (var j:Long = 0; j < size; j++)
 		  {
 				if (i == j)
 					 continue;
@@ -399,7 +414,7 @@ public class QAPAS extends ModelAS
 	 {
 		  //Check Permutation
 		  val permutV = new Rail[Int](sz, 0n);
-		  val baseV = solverParams.baseValue;
+		  val baseV = this.baseValue;
 		  for (mi in match.range())
 		  {
 				val value = match(mi);
@@ -413,9 +428,9 @@ public class QAPAS extends ModelAS
 		  var i : Long, j : Long;
 		  var r : Long  = 0;
 		  
-		  for(i = 0; i < length; i++)
-				for(j = 0; j < length; j++)
-					 r += f(i)(j) * d(match(i))(match(j));
+		  for(i = 0; i < size; i++)
+				for(j = 0; j < size; j++)
+					 r += this.flow(i)(j) * this.dist(match(i))(match(j));
 		  
 		  //Console.OUT.println("Final cost of assignment "+r);
 		  
@@ -426,16 +441,16 @@ public class QAPAS extends ModelAS
 		  
 		  Console.OUT.println("\nMatrix1");
 		  var i : Int = 0n;
-		  for ( i = 0n; i < length; i++ ){
+		  for ( i = 0n; i < size; i++ ){
 				Console.OUT.print( (i+1) + " : ");
-				for(j in f(i))
+				for(j in this.flow(i))
 					 Console.OUT.print( j + " ");
 				Console.OUT.println("");
 		  }
 		  Console.OUT.println("Matrix2");
-		  for ( i = 0n; i < length; i++ ){
+		  for ( i = 0n; i < size; i++ ){
 				Console.OUT.print( (i+1) + ": ");
-				for( j in d(i))
+				for( j in this.dist(i))
 					 Console.OUT.print( j + " ");
 				Console.OUT.println("");
 		  }

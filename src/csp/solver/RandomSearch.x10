@@ -2,6 +2,7 @@ package csp.solver;
 import csp.model.ModelAS;
 import x10.util.Random;
 import csp.util.Logger;
+import csp.model.ParamManager;
 
 /**
  * Basic Implementation of a Random Search Solver
@@ -10,8 +11,14 @@ import csp.util.Logger;
  * 
  */
 
-public class RandomSearch(sz:Long, size:Int, mTime:Long){
-	 property sz() = sz;
+public class RandomSearch(sz:Long){
+	 property sz() = sz; //order of the problem
+	 
+	 protected val vectorSize:Long;
+	 
+	 
+	 //Parameters object
+	 protected val opts: ParamManager;
 	 
 	 // Move information
 	 protected val move = new MovePermutation(-1n, -1n);
@@ -27,28 +34,42 @@ public class RandomSearch(sz:Long, size:Int, mTime:Long){
 	 protected var targetSucc : Boolean = false;
 	 
 	 // -> Statistics
-	 protected var nbRestart : Int = 0n;
-	 protected var nbIter : Int;
-	 protected var nbSwap : Int;
+	 protected var nRestart : Int = 0n;
+	 protected var nIter : Int;
+	 protected var nSwap : Int;
 	 /** Total Statistics */
-	 protected var nbIterTot : Int;
-	 protected var nbSwapTot : Int;
+	 protected var nIterTot : Int;
+	 protected var nSwapTot : Int;
 	 // -> Result
-	 protected val bestConf = new Rail[Int](size, 0n);
+	 protected val bestConf:Rail[Int];
 	 protected var bestCost:Int = x10.lang.Int.MAX_VALUE;
 	 protected var currentCost:Int;
 	 // -> Stop search process 
 	 protected var kill:Boolean = false;
 	 // -> Max time
-	 protected val maxTime = mTime;
+	 protected val maxTime:Long;
 	 protected var initialTime:Long;
 	 // RESTART
 	 protected var restart:Boolean = false;
+	 
+	 protected var maxIters:Long;
+	 protected var maxRestarts:Int;
 	 
 	 // not sure
 	 private var forceRestart : Boolean = false;
 	 private var forceReset : Boolean = false;
 	 
+	 public def this(size:Long, vSize:Long, opt:ParamManager){
+		  property(size);
+		  this.vectorSize = vSize;
+		  this.opts = opt;
+		  this.bestConf = new Rail[Int](this.vectorSize, 0n);
+		  
+		  // Parameters
+		  this.maxTime = this.opts("-mt", 0);
+		  this.maxIters = this.opts("-mi", 100000000);
+		  this.maxRestarts = this.opts("-mr", 0n);
+	 }
 
 	 
 	 /**
@@ -69,19 +90,22 @@ public class RandomSearch(sz:Long, size:Int, mTime:Long){
 		  
 		  // Main Loop 
 		  while( currentCost != 0n ){
-				nbIter++;
+				
+				
+				if (this.nIter >= this.maxIters){
+					 //restart or finish
+					 if(nRestart >= maxRestarts){
+						  break;
+					 }else{
+						  nRestart++;
+						  restartVar( cop );
+						  continue;
+					 }
+				}
+				
+				nIter++;
 				
 				currentCost = search( cop );
-				
-				/**
-				 *  Restart
-				 */
-				if (restart){
-					 restart = false;
-					 nbRestart++;
-					 restartVar( cop );
-					 continue;
-				}
 				
 				/**
 				 *  Update the best configuration found so far
@@ -102,12 +126,13 @@ public class RandomSearch(sz:Long, size:Int, mTime:Long){
 					 val eTime = System.nanoTime() - initialTime; 
 					 if(eTime/1e6 >= maxTime){ //comparison in miliseconds
 						  //Logger.info(()=>{" Time Out"});
+						  Console.OUT.println(" Time Out");
 						  break;
 					 }
 				}
 		  }
-		  nbIterTot += nbIter;
-		  nbSwapTot += nbSwap;
+		  nIterTot += nIter;
+		  nSwapTot += nSwap;
 		  
 		  return bestCost;
 	 }
@@ -121,12 +146,14 @@ public class RandomSearch(sz:Long, size:Int, mTime:Long){
 		  this.strictLow = sLow;
 		  this.targetSucc = false;
 		  
-		  cop_.initialize(0n); //base value
+		  cop_.initialize(); 
 		  //Main.show("initial= ",csp.variables);
-		  this.nbSwap = 0n;
-		  this.nbIter = 0n;
-		  this.nbIterTot = 0n;
-		  this.nbSwapTot = 0n;
+		  this.nSwap = 0n;
+		  this.nIter = 0n;
+		  this.nRestart = 0n;
+		  
+		  this.nIterTot = 0n;
+		  this.nSwapTot = 0n;
 		  
 		  this.initialTime = System.nanoTime();
 		  
@@ -142,11 +169,11 @@ public class RandomSearch(sz:Long, size:Int, mTime:Long){
 		  // Swap two random variables
 		  //Console.OUT.println("HS");
 		  
-		  move.setFirst(random.nextInt(size));
-		  move.setSecond(random.nextInt(size));
+		  move.setFirst(random.nextLong(vectorSize));
+		  move.setSecond(random.nextLong(vectorSize));
 		  
 		  cop_.swapVariables(move.getFirst(), move.getSecond());
-		  nbSwap++;
+		  nSwap++;
 		  
 		  cop_.executedSwap(move.getFirst(), move.getSecond());
 		  return cop_.costOfSolution(true);
@@ -202,22 +229,24 @@ public class RandomSearch(sz:Long, size:Int, mTime:Long){
 	  * 	Report statistics from the solving process
 	  */
 	 public def reportStats( c : CSPStats){
-		  c.iters = nbIterTot;
-		  c.swaps = nbSwapTot;
-		  val singles = bestCost % size;
-		  c.singles = singles;
-		  c.bp = (bestCost-singles)/size;
+		  c.iters = nIterTot;
+		  c.swaps = nSwapTot;
+		  // val singles = bestCost % vectorSize;
+		  // c.singles = singles;
+		  // c.bp = (bestCost-singles)/vectorSize;
+		  c.vectorSize = vectorSize;
 		  c.target = targetSucc;
 		  c.cost = bestCost;
+		  c.restart = nRestart;
 	 }
 	 
 	 protected def restartVar(cop : ModelAS){
-		  cop.initialize(0n); //(solverP.baseValue); // Random Permut
+		  cop.initialize(); 
 		  currentCost = cop.costOfSolution(true);
-		  nbIterTot += nbIter;
-		  nbSwapTot += nbSwap;
-		  nbSwap = 0n;
-		  nbIter = 0n;
+		  nIterTot += nIter;
+		  nSwapTot += nSwap;
+		  nSwap = 0n;
+		  nIter = 0n;
 	 }
 	 
 	 protected def updateCosts(cop : ModelAS){

@@ -26,16 +26,16 @@ public class SMTIAS extends ModelAS{
 	/** nbSingles:Current number of singles in the configuration **/
 	var nbSingles:Int = 0n;
 	/** variablesW:array with current inverted configuration (index woman - value man) **/
-	val variablesW = new Rail[Int](length,0n);
+	val variablesW = new Rail[Int](size,0n);
 	/** errV:array with current individual cost (index man - value cost)**/
-	val errV = new Rail[Int](length,-1n);
+	val errV = new Rail[Int](size,-1n);
 	/** bpi:Blocking par indexes (index man - value bp index to swap)**/
-	val bpi = new Rail[Int](length,-1n);
+	val bpi = new Rail[Int](size,-1n);
 	/** sgV : vector with singles men in match **/
-	val sgV = new Rail[Long](length,-1);
+	val sgV = new Rail[Long](size,-1);
 	
 	/** weight: weight to compute the total cost (cost = bp*weight + singles)**/
-	var weight:Int = length;
+	var weight:Int = size;
 	
 	var singlei:Int = 0n;
 	
@@ -46,27 +46,39 @@ public class SMTIAS extends ModelAS{
 	
 	val mapTable:Rail[Int];
 	
-	val mprefLength = new Rail[Int](length,0n);
+	val mprefsize = new Rail[Int](size, 0n);
 	
-	public def this (lengthProblem : Long , seed : Long, mPrefs:Rail[Rail[Int]], wPrefs:Rail[Rail[Int]], 
-			restLimit:Int, mapTable:Rail[Int], isHRT:Boolean, inv:String):SMTIAS(lengthProblem){
-		super( lengthProblem, seed, inv);
-		this.initParameters(restLimit);
+	// val problemFile:String;
+	
+	// static val NO_FILE = "no_file_provided";
+	
+	public def this (sizeProblem : Long , seed : Long, opts:ParamManager, isHRT:Boolean,
+			  mPref:Rail[Rail[Int]], wPref:Rail[Rail[Int]], mTable:Rail[Int]) : SMTIAS(sizeProblem){
+		super( sizeProblem, seed, opts);
 		
-		val l = length as Int;
-		menPref = mPrefs;
-		womenPref = wPrefs;
+		val l = size as Int;
 		
+		// this.problemFile = opts("-f", NO_FILE);
+		// if (problemFile.equals(NO_FILE))
+		// 	 Console.OUT.println("ERROR: no problem file provided in QAP");
+		
+		// TODO: Load from file size here
+		
+		//menPref = new Rail[Rail[Int]](size, (Long) => new Rail[Int]( size, 0n ));
+		//womenPref = new Rail[Rail[Int]](size, (Long) => new Rail[Int]( size, 0n ));
+		menPref = mPref;
+		womenPref = wPref;
+		
+		// this.mapTable = new Rail[Int](size, 0n);
+		this.mapTable = mTable;
 		this.isHRT = isHRT;
-		
-		this.mapTable = mapTable;
-		
+			
 		revpM = new Rail[Rail[Int]](l, (Long) => new Rail[Int](l,0n));
 		revpW = new Rail[Rail[Int]](l, (Long) => new Rail[Int](l,0n));
 		// Creating Reverse Matrixes
 		var mw:Int,pos:Int;
 		var level:Int=0n;
-		for(mw = 0n; mw < length; mw++){
+		for(mw = 0n; mw < size; mw++){
 			level = 0n;
 			var man:Int;
 			for(pos=0n; ( man = womenPref(mw)(pos)) != 0n; pos++ ){
@@ -80,7 +92,7 @@ public class SMTIAS extends ModelAS{
 			}
 		}
 		
-		for(mw = 0n; mw < length; mw++){
+		for(mw = 0n; mw < size; mw++){
 			level=0n;
 			var woman:Int;
 			for(pos = 0n; (woman = menPref(mw)(pos)) != 0n; pos++ ){
@@ -92,36 +104,36 @@ public class SMTIAS extends ModelAS{
 				//Converting to an index	
 				revpM(mw)(woman - 1) = level;
 			}
-			mprefLength(mw) = pos;
-			//Console.OUT.println("length "+mw+" = "+pos);
+			mprefsize(mw) = pos;
+			//Console.OUT.println("size "+mw+" = "+pos);
 		}
 		//printPreferencesTables();
 		//writeSMTIFile("outSMTI.smp");
 	}
 	
-	/** initParameters
-	 *  It is necessary to fine tune the parameters for this problem
-	 */
-	private def initParameters(rLimit:Int){
-		
-		solverParams.probSelectLocMin =  100n; // try ~80%  
-		solverParams.freezeLocMin = 1n;
-		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit =1n; 
-		solverParams.resetPercent = 0n;
-		solverParams.restartLimit = rLimit;/*30n*length*/; 
-		solverParams.restartMax = 0n;
-		solverParams.baseValue = 1n;
-		solverParams.exhaustive = false;
-		solverParams.firstBest = true;
-		
-		//solverParams.probChangeVector = probCV; //10n;
-		
-		//weight = System.getenv().get("V")!=null?length:1n;
-		//Console.OUT.println("restart Limit= "+solverParams.restartLimit);
-		//Console.OUT.println("Prob Change Vector= "+solverParams.probChangeVector);
-		
-	}
+	// /** initParameters
+	//  *  It is necessary to fine tune the parameters for this problem
+	//  */
+	// private def initParameters(rLimit:Int){
+	// 	
+	// 	solverParams.probSelectLocMin =  100n; // try ~80%  
+	// 	solverParams.freezeLocMin = 1n;
+	// 	solverParams.freezeSwap = 0n;
+	// 	solverParams.resetLimit =1n; 
+	// 	solverParams.resetPercent = 0n;
+	// 	solverParams.restartLimit = rLimit;/*30n*size*/; 
+	// 	solverParams.restartMax = 0n;
+	// 	solverParams.baseValue = 1n;
+	// 	solverParams.exhaustive = false;
+	// 	solverParams.firstBest = true;
+	// 	
+	// 	//solverParams.probChangeVector = probCV; //10n;
+	// 	
+	// 	//weight = System.getenv().get("V")!=null?size:1n;
+	// 	//Console.OUT.println("restart Limit= "+solverParams.restartLimit);
+	// 	//Console.OUT.println("Prob Change Vector= "+solverParams.probChangeVector);
+	// 	
+	// }
 	
 	
 	/**
@@ -188,7 +200,7 @@ public class SMTIAS extends ModelAS{
 			  
 			  if(levelPM == 0n )   //verify if m is single (pm is not a valid match)
 			  { 
-					levelPM = length + 1n;  // FIX (single should be length +1 )
+					levelPM = size + 1n;  // FIX (single should be size +1 )
 					singles++;
 					
 					// if (shouldBeRecorded && r.randomInt(singles) == 0n)
@@ -295,7 +307,7 @@ public class SMTIAS extends ModelAS{
 			  ///Console.OUT.println("totalCost= "+(bpnumber*weight+singles));
 		 }
 		 
-		 //         val s2 : Int = 2n * singles - length;  // check the case where singles is an odd number, is it correct to use round up, ie. (singles +1) / 2 ?
+		 //         val s2 : Int = 2n * singles - size;  // check the case where singles is an odd number, is it correct to use round up, ie. (singles +1) / 2 ?
 		 // 
 		 //         if (bpnumber == 0n ) // check if the mariage is stable and if it improves the min number of singles
 		 //         {
@@ -326,12 +338,12 @@ public class SMTIAS extends ModelAS{
 	 * 	@param i This is the variable that we want to know the cost
 	 *  @return Int value with the cost of this variable
 	 */
-	public def costOnVariable( i : Int ) : Int {		
+	public def costOnVariable( i : Long ) : Int {		
 		return errV(i);
 	}
 	
 	
-	public def nextJ(i:Int, j:Int, exhaustive:Int) : Int {
+	public def nextJ(i:Long, j:Long, exhaustive:Boolean) : Long {
 		///Console.OUT.println("i= "+i+"  j= "+j+"  bp-i= "+bpi(i));
 		return (j < 0n) ? bpi(i) : -1n;
 	}
@@ -344,7 +356,7 @@ public class SMTIAS extends ModelAS{
 	 *  @param i1 First variable already swapped
 	 *  @param i2 Second variable already swapped
 	 */
-	public def executedSwap ( i1 : Int, i2 : Int) {
+	public def executedSwap ( i1:Long, i2:Long ) {
 		this.costOfSolution(true);
 	}
 	
@@ -357,7 +369,7 @@ public class SMTIAS extends ModelAS{
 	 *  @param i2 second variable to swap
 	 *  @return cost of the problem if the swap is done
 	 */
-	public def costIfSwap(current_cost:Int,var i1:Int, var i2:Int) : Int {
+	public def costIfSwap(current_cost:Int, var i1:Long, var i2:Long) : Int {
 		swapVariables(i1, i2);
 		var r : Int = costOfSolution(false);
 		swapVariables(i1, i2);
@@ -371,7 +383,7 @@ public class SMTIAS extends ModelAS{
 		var maxNb:Int = 0n;
 		var i:Int;
 		
-		for(i = 0n; i < length; i++){
+		for(i = 0n; i < size; i++){
 			var e:Int = errV(i);
 			if (e <= 0n || i == pvalue1 || i == pvalue2 ||  bpi(i) == pvalue1 || bpi(i) == pvalue2) 
 				continue;
@@ -389,7 +401,7 @@ public class SMTIAS extends ModelAS{
 		return maxi;
 	}
 	
-	public def reset ( var n : Int, totalCost : Int ) : Int {			
+	public def reset ( var n:Long , totalCost : Int ) : Int {			
 		
 		// 1st BLOCKING PAIRS
 		if (nbBP > 0n){
@@ -408,7 +420,7 @@ public class SMTIAS extends ModelAS{
 		if (nbSingles > 0) {
 			 
 			 // * Assign a random partner to a single
-			 //val j = r.randomInt(length);
+			 //val j = r.randomInt(size);
 			 ///Console.OUT.println("Reset single singV("+singlei+")= "+singV(singlei)+" random j = "+ j+"  nbSingles="+nbSingles);
 			 //swapVariables(singlei, j);		
 			 
@@ -417,7 +429,7 @@ public class SMTIAS extends ModelAS{
 			 // search the man married with the "best" partner of singlei
 			 //var bestpar : Int = menPref(singlei)(0)  ;
 			 
-			 // val j = r.randomInt( mprefLength(singlei) ); 
+			 // val j = r.randomInt( mprefsize(singlei) ); 
 			 // val bestpar = Math.abs( menPref(singlei)(j) );			 
 			 // val manToSwap = variablesW( bestpar - 1 ) - 1n ;
 			 // //Console.OUT.println("Reset single singV("+singlei+"),best par "+ bestpar +"  best = "+ manToSwap+"  nbSingles="+nbSingles);
@@ -427,7 +439,7 @@ public class SMTIAS extends ModelAS{
 			 // select a single man
 			 val singleman = sgV( r.randomInt( nbSingles ) );
 			 // select a woman in the pref list of the single
-			 val j = r.randomInt( mprefLength(singleman) ); 
+			 val j = r.randomInt( mprefsize(singleman) ); 
 			 val bestpar = Math.abs( menPref(singleman)(j) );
 			 // find man paired with bestpar woman
 			 val manToSwap = variablesW( bestpar - 1 ) - 1n ;
@@ -441,7 +453,7 @@ public class SMTIAS extends ModelAS{
 				//   // select a second single man
 				//   val singleman2 = sgV( r.randomInt( nbSingles ) );
 				//   // select a woman in the pref list of the single
-				//   val wj = r.randomInt( mprefLength(singleman2) ); 
+				//   val wj = r.randomInt( mprefsize(singleman2) ); 
 				//   val bestpar2 = Math.abs( menPref(singleman2)(wj) );
 				//   // find man paired with bestpar woman
 				//   val manToSwap2 = variablesW( bestpar2 - 1 ) - 1n ;
@@ -450,8 +462,8 @@ public class SMTIAS extends ModelAS{
 				//   swapVariables(singleman2 as Int, manToSwap2);	
 			 // }
 		} else {
-			val i = r.randomInt(length);
-			val j = r.randomInt(length);
+			val i = r.randomInt(size);
+			val j = r.randomInt(size);
 			///Console.OUT.println("Reset no 2nd BP i= "+i+" j = "+ j);
 			swapVariables(i, j);
 		}
@@ -474,7 +486,7 @@ public class SMTIAS extends ModelAS{
 		var singles:Int = 0n;
 		
 		val permutV = new Rail[Int](sz, 0n);
-		val variablesWv = new Rail[Int](length,0n);
+		val variablesWv = new Rail[Int](size,0n);
 		for (mi in match.range())
 		{
 			val value = match(mi);
@@ -498,7 +510,7 @@ public class SMTIAS extends ModelAS{
 			
 			if( revpM(mi)(pmi)==0n )
 			{
-				levelPM = length; //put some value
+				levelPM = size; //put some value
 				singles++;
 				// Console.OUT.println("m "+ (mi+1n) +" is SINGLE (not a valid match with w "+(pmi+1n)+")");
 				val hos = mapTable(pmi);
@@ -562,31 +574,31 @@ public class SMTIAS extends ModelAS{
 		return errv;
 	}
 	
-	/**
-	 * 	Set the parameter in the solver
-	 * 	@param solverParameters Solver parameter from the model
-	 */
-	public def setParameters(solverParameters : ASSolverParameters):void{
-		solverParameters.setValues(solverParams);
-	}
+	// /**
+	//  * 	Set the parameter in the solver
+	//  * 	@param solverParameters Solver parameter from the model
+	//  */
+	// public def setParameters(solverParameters : ASSolverParameters):void{
+	// 	solverParameters.setValues(solverParams);
+	// }
 	
 	// public def initialize( baseValue : Int ) {
 	// 	for(k in variables.range()){
 	// 		variables(k) = baseValue + k as Int;
 	// 	}
 	// 	//Main.show("before ini",variables);
-	// 	for( var i:Int = length - 1n ; i >	0n ; i-- ) {
+	// 	for( var i:Int = size - 1n ; i >	0n ; i-- ) {
 	// 		val j = r.randomInt( i + 1n );
 	// 		swapVariables(i,j);
 	// 	}
 	// }
 	
-	public def swapVariables(i:Int, j:Int):void{
-		//Console.OUT.println("swap func i: "+i+" j: "+j);
-		val x = variables(i);
-		variables(i) = variables(j); 
-		variables(j) = x;
-	}
+	// public def swapVariables( i:Long, j:Long):void{
+	// 	//Console.OUT.println("swap func i: "+i+" j: "+j);
+	// 	val x = variables(i);
+	// 	variables(i) = variables(j); 
+	// 	variables(j) = x;
+	// }
 	
 	// public def setVariables(array : Rail[Int]{self.size==variables.size}){
 	// 	Rail.copy(array,this.variables);
@@ -673,19 +685,19 @@ public class SMTIAS extends ModelAS{
 		 //Write file
 		 val oFile = new File(fileName);
 		 val p = oFile.printer();
-		 p.println(length);		
+		 p.println(size);		
 		 p.println(" ");		
 		 
 		 
 		 var i:Int = 0n;
-		 for (i=0n; i<length; i++){
+		 for (i=0n; i<size; i++){
 			  //Console.OUT.print(i+1+": ");
 			  for(j in menPref(i))
 					if (j != 0n) p.print(j+" ");
 			  p.println("");
 		 }
 		 p.println(" ");
-		 for (i=0n; i<length; i++){
+		 for (i=0n; i<size; i++){
 			  for(j in womenPref(i))
 					if (j != 0n) p.print(j+" ");
 			  p.println("");
@@ -696,14 +708,14 @@ public class SMTIAS extends ModelAS{
 		 
 		 Console.OUT.println("\nMen Preferences");
 		 var i:Int = 0n;
-		 for (i=0n; i<length; i++){
+		 for (i=0n; i<size; i++){
 			  Console.OUT.print(i+1+": ");
 			  for(j in menPref(i))
 					Console.OUT.print(j+" ");
 			  Console.OUT.println("");
 		 }
 		 Console.OUT.println("Women Preferences");
-		 for (i=0n; i<length; i++){
+		 for (i=0n; i<size; i++){
 			  Console.OUT.print(i+1+": ");
 			  for(j in womenPref(i))
 					Console.OUT.print(j+" ");
@@ -711,7 +723,7 @@ public class SMTIAS extends ModelAS{
 		  }
 		
 		// Console.OUT.println("Men rev Preferences");
-		// for (i=0n; i<length; i++){
+		// for (i=0n; i<size; i++){
 		// 	Console.OUT.print(i+1+": ");
 		// 	for(j in revpM(i))
 		// 		Console.OUT.print(j+" ");
@@ -719,7 +731,7 @@ public class SMTIAS extends ModelAS{
 		// }
 		// 
 		// Console.OUT.println("Women rev Preferences");
-		// for (i=0n; i<length; i++){
+		// for (i=0n; i<size; i++){
 		// 	Console.OUT.print(i+1+": ");
 		// 	for(j in revpW(i))
 		// 		Console.OUT.print(j+" ");

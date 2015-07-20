@@ -52,7 +52,8 @@ public class CSPStats{
 	 var fftarget:Int = 0n;
 	 /** number of targets accomplished */
 	 var ntarget:Int = 0n;
-	 
+	 /** Vector Size */
+	 var vectorSize:Long = 1;
 	 
 	 /** Variables for SMTI */
 	 /** number of BP */

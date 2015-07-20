@@ -21,6 +21,7 @@ import x10.compiler.Inline;
 import x10.util.concurrent.AtomicBoolean; 
 import x10.util.Team;
 import x10.util.StringUtil;
+import csp.model.ParamManager;
 
 /**
  * Each place has solvers, a PlaceLocalHandle[PlaceMultiWalk(sz)].
@@ -35,7 +36,7 @@ import x10.util.StringUtil;
  *  >
  * </verbatim>
  */
-public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {  
+public class PlacesMultiWalks(sz:Long) implements IParallelSolver {  
 	 property sz()=sz;
 	 // Shared state, accessible from any place, via at(
 	 var csp_:ModelAS(sz);
@@ -44,8 +45,9 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 var solver:RandomSearch(sz);
 	 
 	 var time:Long;	
-	 val intraTIRecv : Int;
-	 val intraTISend : Int;
+	 val inTeamReportI : Int;
+	 val inTeamUpdateI : Int;
+	 val poolSize:Int;
 	 //val commOption : Int;
 	 
 	 var bcost : Int;
@@ -57,7 +59,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 /** Comunication Variables */
 	 var commM : CommManager(sz);
 	 //Hybrid approach
-	 val nbExplorerPT : Int;
+	 val expPerTeam : Int;
 	 val nTeams : Int;
 	 
 	 val bestC = new Rail[Int](sz,0n); 
@@ -68,10 +70,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 
 	 //InterTeam Communication
 	 var interTeamKill:Boolean = false;
-	 val interTeamInterval:Long;
+	 val outTeamTime:Long;
 	 val minDistance:Double;
-	 
-	 val maxTime:Long;
 	 
 	 val verify:Boolean;
 	 
@@ -93,21 +93,26 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 	 /**
 	  * 	Constructor of the class
 	  */
-	 public def this(vectorSize:Long, intraTIRecv : Int, intraTISend : Int, interTI : Long, ps : Int, npT : Int, 
-				changeProb:Int, minDistance:Double, maxTime : Long, verify : Boolean, delay:Long, affectedP : Double ){
-		  property(vectorSize,ps);
-		  this.intraTIRecv = intraTIRecv;
-		  this.intraTISend = intraTISend;
+	 public def this(vectorSize:Long, opts:ParamManager){
+				//inTeamReportI : Int, inTeamUpdateI : Int, interTI : Long, ps : Int, npT : Int, 
+				//changeProb:Int, minDistance:Double, maxTime : Long, verify : Boolean, delay:Long, affectedP : Double ){
+		  property(vectorSize);
+		  // Parameters of the CPLS framework
+		  this.verify = opts("-v"); //TODO: a flag??
+		  // Intra team 
+		  this.inTeamReportI = opts("-R", 0n);
+		  this.inTeamUpdateI = opts("-U", 0n);
+		  this.expPerTeam = opts("-N", 1n);
+		  this.changeProb = opts("-C", 100n);
+		  this.poolSize = opts("-P",4n);
+		  // Inter team
+		  this.outTeamTime = opts("-I", 0);
+		  this.minDistance = opts("-D", 0.3);
+		  this.iniDelay = opts("-W", 0);
+		  this.affectedPer = opts("-A", 0.0);
+		  
 		  //commOption = commOpt;
-		  nbExplorerPT = npT; 
-		  nTeams = Place.MAX_PLACES as Int / nbExplorerPT ;
-		  this.changeProb = changeProb;
-		  interTeamInterval = interTI;
-		  this.minDistance = minDistance;
-		  this.maxTime = maxTime;
-		  this.verify = verify;
-		  this.iniDelay = delay;
-		  this.affectedPer = affectedP;
+		  this.nTeams = Place.MAX_PLACES as Int / expPerTeam ;
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	  
 	 }
 	 
@@ -128,7 +133,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  
 		  solver = solGen();
 		  //Console.OUT.println("Aqui");
-		  commM = new CommManager(sz, 0n , st, intraTIRecv, intraTISend ,0n, poolSize, 
+		  commM = new CommManager(sz, 0n , st, inTeamReportI, inTeamUpdateI ,0n, poolSize, 
 					 nTeams, changeProb,divPoolSz); // check parameteres 
 	 }
 	 
@@ -172,11 +177,11 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  
 		  // verify if inter team comm is able, if the number of teams is greater than 1 and 
 		  //        if place(here) is a head node 
-		  if (interTeamInterval > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
-				//if (interTeamInterval > 0 && nTeams > 1n && here.id == 1) //node O to nteams
-				// if (interTeamInterval > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
+		  if (outTeamTime > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
+				//if (outTeamTime > 0 && nTeams > 1n && here.id == 1) //node O to nteams
+				// if (outTeamTime > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
 		  {
-				//val delay = random.nextLong(interTeamInterval);
+				//val delay = random.nextLong(outTeamTime);
 				//Logger.debug(()=>{" creating Inter-Team Activity"});
 				//val delayStr = System.getenv("D");
 				//Console.OUT.println(here+"iniDelay "+iniDelay);
@@ -260,8 +265,8 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  commM.communicate(totalCost, variables);
 	 }
 	 
-	 @Inline public def intraTIRecv():Int = commM.intraTIRecv;
-	 @Inline public def intraTISend():Int = commM.intraTISend;
+	 @Inline public def inTeamReportI():Int = commM.inTeamReportI;
+	 @Inline public def inTeamUpdateI():Int = commM.inTeamUpdateI;
 	 
 	 public def communicateLM(totalCost:Int, variables:Rail[Int]{self.size==sz})
 	 {
@@ -482,7 +487,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 		  while (!interTeamKill) {
 				Logger.debug(()=>{" kill "+interTeamKill});
 				
-				if (!System.sleep(interTeamInterval)){ 
+				if (!System.sleep(outTeamTime)){ 
 					 //Logger.info(()=>"interTeamActivity error: cannot execute sleep");
 					 Console.OUT.println(here+" interTeamActivity error: cannot execute sleep");
 					 //err++;
@@ -491,7 +496,7 @@ public class PlacesMultiWalks(sz:Long,poolSize:Int) implements IParallelSolver {
 				//while(commM.ep.countInsert % 10n != 0n);
 				
 				// woken up
-				//Logger.info(()=>{" interTeamActivity - run : woken up (every "+interTeamInterval+" ms)"});
+				//Logger.info(()=>{" interTeamActivity - run : woken up (every "+outTeamTime+" ms)"});
 				//val random = new Random(seed);
 				//if (random.nextInt(100n) < 16) 
 				interTeamComm(st, r);

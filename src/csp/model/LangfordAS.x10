@@ -44,39 +44,36 @@ public class LangfordAS(order:Long) extends ModelAS{
 	val paramK:Long; // Should be an input parameter
 	val err:Rail[Int];
 
-	def this (order : Long, vectorSize: Long/*{self==2*order}*/, seed : Long, rLimit:Int, inv:String) : LangfordAS(vectorSize){
-		super(vectorSize, seed, inv);
-		property(order);
+	def this (size:Long, vectorSize: Long, seed : Long, opts:ParamManager) : LangfordAS(vectorSize){
+		super(vectorSize, seed, opts);
+		property(size);
 		paramK = vectorSize /order;
 		err = new Rail[Int](order,0n);
-		initParameters(rLimit);
-	}
-
-	/**
-	 * 	initParameters() 
-	 *  Set Initial values for the problem
-	 */
-	private def initParameters(rLimit:Int){ 
-		solverParams.probSelectLocMin = 6n;
-		solverParams.freezeLocMin = 2n;
-		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = 2n;//2n; //(order < 12n) ? 4n : 10n;
-		solverParams.resetPercent = 1n; //1n;      //var to reset
-		//solverParams.nbVarToReset = 1n;
-		solverParams.restartLimit = rLimit;
-		solverParams.restartMax = 1000n;
-		solverParams.baseValue = 0n;
-		solverParams.exhaustive = false;
-		solverParams.firstBest = true; 
 		
 		if ((paramK == 2 && order % 4 != 0 && order % 4 != 3) ||
-				(paramK == 3 && (order < 9 || (order % 9 != 0 && order % 9 != 1 && order % 9 != 8)))){
-			Console.OUT.printf("no solution with size = %d\n", order);
-			//exit(1);
+				  (paramK == 3 && (order < 9 || (order % 9 != 0 && order % 9 != 1 && order % 9 != 8)))){
+			 Console.OUT.printf("no solution with size = %d\n", order);
+			 //exit(1);
 		}
+	}
 
-		
-	} 
+// 	/**
+// 	 * 	initParameters() 
+// 	 *  Set Initial values for the problem
+// 	 */
+// 	private def initParameters(rLimit:Int){ 
+// 		solverParams.probSelectLocMin = 6n;
+// 		solverParams.freezeLocMin = 2n;
+// 		solverParams.freezeSwap = 0n;
+// 		solverParams.resetLimit = 2n;//2n; //(order < 12n) ? 4n : 10n;
+// 		solverParams.resetPercent = 1n; //1n;      //var to reset
+// 		//solverParams.nbVarToReset = 1n;
+// 		solverParams.restartLimit = rLimit;
+// 		solverParams.restartMax = 1000n;
+// 		solverParams.baseValue = 0n;
+// 		solverParams.exhaustive = false;
+// 		solverParams.firstBest = true; 		
+// 	} 
 	
 	public def	computeError(x:Long):Long{            /* here x < order */
 		 var r:Long = 0n;
@@ -156,7 +153,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 * 	@param i variable
 	 * 	@return cost of variable i
 	 */
-	public def costOnVariable( var i : Int ) : Int
+	public def costOnVariable( i:Long ) : Int
 	{
 		val x = i % order;
 		return (err(x) != 0n ? 1n : 0n); /* for K == 3 return if the variable is in error (i.e. 1 or 2 errors are the same) */
@@ -169,7 +166,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 * 	@param i2 second variable to swap
 	 * 	@return cost if swap
 	 */
-	public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
+	public def costIfSwap( currentCost:Int, i1:Long, i2:Long ) : Int
 	{
 		var r : Int = currentCost;
 		
@@ -202,7 +199,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 		var j : Int;
 		Console.OUT.printf("\n");
 		
-		for(i = 0n; i < length; i++){
+		for(i = 0n; i < size; i++){
 			for(j = 0n; variables(j) != i; j++)
 				;
 			j %= order;
@@ -217,7 +214,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 		var j : Int;
 		Console.OUT.printf("\n");
 		
-		for(i = 0n; i < length; i++){
+		for(i = 0n; i < size; i++){
 			for(j = 0n; conf(j) != i; j++)
 				;
 			j %= order;
@@ -234,7 +231,7 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 *  @param i1 First variable already swapped
 	 *  @param i2 Second variable already swapped
 	 */
-	public def executedSwap(var i1 : Int, var i2 : Int) {
+	public def executedSwap(var i1:Long , var i2:Long ) {
 		val x = i1 % order;
 		val y = i2 % order;
 
@@ -248,12 +245,12 @@ public class LangfordAS(order:Long) extends ModelAS{
 	 *  Checks if the solution is valid.
 	 */
 	public  def verify(conf:Valuation(sz)):Boolean {
-		 var order:Long = length / paramK;
+		 var order:Long = size / paramK;
 		 var r:Long = 0;
 		 
 		 //Check Permutation
 		 val permutV = new Rail[Int](sz, 0n);
-		 val baseV = solverParams.baseValue;
+		 val baseV = this.baseValue;
 		 for (mi in conf.range()){
 			  val value = conf(mi);
 			  permutV(value-baseV)++;

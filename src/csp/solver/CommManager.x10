@@ -36,9 +36,8 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	var solverMode : Int;
 	
 	/** Number of iterations between each communication activity */
-	var intraTIRecv : Int;
-	
-	var intraTISend : Int;
+	var inTeamReportI : Int;
+	var inTeamUpdateI : Int;
 	
 	
 	/** Number of iterations between each communication activity */
@@ -65,14 +64,14 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	val solvers:PlaceLocalHandle[IParallelSolver(sz)];
 	
 	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[IParallelSolver(sz)], 
-	        intraTIRecv : Int, intraTISend : Int, interTeamI : Int ,  intPoolSize: Int, teamsNumber : Int,
+	        inTeamReportI : Int, inTeamUpdateI : Int, interTeamI : Int ,  intPoolSize: Int, teamsNumber : Int,
 	        changeProb:Int,  divPoolSize: Int){
 		property(sz, intPoolSize, divPoolSize);
 		solvers = ss;
 		//ep = new ElitePool( sz, poolSize, ss); 
 	    solverMode = solverModeIn;
-		this.intraTIRecv = intraTIRecv;
-		this.intraTISend = intraTISend;
+		this.inTeamReportI = inTeamReportI;
+		this.inTeamUpdateI = inTeamUpdateI;
 		interTI = interTeamI;
 		//commOption = cOption;
 		nbTeams = teamsNumber;
@@ -102,8 +101,8 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	public def setValues(toSet: CommManager{self.sz==this.sz}){
 		this.solverMode = toSet.solverMode;
-		this.intraTIRecv = toSet.intraTIRecv;
-		this.intraTISend = toSet.intraTISend;
+		this.inTeamReportI = toSet.inTeamReportI;
+		this.inTeamUpdateI = toSet.inTeamUpdateI;
 		this.interTI = toSet.interTI;
 	}
 	/**

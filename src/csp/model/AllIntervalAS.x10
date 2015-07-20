@@ -14,47 +14,43 @@ public class AllIntervalAS extends ModelAS{
 	 
 	/** nb occurrences (to compute total cost) 0 is unused */
 	val nbOcc : Rail[Int];	
-	val exh : Boolean;
+	//val exh : Boolean;
 	
 	/**
 	 * 	Constructor
-	 *  @param lengthProblem Number of variables of the problem
+	 *  @param sizeProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	def this (lengthProblem : Long , seed : Long, exahustive:Boolean, restLimit:Int, inv:String ):AllIntervalAS(lengthProblem){
-		super( lengthProblem, seed, inv );
-		nbOcc = new Rail[Int] (length , 0n);
-		exh = exahustive;
-		initParameters(restLimit);
-		
+	def this (sizeProblem : Long , seed : Long, opts:ParamManager ):AllIntervalAS(sizeProblem){
+		super( sizeProblem, seed, opts );
+		this.nbOcc = new Rail[Int] (size , 0n);
 	}
 	
 	
-	private def initParameters(rLimit:Int){
-		if (exh){
-			solverParams.probSelectLocMin = 66n;
-			solverParams.freezeLocMin = 1n;
-			solverParams.freezeSwap = 0n;
-			solverParams.resetLimit = 1n;
-			solverParams.resetPercent = 25n;
-			solverParams.restartLimit = rLimit;
-			solverParams.restartMax = 0n;
-			solverParams.baseValue = 0n;
-			solverParams.exhaustive = true;
-			solverParams.firstBest = true;
-		}else{
-			solverParams.probSelectLocMin = 6n;
-			solverParams.freezeLocMin = 5n;
-			solverParams.freezeSwap = 0n;
-			solverParams.resetLimit = length / 6n;
-			solverParams.resetPercent = 10n;
-			solverParams.restartLimit = rLimit;
-			solverParams.restartMax = 0n;
-			solverParams.baseValue = 0n;
-			solverParams.exhaustive = false;
-			solverParams.firstBest = false;
-		}
-	} 
+	
+	// 	if (exh){
+	// 		solverParams.probSelectLocMin = 66n;
+	// 		solverParams.freezeLocMin = 1n;
+	// 		solverParams.freezeSwap = 0n;
+	// 		solverParams.resetLimit = 1n;
+	// 		solverParams.resetPercent = 25n;
+	// 		solverParams.restartLimit = rLimit;
+	// 		solverParams.restartMax = 0n;
+	// 		solverParams.baseValue = 0n;
+	// 		solverParams.exhaustive = true;
+	// 		solverParams.firstBest = true;
+	// 	}else{
+	// 		solverParams.probSelectLocMin = 6n;
+	// 		solverParams.freezeLocMin = 5n;
+	// 		solverParams.freezeSwap = 0n;
+	// 		solverParams.resetLimit = size / 6n;
+	// 		solverParams.resetPercent = 10n;
+	// 		solverParams.restartLimit = rLimit;
+	// 		solverParams.restartMax = 0n;
+	// 		solverParams.baseValue = 0n;
+	// 		solverParams.exhaustive = false;
+	// 		solverParams.firstBest = false;
+	// 	}
 	
 	/**
 	 * 	Computes the cost of the solution
@@ -64,7 +60,7 @@ public class AllIntervalAS extends ModelAS{
 	public def cost() : Int 
 	{
 		var r : Int = 0n;
-		var i : Int = length;
+		var i : Int = size;
 
 		this.nbOcc(0) = 0n;                /* 0 is unused, use it as a sentinel */
 
@@ -88,13 +84,13 @@ public class AllIntervalAS extends ModelAS{
 
 		this.nbOcc.clear();
 		
-		for(i = 0n; i < length - 1; i++){
+		for(i = 0n; i < size - 1; i++){
 			val aux = Math.abs(variables(i) - variables(i + 1n)); 
 			this.nbOcc(aux) = this.nbOcc(aux) + 1n;
 		}
 		
-		if (isTrivialSolution(variables, length as Int))
-			return length as Int;
+		if (isTrivialSolution(variables, size as Int))
+			return size as Int;
 		
 		return cost();
 	}
@@ -113,7 +109,7 @@ public class AllIntervalAS extends ModelAS{
 	 *  @param i2 second variable to swap
 	 *  @return cost of the problem if the swap is done
 	 */
-	public def costIfSwap(current_cost:Int,var i1:Int, var i2:Int):Int
+	public def costIfSwap( current_cost:Int,var i1:Long, var i2:Long ):Int
 	{
 		var s1 : Int;
 		var s2 : Int;
@@ -126,9 +122,9 @@ public class AllIntervalAS extends ModelAS{
 		var add3 : Int;
 		var add4 : Int;
 
-		if ((i1 == 0n && (variables(i2) == 0n || variables(i2) == length - 1n)) ||
-				(i2 == 0n && (variables(i1) == 0n || variables(i1) == length - 1n)))
-			return length;
+		if ((i1 == 0 && (variables(i2) == 0n || variables(i2) == size - 1n)) ||
+				(i2 == 0 && (variables(i1) == 0n || variables(i1) == size - 1n)))
+			return size;
 		
 		// if(i2 < i1){
 		// 	val aux = i1;
@@ -142,7 +138,7 @@ public class AllIntervalAS extends ModelAS{
 		s1 = variables(i1);
 		s2 = variables(i2);
 
-		if (i1 > 0n)
+		if (i1 > 0)
 		{
 			rem1 = Math.abs(variables(i1 - 1) - s1); 
 			this.nbOcc(rem1) = this.nbOcc(rem1) - 1n; 
@@ -153,7 +149,7 @@ public class AllIntervalAS extends ModelAS{
 			rem1 = add1 = 0n;
 
 
-		if (i1 < i2 - 1n)		// i1 and i2 are not consecutive    ...if(Math.abs(i1-i2) > 1) 
+		if (i1 < i2 - 1)		// i1 and i2 are not consecutive    ...if(Math.abs(i1-i2) > 1) 
 		{	
 			//Console.OUT.println("nocon");
 			rem2 = Math.abs(s1 - variables(i1 + 1));
@@ -169,7 +165,7 @@ public class AllIntervalAS extends ModelAS{
 		else
 			rem2 = add2 = rem3 = add3 = 0n;
 
-		if (i2 < length - 1n)
+		if (i2 < size - 1)
 		{
 			rem4 = Math.abs(s2 - variables(i2 + 1)); 
 			this.nbOcc(rem4) = this.nbOcc(rem4) - 1n;
@@ -202,7 +198,7 @@ public class AllIntervalAS extends ModelAS{
 	 *  @param i1 First variable already swapped
 	 *  @param i2 Second variable already swapped
 	 */
-	public def executedSwap(var i1 : Int, var i2 : Int) {
+	public def executedSwap(var i1:Long, var i2:Long ) {
 		var s1 : Int;
 		var s2 : Int;
 		var rem1 : Int;
@@ -256,7 +252,7 @@ public class AllIntervalAS extends ModelAS{
 			this.nbOcc(add3) = this.nbOcc(add3) + 1n; 
 		}
 
-		if (i2 < length - 1n)
+		if (i2 < size - 1n)
 		{
 			rem4 = Math.abs(s2 - variables(i2 + 1)); 
 			this.nbOcc(rem4) = this.nbOcc(rem4) - 1n;
@@ -277,17 +273,17 @@ public class AllIntervalAS extends ModelAS{
 	 * 	@param totalcost not used (for support more complex implementations)
 	 * 	@return -1 for recompute cost
 	 */
-	public def reset( n : Int, totalCost : Int ): Int // AdData *p_ad
+	public def reset( n:Long, totalCost:Int ): Int // AdData *p_ad
 	{
-		var distMin : Int = length - 3n;	// size - 1 also works pretty well 
+		var distMin : Int = size - 3n;	// size - 1 also works pretty well 
 		var i : Int;
 		var j : Int;
 		
-		for(i = 1n; i < length; i++)
+		for(i = 1n; i < size; i++)
 		{
 			if (Math.abs(variables(i - 1) - variables(i)) >= distMin)
 			{
-				j = r.randomInt(length);
+				j = r.randomInt(size);
 				this.swapVariables(i,j);
 			}
 		}
@@ -295,38 +291,38 @@ public class AllIntervalAS extends ModelAS{
 	}
 	
 	
-	public def costOnVariable(var i:Int):Int{
+	public def costOnVariable( i:Long ) : Int{
 		var costV : Int = 0n;
 		val miss = cost();
 		
 		if(variables(i) >= miss)
-			costV += length;
-		if(variables(i) < length-miss )
-			costV += length;
+			costV += size;
+		if(variables(i) < size-miss )
+			costV += size;
 		return costV;
 		
 		
 // 		//var s1 : Int;
-// 		var distL:Int = length;
-// 		var distR:Int = length;
+// 		var distL:Int = size;
+// 		var distR:Int = size;
 // 		
-// 		if ((i == 0 && (variables(i) == 0 || variables(i) == length - 1)) ||
-// 				(i == length - 1 && (variables(i) == 0 || variables(i) == length - 1)))
-// 			return length;
+// 		if ((i == 0 && (variables(i) == 0 || variables(i) == size - 1)) ||
+// 				(i == size - 1 && (variables(i) == 0 || variables(i) == size - 1)))
+// 			return size;
 // 
 // 		//s1 = variables(i);
 // 		
 // 		if (i > 0){
 // 			distL = Math.abs(variables(i) - variables(i-1));
 // 		}
-// 		if (i < length - 1 ){
+// 		if (i < size - 1 ){
 // 			distR = Math.abs(variables(i) - variables(i+1));
 // 		}
 // 		
 // 		if (distR < distL){
-// 			return(length - distR);
+// 			return(size - distR);
 // 		}else
-// 			return(length - distL);
+// 			return(size - distL);
 	}
 	
 		
@@ -340,7 +336,7 @@ public class AllIntervalAS extends ModelAS{
  		
  		//Check Permutation
  		val permutV = new Rail[Int](sz, 0n);
- 		val baseV = solverParams.baseValue;
+ 		val baseV = this.baseValue;
  		for (mi in conf.range()){
  			val value = conf(mi);
  			permutV(value-baseV)++;
@@ -352,10 +348,10 @@ public class AllIntervalAS extends ModelAS{
  		
  		nbOcc.clear();
  		var i:Int;
- 		for(i = 0n; i < length - 1n; i++)
+ 		for(i = 0n; i < size - 1n; i++)
  			nbOcc(Math.abs(conf(i) - conf(i + 1)))++;
  
- 		for(i = 1n; i < length; i++)
+ 		for(i = 1n; i < size; i++)
  			if (nbOcc(i) > 1)
  			{
  				Console.OUT.println("ERROR distance "+i+" appears "+nbOcc(i)+" times");

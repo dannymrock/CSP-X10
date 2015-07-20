@@ -9,24 +9,24 @@ package csp.solver;
  */
 
 public class MovePermutation {
-	 private var first:Int = -1n;
-	 private var second:Int = -1n;
+	 private var first:Long = -1;
+	 private var second:Long = -1;
 	 
-	 public def this (f:Int, s:Int){
+	 public def this (f:Long, s:Long){
 		  this.first = f;
 		  this.second = s;
 	 }
 	 
-	 public def getFirst():Int{
+	 public def getFirst():Long{
 		  return first;
 	 }
-	 public def getSecond():Int{
+	 public def getSecond():Long{
 		  return second;
 	 }
-	  public def setFirst(f:Int){
+	  public def setFirst(f:Long){
 		  this.first = f;
 	 }
-	 public def setSecond(s:Int){
+	 public def setSecond(s:Long){
 		  this.second = s;
 	 }	 
 	 

@@ -4,47 +4,43 @@ import csp.solver.Valuation;
 public class PartitAS extends ModelAS{
 	
 	val size2 : Int;
-	
 	val sumMidX : Int;
 	var curMidX : Int;
-	
 	val coeff : Int;
-	
 	val sumMidX2 : Long;
 	var curMidX2 : Long;
 	
-	def this(length:Long, seed:Long, rLimit:Int, inv:String): PartitAS(length) {
-		super(length, seed, inv);
-		size2 = (length / 2) as Int;
+	def this(sizeProblem:Long, seed:Long, opts:ParamManager): PartitAS(sizeProblem) {
+		super(sizeProblem, seed, opts);
+		size2 = (size / 2) as Int;
 		
-		if (length < 8 || length % 4 != 0)
+		if (size < 8 || size % 4 != 0)
 		{
-			Console.OUT.printf("no solution with size = %d\n", length);
+			Console.OUT.printf("no solution with size = %d\n", size);
 			//exit(1);
 		}
 		
-		sumMidX = ((length * (length + 1n)) / 4n) as Int;
-		sumMidX2 = (sumMidX as Long * (2n * length + 1n)) / 3L;
+		sumMidX = ((size * (size + 1n)) / 4n) as Int;
+		sumMidX2 = (sumMidX as Long * (2n * size + 1n)) / 3L;
 		coeff = ( sumMidX2 / sumMidX ) as Int;
-		initParameters(rLimit);
 	}
 	
-	/**
-	 * 	initParameters() 
-	 *  Set Initial values for the problem
-	 */
-	private def initParameters(rLimit:Int){
-		solverParams.probSelectLocMin = 80n;
-		solverParams.freezeLocMin = 1n;
-		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = 1n;
-		solverParams.resetPercent = 1n;
-		solverParams.restartLimit = rLimit;//(length < 100) ? 10 : (length < 1000) ? 150 : length / 10;
-		solverParams.restartMax = 100000n;
-		solverParams.baseValue = 1n;
-		solverParams.exhaustive = true;
-		solverParams.firstBest = false;
-	} 
+	// /**
+	//  * 	initParameters() 
+	//  *  Set Initial values for the problem
+	//  */
+	// private def initParameters(rLimit:Int){
+	// 	solverParams.probSelectLocMin = 80n;
+	// 	solverParams.freezeLocMin = 1n;
+	// 	solverParams.freezeSwap = 0n;
+	// 	solverParams.resetLimit = 1n;
+	// 	solverParams.resetPercent = 1n;
+	// 	solverParams.restartLimit = rLimit;//(size < 100) ? 10 : (size < 1000) ? 150 : size / 10;
+	// 	solverParams.restartMax = 100000n;
+	// 	solverParams.baseValue = 1n;
+	// 	solverParams.exhaustive = true;
+	// 	solverParams.firstBest = false;
+	// } 
 	
 	/**
 	 * 	Returns the total cost of the current solution.
@@ -81,7 +77,7 @@ public class PartitAS extends ModelAS{
 	 * 	@param i2 second variable to swap
 	 * 	@return cost if swap
 	 */
-	public def costIfSwap(currentCost : Int, i1 : Int, i2 : Int) : Int
+	public def costIfSwap( currentCost:Int, i1:Long, i2:Long ) : Int
 	{
 		var xi1 : Int, xi12 : Int, xi2 : Int, xi22 : Int, cmX : Int, cmX2 : Long, r : Int;
 
@@ -108,7 +104,7 @@ public class PartitAS extends ModelAS{
 	 * 	@param i1 not used
 	 * 	@param i2 not used
 	 */
-	public def executedSwap(i1:Int, i2:Int)
+	public def executedSwap( i1:Long, i2:Long )
 	{
 		var xi1 : Int, xi12 : Int, xi2 : Int, xi22 : Int;
 
@@ -134,7 +130,7 @@ public class PartitAS extends ModelAS{
 
 		//Check Permutation
 		val permutV = new Rail[Int](sz, 0n);
-		val baseV = solverParams.baseValue;
+		val baseV = this.baseValue;
 		for (mi in conf.range()){
 			val value = conf(mi);
 			permutV(value-baseV)++;
@@ -151,7 +147,7 @@ public class PartitAS extends ModelAS{
 			sumA2 += conf(i) * conf(i);
 		}
 		
-		for(; i < length; i++)
+		for(; i < size; i++)
 		{
 			sumB += conf(i);
 			sumB2 += conf(i) * conf(i);
@@ -172,14 +168,14 @@ public class PartitAS extends ModelAS{
 		return true;
 	}
 	
-	public def nextJ(i:Int, j:Int, exhaustive:Boolean) : Int {
-		return (j < 0n) ? size2 : j + 1n;
+	public def nextJ( i:Long, j:Long, exhaustive:Boolean ) : Long {
+		return (j < 0) ? size2 as Long : j + 1;
 	}
 	
 	
-	public def nextI(i:Int) : Int {
-		var vari:Int = i + 1n;
-		return vari < size2 ? vari : length;
+	public def nextI( i:Long ) : Long {
+		val vari = i + 1;
+		return vari < size2 as Long ? vari : size as Long;
 	}
 
 	

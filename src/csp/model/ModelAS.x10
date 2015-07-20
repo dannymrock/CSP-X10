@@ -20,30 +20,35 @@ import csp.solver.MovePermutation;
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013
  */
-public class ModelAS(sz:Long, seed:Long) {
-	protected val length = sz as Int;
+public class ModelAS(sz:Long) {
+	protected val size = sz as Int;
 	protected val variables = new Rail[Int]( sz, (i:Long) => i as Int);
-	protected val r  = new RandomTools(seed);
-	protected val solverParams = new ASSolverParameters();
+	protected var baseValue:Int;
+	protected val r:RandomTools;
+	
+	//protected val solverParams = new ASSolverParameters();
 	
 	val inVector:Boolean;
 	val inPath:String;
-	
-	//Constants for Target COST
-	public static val COST_FROM_COMMAND_LINE = 0;
-	public static val COST_FROM_FILE_OPT = 1;
-	public static val COST_FROM_FILE_BKS = 2;
-	public static val STRICTLY_LOWER = -3;
-	public static val LOWER_OR_EQUAL = -4;
+	val opts:ParamManager;
+	// //Constants for Target COST
+	// public static val COST_FROM_COMMAND_LINE = 0;
+	// public static val COST_FROM_FILE_OPT = 1;
+	// public static val COST_FROM_FILE_BKS = 2;
+	// public static val STRICTLY_LOWER = -3;
+	// public static val LOWER_OR_EQUAL = -4;
 	
 	/**
 	 * 	Constructor of the class
 	 */
-	public def this( lengthProblem : Long, seed : Long, inPath:String ){
-		property(lengthProblem, seed);
-		this.initParameters(1000n);
-		inVector = inPath.equals(".")?false:true;
-		this.inPath = inPath;
+	public def this( sizeProblem:Long, seed:Long, opts:ParamManager){
+		property(sizeProblem);
+		//this.initParameters(1000n);
+		this.opts = opts;
+		this.baseValue = opts("-bv", 1n);
+		this.r  = new RandomTools(seed);
+		this.inPath = opts("-if","."); 
+		this.inVector = inPath.equals(".") ? false : true;
 	}
 	
 	/**
@@ -53,36 +58,36 @@ public class ModelAS(sz:Long, seed:Long) {
 		r.setSeed(seed);
 	}
 	
-	/**
-	 *  Initialize the default solver parameters for the model 
-	 */
-	private def initParameters(rLimit:Int){
-		
-		//Default values
-		solverParams.probSelectLocMin = 0n;
-		solverParams.freezeLocMin = 0n;
-		solverParams.freezeSwap = 0n;
-		solverParams.resetLimit = length;
-		solverParams.resetPercent = 10n;
-		solverParams.restartLimit = rLimit;
-		solverParams.restartMax = 0n;
-		solverParams.exhaustive = false;
-		solverParams.firstBest = false;
-		solverParams.nbVarToReset = -1n;
-	}
+	// /**
+	//  *  Initialize the default solver parameters for the model 
+	//  */
+	// private def initParameters(rLimit:Int){
+	// 	
+	// 	//Default values
+	// 	solverParams.probSelectLocMin = 0n;
+	// 	solverParams.freezeLocMin = 0n;
+	// 	solverParams.freezeSwap = 0n;
+	// 	solverParams.resetLimit = length;
+	// 	solverParams.resetPercent = 10n;
+	// 	solverParams.restartLimit = rLimit;
+	// 	solverParams.restartMax = 0n;
+	// 	solverParams.exhaustive = false;
+	// 	solverParams.firstBest = false;
+	// 	solverParams.nbVarToReset = -1n;
+	// }
 	
-	/**
-	 * 	Set the parameter in the solver
-	 * 	@param solverParameters Solver parameter from the model
-	 */
-	public def setParameters(solverParameters : ASSolverParameters):void{
-		solverParameters.setValues(solverParams);
-	}
+	// /**
+	//  * 	Set the parameter in the solver
+	//  * 	@param solverParameters Solver parameter from the model
+	//  */
+	// public def setParameters(solverParameters : ASSolverParameters):void{
+	// 	solverParameters.setValues(solverParams);
+	// }
 	
 	/**
 	 * 	Cost on variable function (may be virtual)
 	 */
-	public def costOnVariable(i:Int):Int{
+	public def costOnVariable(i:Long):Int{
 		Console.OUT.println("Error bad costOnVariable");
 		return 0n;
 	}
@@ -90,7 +95,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	/**
 	 * 	Cost if swap function
 	 */
-	public def costIfSwap(current_cost:Int, i1:Int, i2:Int):Int{
+	public def costIfSwap(current_cost:Int, i1:Long, i2:Long):Int{
 		Console.OUT.println("Error costIfSwap");
 		return 0n;
 	}
@@ -98,7 +103,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	/**
 	 * 	executed swap
 	 */
-	public def executedSwap(i1:Int, i2:Int):void{
+	public def executedSwap(i1:Long, i2:Long):void{
 		Console.OUT.println("Error no executedSwap implementation");
 	}
 	
@@ -106,7 +111,7 @@ public class ModelAS(sz:Long, seed:Long) {
 	// public def swapVariables(move:MovePermutation):void{
 	// 	 val i = move.getFirst();
 	// 	 val j = move.getSecond();
-	public def swapVariables( i:Int, j:Int):void{
+	public def swapVariables( i:Long, j:Long):void{
 		 val x = variables(i);
 		 variables(i) = variables(j); 
 		 variables(j) = x;
@@ -124,7 +129,7 @@ public class ModelAS(sz:Long, seed:Long) {
 		x10.io.Console.OUT.println("");
 	}
 	
-	public def initialize( baseValue : Int ) {
+	public def initialize() {
 		 if (inVector)
 		 {
 			  //initialize from inVector
@@ -152,11 +157,11 @@ public class ModelAS(sz:Long, seed:Long) {
 					//Console.OUT.println("var "+(j-1)+" = "+variables(j-1));
 			  }
 			  
-			  if(j < length)
+			  if(j < this.size)
 					Console.OUT.println("ModelAS ERROR: The input vector is shorter than the variables array");
 			  
 			  // check permutation
-			  val permutV = new Rail[Int](length, 0n);
+			  val permutV = new Rail[Int](this.size, 0n);
 			  for (mi in variables.range())
 			  {
 					val value = variables(mi);
@@ -172,10 +177,10 @@ public class ModelAS(sz:Long, seed:Long) {
 		 {
 			  for(k in variables.range())
 			  {
-					variables(k) = baseValue + k as Int;
+					variables(k) = this.baseValue + k as Int;
 			  }
 			  //Main.show("before ini",variables);
-			  for( var i:Int = length - 1n ; i >	0n ; i-- )
+			  for( var i:Int = this.size - 1n ; i >	0n ; i-- )
 			  {
 					val j = r.randomInt( i + 1n );
 					swapVariables(i,j);
@@ -189,11 +194,11 @@ public class ModelAS(sz:Long, seed:Long) {
 	 * 	@param totalcost not used (for support more complex implementations)
 	 * 	@return -1 for recompute cost
 	 */
-	public def reset ( var n : Int, totalCost : Int ) : Int {
+	public def reset ( var n : Long, totalCost : Int ) : Int {
 		
-		while( n-- != 0n ) {
-			val i = r.randomInt(length);
-			val j = r.randomInt(length);
+		while( n-- != 0 ) {
+			val i = r.randomInt(this.size);
+			val j = r.randomInt(this.size);
 			swapVariables(i,j);
 		}
 		return -1n;
@@ -213,17 +218,17 @@ public class ModelAS(sz:Long, seed:Long) {
 		return variables;
 	}
 	
-	public def nextJ(i:Int, j:Int, exhaustive:Int) : Int {
+	public def nextJ(i:Long, j:Long, exhaustive:Boolean) : Long {
 		///Console.OUT.println("i= "+i+"  j= "+j+"  bp-i= "+bpi(i));
-		var newj:Int = j;
-		if (j < 0 && exhaustive != 0n)
+		var newj:Long = j;
+		if (j < 0 && exhaustive) // != 0n)
 			newj = i;
 		
-		return newj + 1n;
+		return newj + 1;
 	}
 	
-	public def nextI(i:Int) : Int{
-		return i + 1n;
+	public def nextI(i:Long) : Long{
+		return i + 1;
 	}
 	
 	

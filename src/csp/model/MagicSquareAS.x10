@@ -9,26 +9,26 @@ import csp.solver.Valuation;
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013
  * 
- * The square has dimensions squareLength x squareLength.
+ * The square has dimensions squareSize x squareSize.
  */
 
 import x10.util.Random;
 import x10.array.Array_2;
-public class MagicSquareAS(squareLength:Int) extends ModelAS{   
+public class MagicSquareAS(squareSize:Long) extends ModelAS{   
 	
-	val square_length_m1 = (squareLength-1n);
-	val square_length_p1 = (squareLength+1n);
-	var avg : Int;					/* sum to reach for each l/c/d */
+	val square_length_m1 = (squareSize-1);
+	val square_length_p1 = (squareSize+1);
+	var avg : Long;					/* sum to reach for each l/c/d */
 	
-	val err_l     = new Rail[Int] (squareLength, 0n);
-	val err_l_abs = new Rail[Int] (squareLength, 0n);	  /* errors on lines (relative + absolute) */
-	val err_c     = new Rail[Int] (squareLength, 0n);
-	val err_c_abs = new Rail[Int] (squareLength, 0n);		/* errors on columns */
+	val err_l     = new Rail[Long] (squareSize, 0);
+	val err_l_abs = new Rail[Long] (squareSize, 0);	  /* errors on lines (relative + absolute) */
+	val err_c     = new Rail[Long] (squareSize, 0);
+	val err_c_abs = new Rail[Long] (squareSize, 0);		/* errors on columns */
 	
-	var err_d1 : Int;
-	var err_d1_abs : Int; 	/* error on d1 (\) */
-	var err_d2 : Int;
-	var err_d2_abs : Int;	/* error on d2 (/) */
+	var err_d1 : Long;
+	var err_d1_abs : Long; 	/* error on d1 (\) */
+	var err_d2 : Long;
+	var err_d2_abs : Long;	/* error on d2 (/) */
 	val xref = new Rail[XRef]( sz );
 	
 	//val regionSquare : Region(1);
@@ -38,38 +38,30 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  @param lengthProblem Number of variables of the problem
 	 * 	@param seed Desired seed for randomness of  the problem
 	 */
-	public def this(length:Int, vectorSize:Long/*{self==length*length}*/, seed:Long, rLimit:Int, inv:String){
-		super(vectorSize, seed, inv);
-		property(length);
-		assert length*length==(vectorSize as Int);
-		initParameters(rLimit);
+	public def this(size:Long, vectorSize:Long, seed:Long, opts:ParamManager){
+		super(vectorSize, seed, opts);
+		property(size);
+		assert size * size == vectorSize; 
+		
+		avg = (squareSize * (squareSize + 1n) / 2n);		/* sum to reach for each l/c/d */
+		for( k in 0..(size-1))	
+			 xref(k)= new XRef(squareSize, k /squareSize, k % squareSize);
 	}
 	
-	/**
-	 * 	initParameters() 
-	 *  Set Initial values for the problem
-	 */
-	private def initParameters(rLimit:Int){
-		avg = (squareLength * (length + 1n) / 2n);		/* sum to reach for each l/c/d */
-		
-		solverParams.probSelectLocMin = 6n;
-		solverParams.freezeLocMin = 5n;
-		solverParams.freezeSwap = 0n;
-		//solverParams.resetLimit = 10n; //squareLength as Int / 2n;
-		solverParams.resetLimit = squareLength as Int;
-		solverParams.resetPercent = 10n;
-		solverParams.restartLimit = rLimit;
-		solverParams.restartMax = 0n;
-		//solverParams.restartLimit = 2n * length;
-		//solverParams.restartMax = 20n;
-		solverParams.baseValue = 1n;
-		solverParams.exhaustive = false;
-		solverParams.firstBest = false;
-		
-		for( k in 0n..((length-1) as Int))	
-			xref(k)= new XRef(squareLength, k /squareLength, k % squareLength);
+	// 	solverParams.probSelectLocMin = 6n;
+	// 	solverParams.freezeLocMin = 5n;
+	// 	solverParams.freezeSwap = 0n;
+	// 	//solverParams.resetLimit = 10n; //squareSize as Int / 2n;
+	// 	solverParams.resetLimit = squareSize as Int;
+	// 	solverParams.resetPercent = 10n;
+	// 	solverParams.restartLimit = rLimit;
+	// 	solverParams.restartMax = 0n;
+	// 	//solverParams.restartLimit = 2n * length;
+	// 	//solverParams.restartMax = 20n;
+	// 	solverParams.baseValue = 1n;
+	// 	solverParams.exhaustive = false;
+	// 	solverParams.firstBest = false;
 
-	}
 	
 	/**
 	 * 	costOfSolution() : Int
@@ -78,9 +70,9 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 */
 	public def costOfSolution(shouldBeRecorded : Boolean) : Int {
 		
-		var k:Int;
-		var r:Int;
-		var neg_avg:Int = -avg;
+		var k:Long;
+		var r:Long;
+		var neg_avg:Long = -avg;
 		
 		//show("nuevo vector", variables);
 
@@ -89,17 +81,17 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 		err_l.clear();
 		err_c.clear();
 		
-		k = 0n;
+		k = 0;
 		
 		do{
 			val xr  = xref(k); // is it neccessary? I can do only xref(k).get????
 			//Console.OUT.println("getl "+xr.getL()+"getc "+xr.getC()+" k "+k);
 			err_l(xr.l) += variables(k);
 			err_c(xr.c) += variables(k);
-		}while( ++k < length );
+		}while(++k < size);
 		
-		var k1 : Int = 0n;
-		var k2 : Int = 0n;
+		var k1 : Long = 0;
+		var k2 : Long = 0;
 		
 		do{
 			k2 += square_length_m1;
@@ -107,14 +99,14 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 			err_d2 += variables(k2);
 			k1 += square_length_p1;
 		}
-		while( k1 < length );
+		while(k1 < size);
 		
 		// Console.OUT.println("err_d1 "+err_d1+" err_d2 "+err_d2);
 		err_d1_abs = Math.abs(err_d1);
 		err_d2_abs = Math.abs(err_d2);
 		
 		r = err_d1_abs + err_d2_abs;
-		k = 0n;
+		k = 0;
 		
 		do{
 			err_l(k) -= avg; 
@@ -125,9 +117,9 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 			err_c_abs(k) = Math.abs(err_c(k));
 			r += err_c_abs(k);
 			
-		}while( ++k < squareLength );
+		}while( ++k < squareSize );
 		
-		return r;
+		return r as Int;
 	}
 	
 	/** 
@@ -136,16 +128,16 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 * 	@param i This is the variable that we want to know the cost
 	 *  @return Int value with the cost of this variable
 	 */
-	public def costOnVariable( i : Int ) : Int{
+	public def costOnVariable( i:Long ) : Int{
 		val xr = xref(i);
 		val r = err_l_abs(xr.l) + err_c_abs(xr.c) + 
-		(xr.d1 ? err_d1_abs : 0n) + (xr.d2 ? err_d2_abs : 0n);
+		(xr.d1 ? err_d1_abs : 0) + (xr.d2 ? err_d2_abs : 0);
 		//r = err_l(xr.getL()) + err_c(xr.getC()) + 
 		//	(xr.d1 ? err_d1 : 0) + (xr.d2 ? err_d2 : 0);
 
 		//r = Math.abs(r); 
 		
-		return r;
+		return r as Int;
 	}
 	
 	/**
@@ -157,12 +149,12 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  @param i2 second variable to swap
 	 *  @return cost of the problem if the swap is done
 	 */
-	public def costIfSwap( current_cost : Int, i1 : Int, i2 : Int ) : Int {
+	public def costIfSwap( current_cost:Int, i1:Long, i2:Long ) : Int {
 
 		val xr1  = xref(i1), l1 = xr1.l, c1 = xr1.c;
 		val xr2  = xref(i2), l2 = xr2.l, c2 = xr2.c;
 		val diff1  = variables(i2) - variables(i1), diff2 = -diff1;
-		var r : Int = current_cost;
+		var r : Long = current_cost;
 
 		if (l1 != l2)	{		/* not on the same line */
 			r = r - err_l_abs(l1) + Math.abs(err_l(l1) + diff1); 
@@ -186,7 +178,7 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 			r = r - err_d2_abs + Math.abs(err_d2 + diff2);
 		}
 		
-		return r;
+		return r as Int;
 	}
 	
 	/**
@@ -196,7 +188,7 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  @param i1 First variable already swapped
 	 *  @param i2 Second variable already swapped
 	 */
-	public def executedSwap( i1 : Int, i2 : Int) {
+	public def executedSwap( i1:Long, i2:Long ) {
 		val xr1  = xref(i1), l1 = xr1.l, c1 = xr1.c;
 		val xr2  = xref(i2), l2 = xr2.l, c2 = xr2.c;
 		val diff1 = variables(i1) - variables(i2); /* swap already executed */
@@ -231,16 +223,16 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	}
 	
 	public  def verify(conf:Valuation(sz)):Boolean { //check
-		val soln = Array_2.makeView(variables, squareLength as Long, squareLength as Long);
-		val I=soln.numElems_1, J=soln.numElems_2;
+		val soln = Array_2.makeView(variables, squareSize as Long, squareSize as Long);
+		val I = soln.numElems_1, J = soln.numElems_2;
 		
 		
 		//Check Permutation
 		val permutV = new Rail[Int](sz, 0n);
-		val baseV = solverParams.baseValue;
+		val baseV = baseValue;
 		for (mi in conf.range()){
 			val value = conf(mi);
-			permutV(value-baseV)++;
+			permutV( value - baseV )++;
 			if (permutV(value-baseV)>1){
 				Console.OUT.println("Not valid permutation, value "+ value +" is repeted");
 			}
@@ -269,7 +261,7 @@ public class MagicSquareAS(squareLength:Int) extends ModelAS{
 	 *  Xref Class
 	 *  Data structure that helps to make the Magic Square funtions easier
 	 */
-	static struct XRef(m:Int, l:Int,c:Int) {
+	static struct XRef(m:Long, l:Long,c:Long) {
 		val d1 = l==c; /* am I on the main diagonal? */
 		val d2 = (l+c)== m-1n; /* am I on the anti-diagonal? */
 	}
