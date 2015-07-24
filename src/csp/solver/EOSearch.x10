@@ -28,20 +28,25 @@ public class EOSearch extends RandomSearch {
 	 };
 	 
 	 // Communication Variables
-	 private var bestSent:Boolean=false;
+	 private var bestSent:Boolean = false;
 	 private solver:IParallelSolver(sz);
 	 private val tau:Double;
 	 private val pdfS:Int;
 	 
-	 public def this(sz:Long, vectorSize:Long, solver:IParallelSolver(sz), opts:ParamManager){
-		  super(sz, vectorSize, opts);
-		  this.pdf = new Rail[Double] (this.vectorSize, 0.0);
-		  fit = new Rail[PairAS] (this.vectorSize); 
+	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
+		  super(sz, opts);
+		  this.pdf = new Rail[Double] (this.sz, 0.0);
+		  fit = new Rail[PairAS] (this.sz); 
 		  this.solver = solver;
 		  
 		  // Parameters
-		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(vectorSize)));
+		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
 		  this.pdfS = opts("--EO_pdf", 1n);
+		  
+		  if (here.id == 0)
+				Console.OUT.println("Parameters EO: TAU= "+tau+" pdf= "
+						  +(pdfS == 1n ? "Power":"Exp"));
+
 	 }
 	 
 	 
@@ -66,41 +71,41 @@ public class EOSearch extends RandomSearch {
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  // val tStr = System.getenv("T");
-		  // val tau = (tStr==null)? (1.0 + 1.0 / Math.log(vectorSize)) : StringUtil.parseLong(tStr)/100.0;
+		  // val tau = (tStr==null)? (1.0 + 1.0 / Math.log(sz)) : StringUtil.parseLong(tStr)/100.0;
 		  //Console.OUT.println("tau "+tau);
 		  
 		  // val pStr = System.getenv("F");
 		  // val pdfS = (pStr==null)? 1n : StringUtil.parseInt(pStr);
 		  
 		  if ( this.pdfS == 1n )
-				initPDF( this.tau, this.vectorSize, this.powFnc );
+				initPDF( this.powFnc );
 		  else
-				initPDF( this.tau, this.vectorSize, this.expFnc );
+				initPDF( this.expFnc );
 		  
 		  Logger.debug(()=>{"EOSolver"});
 
 	 }
 	 
-	 private def initPDF(tau:Double, vectorSize:Long, fnc:(tau : Double, x : Long)=>Double ){
+	 private def initPDF( fnc:(tau : Double, x : Long)=>Double ){
 		  var sum:Double = 0.0;
 		  var y:Double = 0.0;
 		  
-		  for (x in 1n..vectorSize){
+		  for (x in 1n..this.sz){
 				y = fnc(tau, x);
 				if (y < 0)
 					 y = 0;
 				pdf(x) = y;
 				sum += y; 
 		  }
-		  for (x in 1n..vectorSize){
+		  for (x in 1n..this.sz){
 				pdf(x) /= sum;
 		  }
-		  // for (x in 1n..vectorSize)
+		  // for (x in 1n..this.sz)
 		  // Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 	 
 	 private def pdfPick():Int {
-		  //return pdf(random.nextInt(vectorSize)) - 1n;
+		  //return pdf(random.nextInt(this.sz)) - 1n;
 		  var p:Double = random.nextDouble();
 		  var fx:Double;
 		  var x:Int = 0n;
@@ -116,7 +121,7 @@ public class EOSearch extends RandomSearch {
 		  var cost: Int;
 		  var selIndex:Int=0n; 
 		  
-		  while((i = cop_.nextI(i)) as ULong < vectorSize as ULong) { //False if i < 0
+		  while((i = cop_.nextI(i)) as ULong < this.sz as ULong) { //False if i < 0
 				cost = cop_.costOnVariable(i);
 				fit(i) = new PairAS(i as Int , cost);
 		  }
@@ -126,7 +131,7 @@ public class EOSearch extends RandomSearch {
 		  val selFit = fit(index).j;
 		  var nSameFit:Int = 0n;
 
-		  for(var k:Int=0n; k < vectorSize; k++){
+		  for(var k:Int=0n; k < this.sz; k++){
 				if (fit(k).j < selFit)   // descending order
 					 break;
 				
@@ -154,7 +159,7 @@ public class EOSearch extends RandomSearch {
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
-		  for (j = 0; j < vectorSize; j++)
+		  for (j = 0; j < this.sz; j++)
 		  {	
 				if (first == j) continue;
 				cost = csp.costIfSwap(this.currentCost, j, first);
@@ -174,7 +179,7 @@ public class EOSearch extends RandomSearch {
 	 }
 	 
 	 private def selectSecondVar( csp : ModelAS, totalCost:Int, move:MovePermutation) : Int {
-		  val randomJ = random.nextLong(vectorSize);
+		  val randomJ = random.nextLong(this.sz);
 		  val newCost = csp.costIfSwap(totalCost, randomJ, move.getFirst());	 
 		  move.setSecond(randomJ);
 		  return newCost; 

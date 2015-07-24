@@ -98,7 +98,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				//changeProb:Int, minDistance:Double, maxTime : Long, verify : Boolean, delay:Long, affectedP : Double ){
 		  property(vectorSize);
 		  // Parameters of the CPLS framework
-		  this.verify = opts("-v"); //TODO: a flag??
+		  this.verify = opts("-v", 0n) == 1n; // verify == 1 : true
 		  // Intra team 
 		  this.inTeamReportI = opts("-R", 0n);
 		  this.inTeamUpdateI = opts("-U", 0n);
@@ -359,9 +359,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-				fr : Int, bp:Int, sg:Int, gr:Int, tar:Boolean, fftar:Int)
+				fr : Int, gr:Int, tar:Boolean, fftar:Int)
 	 {
-		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, bp, sg, gr, tar, fftar);
+		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, gr, tar, fftar, this.sz);
 		  accStats(stats);
 	 }
 	 

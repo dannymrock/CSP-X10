@@ -19,11 +19,7 @@ public class ParamManager extends OptionsParser {
 	 
 	 public def this(args: Rail[String]) {
 		  super(args, 
-					 [Option("h", "help", "shows this help message and exit"),
-					  Option("AS_e", "AS_exhaustive", "Exhaustive mode (explore all combinations)"),
-					  Option("AS_fb", "AS_firstBest", "Select the first best variable in Min conflict heuristic"),
-					  Option("v", "verify", "verify and print solution.")
-					  ],
+					 [Option("h", "help", "shows this help message and exit")],
 					 [// Main parameters
 					  Option("p", "problem", "(p)roblem to solve"),
 					  Option("f", "problem_file", "(f)ile path for SMTI or QAP"),
@@ -36,6 +32,7 @@ public class ParamManager extends OptionsParser {
 					  Option("tc", "target_cost", "target (c)ost from Command Line Parameter. default 0"),
 					  Option("b", "bench", "Number of (b)enchmark tests"),
 					  Option("pf", "param_file", "path of the parameters file"),
+					  Option("v", "verify", "verify and print solution., 0 or 1"),
 					  // CPLS 
 					  Option("N", "nodes_per_team", "nodes_per_team parameter. Default 4."),
 					  Option("U", "update", "Update Interval Intra-team Communication (iterations) . Default 0 - no communication."),
@@ -57,13 +54,15 @@ public class ParamManager extends OptionsParser {
 					  Option("AS_fs", "AS_freezeSwap", "number of swaps to freeze swapped variables. Default 5"),
 					  Option("AS_rl", "AS_resetLimit", "number of marked variables to reset. Default 5"),
 					  Option("AS_plm", "AS_probSelecLocMin", "Probability to select a local min (instead of staying on a plateau). Default 0"),
+					  Option("AS_e", "AS_exhaustive", "Exhaustive mode (explore all combinations), 0 or 1"),
+					  Option("AS_fb", "AS_firstBest", "Select the first best variable in Min conflict heuristic, 0 or 1"),
 					  // Parameters for EO
 					  Option("EO_t", "EO_tau", "Parameter tau in Extremal Optimization. Default 1 + 1 / log(n)"),
 					  Option("EO_p", "EO_pdf", "PDF used to select the variable to swap . Default 1-(Original) 2-(Exp)"),
 					  // Parameters for Problem Models
 					  Option("if", "input_vector_file", "file path for input vector . Default ."),
-					  Option("bv", "model_baseValue", "Domain base value for the model . 0 or 1")
-					  
+					  Option("bv", "model_baseValue", "Domain base value for the model . 0 or 1"),
+					  Option("LNP_k", "LNP_k", "Parameter K in Langford number problem . 2 or 3")					  
 					  ]);
 		  
 		  paramFileName = this("-pf","CPLS.param");
@@ -103,7 +102,7 @@ public class ParamManager extends OptionsParser {
 				
 				if(res == null){
 					 //Console.OUT.println("Not Registered Option");
-					 break;
+					 continue;
 				}
 				else{
 					 //Console.OUT.println("registered option");
@@ -121,7 +120,7 @@ public class ParamManager extends OptionsParser {
 					 }else{
 					 	 //Console.OUT.println("The key is registered and a value was given in the CL");
 					 	 // Do nothing, the CL parameters has priority over the File parameters
-						  break;
+						  continue;
 					 }
 					 //Console.OUT.println("");
 				}
@@ -158,7 +157,7 @@ public class ParamManager extends OptionsParser {
 		  val problem        = this("-p", "MSP");
 		  val filePath       = this("-f", ".");
 		  val size           = this("-s", 10n);
-		  val solverMode	    = this("-sm", 0n);
+		  val solverMode	    = this("-sm", 1n);
 		  val restartLimit   = this("-mi", 1000000000n);
 		  val maxTime        = this("-mt", 0);
 		  val tCostFromCL    = this("-tf", 0n);
@@ -175,7 +174,6 @@ public class ParamManager extends OptionsParser {
 		  val delayI         = this("-W", 0);
 		  val affectedP      = this("-A", 0.0);
 		  val inSeed         = this("-S", 0);
-		  val verify         = this("-v");
 		  val inputPath      = this("-if", ".");
 		  val outFormat	    = this("-of", 1n);
 		  
@@ -184,7 +182,7 @@ public class ParamManager extends OptionsParser {
 		  Console.OUT.println("Problem "+problem+" size "+size+" File Path (SMTI):"+filePath); 
 		  Console.OUT.println("");
 		  Console.OUT.println("Solver Parameters:");
-		  Console.OUT.println("Solver "+solverIn+" Mode: "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
+		  Console.OUT.println("Solver: "+solverIn+", Mode: "+(solverMode==0n ?"sequential":"parallel")+", Limit: "+restartLimit+ " iterations or "+maxTime+" ms.");
 		  Console.OUT.println("Target cost from "+(costFromF != 0 ? "file. " :
 				((tCostFromCL >= 0n ? "command line, lower or equal than ":
 				"command line, strictly lower than ") + Math.abs( tCostFromCL ))));

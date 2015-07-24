@@ -39,15 +39,16 @@ import csp.util.Utils;
  *  (i.e. the distance between indices are != x + 2  and x + 1 for Skolem)     
  */
 
-public class LangfordAS(order:Long) extends ModelAS{ 
+public class LangfordAS extends ModelAS{ 
 	
 	val paramK:Long; // Should be an input parameter
 	val err:Rail[Int];
+	val order:Long;
 
-	def this (size:Long, vectorSize: Long, seed : Long, opts:ParamManager) : LangfordAS(vectorSize){
-		super(vectorSize, seed, opts);
-		property(size);
-		paramK = vectorSize /order;
+	def this (size:Long, seed : Long, opts:ParamManager) : LangfordAS(sz){
+		super(size, seed, opts);
+		this.paramK = opts("LNP_k", 3n);
+		this.order = this.sz / paramK; 
 		err = new Rail[Int](order,0n);
 		
 		if ((paramK == 2 && order % 4 != 0 && order % 4 != 3) ||
@@ -344,4 +345,4 @@ public class LangfordAS(order:Long) extends ModelAS{
 	}
 	
 }
-public type LangfordAS(s:Long)=LangfordAS{self.sz==s};
+public type LangfordAS(s:Long) = LangfordAS{self.sz==s};

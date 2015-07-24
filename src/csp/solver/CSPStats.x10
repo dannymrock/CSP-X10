@@ -17,7 +17,6 @@ public class CSPStats{
 	 /** Desired Target */
 	 var dTarget : Long = 0;	
 	 
-	 
 	 /** Final Cost of solution */
 	 var cost : Long = 0;	
 	 /** Team id solution */
@@ -74,8 +73,9 @@ public class CSPStats{
 	 * 	@param sa same variableplace
 	 * 	@param rs restarts
 	 */
-	public def setStats(co : Long, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-			fr : Int, bp:Int, sg:Int, gr:Int, target:Boolean, fft:Int){
+	public def setStats(co : Long, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, 
+			  re:Int, sa:Int, rs:Int, ch:Int, fr : Int, gr:Int, target:Boolean, fft:Int, 
+			  vs:Long){
 	        this.cost = co;
 	        this.team = p;
 	        this.explorer = e;
@@ -88,11 +88,12 @@ public class CSPStats{
 	        this.restart = rs;
 	        this.change = ch;
 	        this.forceRestart = fr;
-	        this.bp = bp;
-	        this.singles = sg;
+	        //this.bp = bp;
+	        //this.singles = sg;
 	        this.groupR = gr;
 	        this.target = target;
 	        this.fftarget = fft;
+	        this.vectorSize = vs;
 	}
 	
 	public def setStats( c:CSPStats ){
@@ -108,13 +109,13 @@ public class CSPStats{
 		 this.restart = c.restart;
 		 this.change = c.change;
 		 this.forceRestart = c.forceRestart;
-		 this.bp = c.bp;
-		 this.singles = c.singles;
+		 //this.bp = c.bp;
+		 //this.singles = c.singles;
 		 this.groupR = c.groupR;
 		 this.target = c.target;
 		 this.fftarget = c.fftarget;
+		 this.vectorSize = c.vectorSize;
 	}
-	
 	
 	/**
 	 *  Accumulate statistics in this object, Is used for average calculation
@@ -131,12 +132,16 @@ public class CSPStats{
 	    this.restart += stats.restart;
 	    this.change += stats.change;
 	    this.forceRestart += stats.forceRestart;
-	    this.bp += stats.bp;
-	    this.singles += stats.singles;
+	    
+	    val sing = stats.cost % stats.vectorSize; 
+	    val blockPair = (stats.cost - sing)/stats.vectorSize;
+	    this.bp += blockPair;
+	    this.singles += sing;
+	    
 	    this.groupR += stats.groupR;
 	    
-	    if(stats.bp == 0n && stats.singles == 0n)
-	    accPS++;
+	    if(blockPair == 0 && sing == 0)
+	   	  accPS++;
 	    
 	    if (stats.target)
 	    ntarget++;
@@ -150,19 +155,26 @@ public class CSPStats{
 	public def print(count:Int, oF:Int, problem:Int){
 		val sameIter : Double = same /(iters as Double);
 		val gap = (cost-dTarget)/(cost as Double)*100.0;
+		val sgl = this.cost % this.vectorSize; 
+		val bpl = (this.cost - sgl)/this.vectorSize;
 		
 		//val changeF : Double = (change as Double)/count;
 		if (oF == 0n){
-			 Console.OUT.print(count+","+time+","+iters+","+team+/*","+explorer+*/","+locmin+","+swaps
-						+","+reset+","+sameIter+","+restart+","+bp+","+singles+","+change+","+forceRestart
-						+","+groupR+","+(cost == 0)+","+(target ? "S":"-" )+","+cost+","+fftarget+","+gap);
+			 Console.OUT.print(count+","+this.time+","+this.iters+","+this.team+
+						/*","+explorer+*/","+this.locmin+","+this.swaps+","+this.reset+
+						","+sameIter+","+this.restart+","+bpl+","+sgl+","+this.change+","+
+						this.forceRestart+","+this.groupR+","+(this.cost == 0)+","+
+						(this.target ? "S":"-" )+","+this.cost+","+this.fftarget+","+gap);
 		}else{
-			Console.OUT.printf("|  %3d  | %8.4f | %8d | %3d-%2d | %8d |",count, time, iters, team, explorer, locmin);
-			Console.OUT.printf(" %8d | %8d | %5.1f | %3d |",swaps,reset,sameIter,restart);
+			Console.OUT.printf("|  %3d  | %8.4f | %8d | %3d-%2d | %8d |",count, this.time,
+					  this.iters, this.team, this.explorer, this.locmin);
+			Console.OUT.printf(" %8d | %8d | %5.1f | %3d |",this.swaps,this.reset,sameIter,
+					  this.restart);
 			if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
-				 Console.OUT.printf(" %3d | %3d |",bp, singles);
-			Console.OUT.printf(" %4d | %3d-%3d | %3d |", change, forceRestart,groupR,((bp == 0n && singles == 0n)?1:0));
-			Console.OUT.printf("  %s | %8d |%6.3f |", (target ? "S":"-" ),cost,gap );
+				 Console.OUT.printf(" %3d | %3d |",bpl, sgl);
+			Console.OUT.printf(" %4d | %3d-%3d | %3d |", this.change, this.forceRestart,
+					  this.groupR,(this.cost == 0 ? 1 : 0 ));
+			Console.OUT.printf("  %s | %8d |%6.3f |", (this.target ? "S":"-" ),this.cost,gap);
 		} 
 	}
 
@@ -172,11 +184,10 @@ public class CSPStats{
 	 */
 	public def printAVG(no:Int, oF:Int, problem:Int){ 
 	   // val no = no1 as Double;
-		val sameIter : Double = same/(iters as Double);
-		val changeF : Double = (change as Double)/no;
-		val avgCost:Double = cost/(no as Double);
-		val gap = (avgCost-dTarget)/(avgCost as Double)*100.0;
-		
+		val sameIter : Double = this.same/(this.iters as Double);
+		val changeF : Double = (this.change as Double)/no;
+		val avgCost:Double = this.cost/(no as Double);
+		val gap = (avgCost-this.dTarget)/(avgCost as Double)*100.0;
 		
 		if (oF == 0n){
 			Console.OUT.print("AVG,"+time/no+","+iters/no+",,"+locmin/no+","+swaps/no+","+reset/no
@@ -194,28 +205,29 @@ public class CSPStats{
 	}
 	
 	public def clear():void{ 
-		 cost = 0n;	
-		 team = -1n;
-		 explorer = -1n;
-		 time = 0.0d;
-		 iters = 0n;
-		 locmin = 0n;
-		 swaps = 0n;
-		 reset = 0n;
-		 same = 0n;
-		 restart = 0n;
-		 change = 0n;
-		 forceRestart = 0n;
-		 groupR = 0n;
+		 this.cost = 0n;	
+		 this.team = -1n;
+		 this.explorer = -1n;
+		 this.time = 0.0d;
+		 this.iters = 0n;
+		 this.locmin = 0n;
+		 this.swaps = 0n;
+		 this.reset = 0n;
+		 this.same = 0n;
+		 this.restart = 0n;
+		 this.change = 0n;
+		 this.forceRestart = 0n;
+		 this.groupR = 0n;
 		 
-		 bp = 0n;
-		 singles = 0n;
-		 accPS = 0n;
-		 ntarget = 0n;
+		 this.bp = 0n;
+		 this.singles = 0n;
+		 this.accPS = 0n;
+		 this.ntarget = 0n;
+		 this.vectorSize = 1;
 	}
 	
 	public def setTarget(target:Long) : void
 	{ 
-		 dTarget = target;
+		 this.dTarget = target;
 	}
 }

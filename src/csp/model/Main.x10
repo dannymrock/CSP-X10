@@ -24,39 +24,39 @@ public class Main {
 	 
 	 public static struct CSPProblem(kind:Int) 
 	 {
-		  public def make( size : Long, vectorSize : Long, seed : Long, opts:ParamManager, 
+		  public def make( size : Long, seed : Long, opts:ParamManager, 
 					 mPrefs : Rail[Rail[Int]], wPrefs : Rail[Rail[Int]], mapTable : Rail[Int]) 
-		  : ModelAS(vectorSize) 
+		  : ModelAS(size) 
 		  {
 				if (kind == MAGIC_SQUARE_PROBLEM) 
-					 return new MagicSquareAS(size, vectorSize, seed, opts);
+					 return new MagicSquareAS(size, seed, opts);
 				if (kind == COSTAS_PROBLEM) 
-					 return new CostasAS(vectorSize, seed, opts);
+					 return new CostasAS(size, seed, opts);
 				if (kind == ALL_INTERVAL_PROBLEM) 
-					 return new AllIntervalAS(vectorSize, seed, opts);
+					 return new AllIntervalAS(size, seed, opts);
 				if (kind == LANGFORD_PROBLEM) 
-					 return new LangfordAS(size, vectorSize, seed, opts);
+					 return new LangfordAS(size, seed, opts);
 				if (kind == STABLE_MARRIAGE_PROBLEM) 
-					 return new SMTIAS(vectorSize, seed, opts, false, mPrefs, wPrefs, mapTable);
+					 return new SMTIAS(size, seed, opts, false, mPrefs, wPrefs, mapTable);
 				if (kind == HOSPITAL_RESIDENT_PROBLEM) 
-					 return new SMTIAS(vectorSize, seed, opts, true, mPrefs, wPrefs, mapTable);
+					 return new SMTIAS(size, seed, opts, true, mPrefs, wPrefs, mapTable);
 				if (kind == QA_PROBLEM) 
-					 return new QAPAS(vectorSize, seed, opts, mPrefs, wPrefs );
-				return new PartitAS(vectorSize, seed, opts);
+					 return new QAPAS(size, seed, opts, mPrefs, wPrefs );
+				return new PartitAS(size, seed, opts);
 		  }
 	 }
 	 
 	 public static struct Solver(kind:Int) 
 	 {
-		  public def make( size : Long, nsize : Int, ss : IParallelSolver(size),
+		  public def make( size : Long, ss : IParallelSolver(size),
 					 opts:ParamManager) 
 		  : RandomSearch(size) 
 		  {
 				if (kind == AS_SOL) 
-					 return new AdaptiveSearch( size, nsize, ss , opts) ;
+					 return new AdaptiveSearch( size, ss , opts) ;
 				if (kind == EO_SOL) 
-					 return new EOSearch( size, nsize, ss, opts);
-				return new RandomSearch( size, nsize, opts);
+					 return new EOSearch( size, ss, opts);
+				return new RandomSearch( size, opts);
 		  }
 	 } 
 	 
@@ -99,10 +99,10 @@ public class Main {
 		  /**
 		   *  Param used in Main
 		   */
-		  val size           = opts("-s", 10n);
+		  var size:Long      = opts("-s", 10);
 		  val problem        = opts("-p", "MSP");
 		  val filePath       = opts("-f", ".");
-		  val solverMode	   = opts("-sm", 0n);
+		  val solverMode	   = opts("-sm", 1n);
 		  val solverIn       = opts("-sl", "AS");
 		  val inSeed         = opts("-S", 0);
 		  val outFormat	   = opts("-of", 1n);
@@ -113,91 +113,63 @@ public class Main {
 		  /**
 		   *   Define basic values for each type of problem
 		   */
-		  
 		  var problemParam:Int = UNKNOWN_PROBLEM;
-		  var vectorSize:Long = size; //?
-		  if (problem.equalsIgnoreCase("MSP"))
-		  {
-				//Logger.debug(()=>{"Magic Square Problem"});
+		  if (problem.equalsIgnoreCase("MSP")){
+				Logger.debug(()=>{"Magic Square Problem"});
 				problemParam = MAGIC_SQUARE_PROBLEM;
-				vectorSize = size*size;
-		  } 
-		  else if(problem.equals("CAP"))
-		  {
-				//Logger.debug(()=>{"Costas Array Problem"});
+				size = size*size;
+		  }else if(problem.equals("CAP")){
+				Logger.debug(()=>{"Costas Array Problem"});
 				problemParam = COSTAS_PROBLEM;
-				vectorSize = size;
-		  }
-		  else if(problem.equals("AIP"))
-		  {
-				//Logger.debug(()=>{"All-Interval Array Problem"});
+		  }else if(problem.equals("AIP")){
+				Logger.debug(()=>{"All-Interval Array Problem"});
 				problemParam = ALL_INTERVAL_PROBLEM;
-				vectorSize = size;
-		  }
-		  else if(problem.equals("LNP"))
-		  {
-				//Logger.debug(()=>{"Langford Pairing Problem"});
+		  }else if(problem.equals("LNP")){
+				Logger.debug(()=>{"Langford Pairing Problem"});
 				problemParam = LANGFORD_PROBLEM;
-				val eNumber = 3n; //entanglement number 2 for pairs, 3 for triplets. Parameter K
-				vectorSize = eNumber*size;
-		  }
-		  else if(problem.equals("NPP"))
-		  {
-				//Logger.debug(()=>{"Number Partition Problem"});
+				val eNumber = opts("LNP_k", 3n);
+				size = eNumber*size;
+		  }else if(problem.equals("NPP")){
+				Logger.debug(()=>{"Number Partition Problem"});
 				problemParam = PARTIT_PROBLEM;
-				vectorSize = size;
-		  }
-		  else if(problem.equals("SMP"))
-		  {
-				//Logger.debug(()=>{"Stable Marriage Problem"});
+		  }else if(problem.equals("SMP")){
+				Logger.debug(()=>{"Stable Marriage Problem"});
 				problemParam = STABLE_MARRIAGE_PROBLEM;
-				vectorSize = size;
-		  }
-		  else if(problem.equals("HRP"))
-		  {
-				//Logger.debug(()=>{"Stable Marriage Problem"});
+		  }else if(problem.equals("HRP")){
+				Logger.debug(()=>{"Stable Marriage Problem"});
 				problemParam = HOSPITAL_RESIDENT_PROBLEM;
-				vectorSize = size;
-		  }
-		  else if(problem.equals("QAP"))
-		  {
-				//Logger.debug(()=>{"Stable Marriage Problem"});
+		  }else if(problem.equals("QAP")){
+				Logger.debug(()=>{"Stable Marriage Problem"});
 				problemParam = QA_PROBLEM;
-				vectorSize = size;
-		  }
-		  else
-		  {
+		  }else{
 				Console.OUT.println("Error: Type a valid CSP example: MSP, CAP, AIP, LNP, NPP , SMP, HRP or QAP"); 
 				return;
 		  }
+		  val valSize = size; // the immutable size variable
 		  
 		  /**
 		   *   Define basic values for each type of Solver
 		   */
 		  var solParam : Int = UNKNOWN_SOL;
-		  
 		  if (solverIn.equalsIgnoreCase("AS"))
 				solParam = AS_SOL;
 		  else if(solverIn.equals("EO"))
 				solParam = EO_SOL;
 		  
-		  
-		  
 		  /**
 		   *  Creating objects for solver execution
 		   */
 		  val seed = inSeed;//(inSeed == 0) ? j as Long:inSeed;
-		  val random = new Random(seed);	
+		  val random = new Random(seed);
 		  
-		  val fileMode = (problemParam == STABLE_MARRIAGE_PROBLEM || problemParam == HOSPITAL_RESIDENT_PROBLEM 
+		  val fileMode = (problemParam == STABLE_MARRIAGE_PROBLEM 
+					 || problemParam == HOSPITAL_RESIDENT_PROBLEM 
 					 || problemParam == QA_PROBLEM );
 		  
-		  val vectorSz = vectorSize;
+		  val solvers:PlaceLocalHandle[IParallelSolver(valSize)];
 		  
-		  val solvers:PlaceLocalHandle[IParallelSolver(vectorSz)];
-		  
-		  solvers = PlaceLocalHandle.make[IParallelSolver(vectorSz)](PlaceGroup.WORLD, 
-					 ()=>new PlacesMultiWalks(vectorSz, opts) as IParallelSolver(vectorSz));
+		  solvers = PlaceLocalHandle.make[IParallelSolver(valSize)](PlaceGroup.WORLD, 
+					 ()=>new PlacesMultiWalks(valSize, opts) as IParallelSolver(valSize));
 		  
 		  var insNb:Int = 0n; //counter of instances
 		  var iList : Rail[String];
@@ -205,12 +177,9 @@ public class Main {
 		  // accumulated times
 		  var totalWallT :Long = 0;
 		  
-		  
 		  val sparam = solParam;
-		  //val ss = solvers() as IParallelSolver(vectorSz);
-		  //val solGen = ():ISolver(vectorSz)=>Solver(sparam).make( vectorSz, size, solvers() as IParallelSolver(vectorSz), maxTime );
-		  val solGen = ():RandomSearch(vectorSz)=>Solver(sparam).make( vectorSz, size, 
-					 solvers() as IParallelSolver(vectorSz), opts );
+		  val solGen = ():RandomSearch(valSize)=>Solver(sparam).make( valSize, 
+					 solvers() as IParallelSolver(valSize), opts );
 		  
 		  /**
 		   *  Install solver data structures on every available place
@@ -220,15 +189,12 @@ public class Main {
 		  }
 		  
 		  val nPath = new StringBuilder();
-		  if ( fileMode ){
-				//Load Files enable double loop
+		  if ( fileMode ){ // Load Files enable double loop
 				iList = SMTIAS.loadDir(filePath,nPath);
-				//Logger.info(()=>{"nPath "+nPath});
-		  }else{
-				//disable double loop
+				Logger.debug(()=>{"nPath "+nPath});
+		  }else{           // Disable double loop
 				iList = ["noFile" as String];
 		  }
-		  
 		  
 		  var cFile : String = new String (""); 
 		  var fWall : Long = 0;
@@ -248,11 +214,13 @@ public class Main {
 				//I expect to receive 4 parameters
 				val problemParams = new Rail[Long](4, -1 );
 				
-				// mode equal to:
-				// 1 -> filemode==true && sucess (vali.0/bcgilmptwd file)
-				// 2 -> filemode==true && !sucess (not valid file eg. directory)   
-				// 3 -> filemode==false
-				val mode = (fileMode) ? (SMTIAS.tryReadParameters( nPath+"/"+instance, problemParams)? 1 : 2 ): 3;
+				/** Filemode equal to:
+				 * 1 -> filemode==true && sucess (valid file)
+				 * 2 -> filemode==true && !sucess (not valid file eg. directory)   
+				 * 3 -> filemode==false
+				 */
+				val mode = (fileMode) ? 
+						  (SMTIAS.tryReadParameters(nPath+"/"+instance, problemParams)?1:2):3;
 				
 				// if filemode == true and "path" is a directory -> skip
 				if ( mode == 2 ) continue; 
@@ -264,11 +232,9 @@ public class Main {
 				 *  in noFile: n1 = n2 = 1  - matrix1, matrix2 and mapTable are not used
 				 */
 				val n1 = problemParams(0) < 0 ? 1 : problemParams(0);
-				
 				val n2 = (mode == 3 || problemParams(1) == -1) ? 1 :     // default value
 					 problemParam == QA_PROBLEM ? n1:     // n1 == n2  
 						  problemParams(1);                             // file loaded value 
-				
 				/**
 				 * Data structures for file problems SMP HRP QAP
 				 * if fileMode is false create "empty" matrices of size 1
@@ -284,8 +250,7 @@ public class Main {
 				var bks : Long = 0;
 				
 				var loadTime:Long = -System.nanoTime();
-				if ( problemParam == STABLE_MARRIAGE_PROBLEM)
-				{	
+				if ( problemParam == STABLE_MARRIAGE_PROBLEM){	
 					 // load men and women preferences for the SMTI problem or
 					 SMTIAS.loadData( nPath+"/"+instance, n1, n2, matrix1, matrix2);
 					 opt = problemParams(2);
@@ -301,36 +266,25 @@ public class Main {
 					 SMTIAS.loadData(nPath+"/"+instance, n1, n1, matrix1, matrix2);
 					 opt = problemParams(1);
 					 bks = problemParams(2);
-					 
 					 Console.OUT.println(((opt < 0)?"bound ":"opt ")+Math.abs(opt)+" bks "+ bks);
 					 opt = Math.abs(opt);
-					 
 				}
 				val cT= loadTime += System.nanoTime();
-				//Logger.debug(()=>{"Time to load the file problem="+cT/1e9});
-				
-				
+				Logger.debug(()=>{"Time to load the file problem="+cT/1e9});
 				
 				var c : Long = 0;
 				var sl : Boolean = false;
-				
-				if ( costFromF == 0 ) // target cost loaded from command line parameter
-				{	
-					 if (tCostFromCL >= 0) // get lower or equal to target 
-					 {	
-						  c = tCostFromCL;
+				if ( costFromF == 0 ) { // target cost loaded from command line parameter
+					 if (tCostFromCL >= 0){ // get lower or equal to target 
+					 	  c = tCostFromCL;
 						  sl = false;
-						  //ff = false;
 						  Console.OUT.println("Target from CL: lower or equal than "+c);
-					 } else 
-					 {	
-						  c = tCostFromCL * -1;
+					 } else { 
+					 	  c = tCostFromCL * -1;
 						  sl = true;
 						  Console.OUT.println("Target from CL: strictly lower than "+c);
 					 }
-				} else // target cost loaded from file
-				{
-					 
+				} else { // target cost loaded from file
 					 sl = costFromF < 0; // strictly lower true for negative numbers
 					 if ( costFromF == 1  || costFromF == -1  ) // try to get optimal cost
 						  c = opt; 
@@ -356,28 +310,28 @@ public class Main {
 					 var wallTime:Long = -System.nanoTime();	
 					 val modelSeed = random.nextLong();
 					 val prob = problemParam;
-					 val cspGen = ():ModelAS(vectorSz)=>CSPProblem(prob).make (size as Long, 
-								vectorSz, modelSeed, opts, matrix1, matrix2, mapTable);
+					 
+					 // Closure for the problem model
+					 val cspGen = ():ModelAS(valSize)=>CSPProblem(prob).make (valSize, 
+								modelSeed, opts, matrix1, matrix2, mapTable);
 					 
 					 /**
 					  *   Start remote solver processes
 					  */
 					 if (solverMode == 0n){
-						  finish for (p in Place.places()) 
-						  {
+						  finish for (p in Place.places()){
 								val solverSeed = random.nextLong(); 
 								at (p) async
 								solvers().solve(solvers, cspGen, solverSeed, tCost, sLow);   
 						  }
 					 }else{
-						  finish for(var i:Long = Place.MAX_PLACES-1; i >= 0; i-= 16) at (Place(i)) async 
-						  {
+						  finish for(var i:Long = Place.MAX_PLACES-1; i >= 0; i-= 16) 
+								at (Place(i)) async {
 								val max = here.id; val min = Math.max(max-15, 0);
 								val r = new Random(random.nextLong()+here.id);
-								finish for(k in min..max)
-								{
+								finish for(k in min..max){
 									 val solverSeed = r.nextLong();
-									 at(Place(k)) async  solvers().solve(solvers, cspGen, solverSeed, tCost, sLow );
+									 at(Place(k)) async solvers().solve(solvers, cspGen, solverSeed, tCost, sLow );
 								}
 						  }
 					 }

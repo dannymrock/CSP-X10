@@ -393,7 +393,8 @@ public class CostasAS extends ModelAS{
 				if (nr > 1)
 				{
 					var dist:Int = d - size;
-					Console.OUT.println("ERROR at row "+i+": distance "+dist+" appears "+nr+" times");
+					val vali =i; val valdist=dist; val valnr=nr;
+					Logger.debug(()=>{" ERROR at row "+vali+": distance "+valdist+" appears "+valnr+" times"});
 					r = 0n;
 				}
 			}

@@ -1,10 +1,10 @@
 
 -AS_vtr -1
 -AS_rp 5
--AS_e false
 -AS_flm 1
 -AS_fs 0
 -AS_rl 1
 -AS_plm 50
--AS_fb false
+-AS_fb 0
+-AS_e 0
 -bv 1

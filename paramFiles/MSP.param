@@ -5,6 +5,6 @@
 -AS_flm 5
 -AS_fs 0
 -AS_rl 10
--AS_e false
--AS_fb false
+-AS_e 0
+-AS_fb 0
 -bv 1
