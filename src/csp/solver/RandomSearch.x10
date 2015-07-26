@@ -55,6 +55,9 @@ public class RandomSearch(sz:Long){
 	 private var forceRestart : Boolean = false;
 	 private var forceReset : Boolean = false;
 	 
+	 // Report results
+	 protected val reportPart:Boolean;
+	 
 	 public def this(size:Long, opt:ParamManager){
 		  property(size);
 		  //this.vectorSize = size;
@@ -65,6 +68,8 @@ public class RandomSearch(sz:Long){
 		  this.maxTime = this.opts("-mt", 0);
 		  this.maxIters = this.opts("-mi", 100000000);
 		  this.maxRestarts = this.opts("-mr", 0n);
+		  this.reportPart = this.opts("-rp", 0n) == 1n;
+		  
 	 }
 
 	 /**
@@ -243,7 +248,13 @@ public class RandomSearch(sz:Long){
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
-				// Console.OUT.println(here+" best cost= "+bestCost);
+				
+				if (this.reportPart){
+					 val eT = (System.nanoTime() - initialTime)/10e9;
+					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap %5.2f%% \n",here,eT,this.bestCost,gap);
+				}
+				
 				// Compare cost and break if target is accomplished
 				if ((this.strictLow && this.bestCost < this.target)
 						  ||(!this.strictLow && this.bestCost <= this.target)){

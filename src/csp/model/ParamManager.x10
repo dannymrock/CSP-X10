@@ -47,6 +47,7 @@ public class ParamManager extends OptionsParser {
 					  Option("mt", "max_time", "Max. time  default 0"),
 					  Option("mi", "max_iter", "Max. iterations limit"),
 					  Option("mr", "max_restart", "maximum number of restarts"),
+					  Option("rp", "rep_partial", "report partial results"),				  
 					  // Parameters for AS
 					  Option("AS_vtr", "AS_varToReset", "number of variables to swap in the reset procedure."),
 					  Option("AS_rp", "AS_resetPer", "Percentage of variables to swap in the reset procedure. Default 10%"),
