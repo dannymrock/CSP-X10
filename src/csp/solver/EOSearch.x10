@@ -11,7 +11,7 @@ import csp.model.ParamManager;
 public class EOSearch extends RandomSearch {
 	 	 
 	 /** Number time to change vector due to communication */ 
-	 private var nbChangeV : Int = 0n;
+	 private var nChangeV : Int = 0n;
 	 
 	 // PDF for EO
 	 private val pdf:Rail[Double];
@@ -32,6 +32,7 @@ public class EOSearch extends RandomSearch {
 	 private solver:IParallelSolver(sz);
 	 private val tau:Double;
 	 private val pdfS:Int;
+	 private val selSecond:Int;
 	 
 	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
 		  super(sz, opts);
@@ -43,9 +44,12 @@ public class EOSearch extends RandomSearch {
 		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
 		  this.pdfS = opts("--EO_pdf", 1n);
 		  
+		  this.selSecond = opts("--EO_selSec", 1n);
+		  
 		  if (here.id == 0)
-				Console.OUT.println("Parameters EO: TAU= "+tau+" pdf= "
-						  +(pdfS == 1n ? "Power":"Exp"));
+				Console.OUT.println("Parameters EO: TAU= "+tau+", pdf= "
+						  +(pdfS == 1n ? "Power":"Exp")+ ", Second_variable_selection="+
+						  (selSecond==0n?"Random":"MinConflict"));
 
 	 }
 	 
@@ -58,8 +62,12 @@ public class EOSearch extends RandomSearch {
 	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Int{
 		  //Console.OUT.println("EO");
 		  
-		  selectFirstVar( cop_, move );
-		  currentCost = selectVarMinConflict( cop_, move);
+		  selFirstVar( cop_, move );
+		  if (selSecond == 0n)
+				currentCost = selSecondRandom( cop_, move);
+		  else 
+				currentCost = selSecondMinConf( cop_, move);
+		  	
 		  //newCost = selectSecondVar( cop_ , totalCost, eoi);
 		  cop_.swapVariables(move.getFirst(), move.getSecond()); //adSwap(maxI, minJ,csp);
 		  nSwap++;
@@ -116,7 +124,7 @@ public class EOSearch extends RandomSearch {
 		  return x - 1n ;
 	 }
 	 
-	 private def selectFirstVar( cop_ : ModelAS, move:MovePermutation){
+	 private def selFirstVar( cop_ : ModelAS, move:MovePermutation){
 		  var i: Long =-1n;
 		  var cost: Int;
 		  var selIndex:Int=0n; 
@@ -149,7 +157,7 @@ public class EOSearch extends RandomSearch {
 	  *   @param move object
 	  * 	@return the cost of the best move
 	  */
-	 private def selectVarMinConflict( csp : ModelAS, move:MovePermutation) : Int {
+	 private def selSecondMinConf( csp : ModelAS, move:MovePermutation) : Int {
 		  var j: Long;
 		  var cost: Int;
 		  var second : Long = 0;
@@ -178,9 +186,9 @@ public class EOSearch extends RandomSearch {
 		  return minCost;
 	 }
 	 
-	 private def selectSecondVar( csp : ModelAS, totalCost:Int, move:MovePermutation) : Int {
+	 private def selSecondRandom( csp : ModelAS, move:MovePermutation) : Int {
 		  val randomJ = random.nextLong(this.sz);
-		  val newCost = csp.costIfSwap(totalCost, randomJ, move.getFirst());	 
+		  val newCost = csp.costIfSwap(this.currentCost, randomJ, move.getFirst());	 
 		  move.setSecond(randomJ);
 		  return newCost; 
 	 }
@@ -205,7 +213,7 @@ public class EOSearch extends RandomSearch {
 		  if(solver.inTeamReportI() != 0n && this.nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
 				val result = solver.getIPVector(cop_, this.currentCost );
 				if (result){
-					 this.nbChangeV++;
+					 this.nChangeV++;
 					 this.currentCost = cop_.costOfSolution(true);
 					 bestSent = true;
 					 //Console.OUT.println("Changing vector in "+ here);
@@ -225,9 +233,9 @@ public class EOSearch extends RandomSearch {
 				bestSent = false; // new best found, I must send it!
 				
 				if (this.reportPart){
-					 val eT = (System.nanoTime() - initialTime)/10e9;
+					 val eT = (System.nanoTime() - initialTime)/1e9;
 					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap %5.2f%% \n",here,eT,this.bestCost,gap);
+					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
 				}
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);
@@ -238,6 +246,14 @@ public class EOSearch extends RandomSearch {
 					 this.kill = true;
 				}
 		  }
+	 }
+	 
+	 /**
+	  * 	Report statistics from the solving process
+	  */
+	 public def reportStats( c : CSPStats){
+	 super.reportStats(c);
+	 c.change = this.nChangeV;
 	 }
 	 
 }

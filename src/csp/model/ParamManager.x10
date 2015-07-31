@@ -60,6 +60,7 @@ public class ParamManager extends OptionsParser {
 					  // Parameters for EO
 					  Option("EO_t", "EO_tau", "Parameter tau in Extremal Optimization. Default 1 + 1 / log(n)"),
 					  Option("EO_p", "EO_pdf", "PDF used to select the variable to swap . Default 1-(Original) 2-(Exp)"),
+					  Option("EO_ss", "EO_selSec", "Function used to select the second variable . Default 1-(minconflict) 0-(random)"),
 					  // Parameters for Problem Models
 					  Option("if", "input_vector_file", "file path for input vector . Default ."),
 					  Option("bv", "model_baseValue", "Domain base value for the model . 0 or 1"),

@@ -451,9 +451,9 @@ public class AdaptiveSearch extends RandomSearch {
 				bestSent = false; // new best found, I must send it!
 				
 				if (this.reportPart){
-					 val eT = (System.nanoTime() - initialTime)/10e9;
+					 val eT = (System.nanoTime() - initialTime)/1e9;
 					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap %5.2f%% \n",here,eT,this.bestCost,gap);
+					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
 				}
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);
