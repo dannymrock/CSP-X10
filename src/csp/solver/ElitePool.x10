@@ -46,82 +46,81 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 	 * Note: Check that all calls are from remote places. If so the copy of
 	 * variables will already have happened.
 	 */
-	public def tryInsertVector(cost:Int, variables:Rail[Int]{self.size==sz}, place:Int) {
+	public def tryInsertVector(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) {
 		monitor.atomicBlock(()=>tryInsertVector0(cost,variables,place));		
 	}
 
 	//var countInsert:Int = 0n;
-	protected def tryInsertVector0( cost : Int , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
-		 // var worstConf:Int = -1n; // index of the worst conf in the pool (highest cost)
-		 // var worstCost:Int = Int.MIN_VALUE;
-		 // var victim:Int = -1n;
-		 // 
-		 // var simConf:Int = -1n;
-		 // var minDiff:Int = Int.MAX_VALUE;
-		 // 
-		 // 
-		 // if (nbEntries == 0n){
-			//   bestPartialSolutions(nbEntries++) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place); 
-		 // }else{
-			//   // Searching the worst conf (highest cost)
-			//   for ( i in 0n..(nbEntries-1n) ){
-			// 		// Select worst conf
-			// 		val thisCost = bestPartialSolutions(i).cost;
-			// 		if (thisCost > worstCost){
-			// 			 worstCost = thisCost;
-			// 			 worstConf = i;
-			// 		} 
-			// 		
-			// 		//select similar cost configuration
-			// 		val cdiff = Math.abs(thisCost - cost);
-			// 		if (cdiff < minDiff){
-			// 			 minDiff = cdiff;
-			// 			 simConf = i; 
-			// 		}	 
-			//   }
-			//   
-			//   // Replace the worst conf in the pool with a new one
-			//   if (cost < worstCost && distance(variables, bestPartialSolutions(simConf).vector) >= distanceT)
-			// 		if (nbEntries < poolSize )
-			// 			 victim = nbEntries++;
-			// 		else{
-			// 			 //if (distance(variables, bestPartialSolutions(simConf).vector) >= distanceT )
-			// 			 victim = worstConf;					 
-			// 		}
-			// 			 
-			//   if (victim >= 0n)
-			// 		bestPartialSolutions(victim) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
-		 // }
-		 // return Unit();
-		
+	protected def tryInsertVector0( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
 		 var victim:Int;
-		
-		if( nbEntries < poolSize ){
-			victim = nbEntries++;
-		}else{
-			// No place available select a victim
-			
-			victim = -1n;
-		
-			for (i in 0n..(nbEntries-1n)){
-				if (cost < bestPartialSolutions(i).cost){
-					victim = i;
-				} else if (cost == bestPartialSolutions(i).cost && compareVectors(variables, bestPartialSolutions(i).vector)){
-					victim = -1n;
-					break;
-				}
-			}
-		}
-		if (victim >= 0n) {
-			//Console.OUT.println("insert vector with cost "+cost);	
-			bestPartialSolutions(victim) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
-			// countInsert++;
-			// if (countInsert % 10n == 0n){
-			// 	
-			// }
-		}
-		
-		return Unit();
+		 
+		 if( nbEntries < poolSize ){
+			  victim = nbEntries++;
+		 }else{
+			  // No place available select a victim
+			  
+			  victim = -1n;
+			  
+			  for (i in 0n..(nbEntries-1n)){
+					if (cost < bestPartialSolutions(i).cost){
+						 victim = i;
+					} else if (cost == bestPartialSolutions(i).cost && compareVectors(variables, bestPartialSolutions(i).vector)){
+						 victim = -1n;
+						 break;
+					}
+			  }
+		 }
+		 if (victim >= 0n) {
+			  //Console.OUT.println("insert vector with cost "+cost);	
+			  bestPartialSolutions(victim) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
+			  // countInsert++;
+			  // if (countInsert % 10n == 0n){
+			  // 	
+			  // }
+		 }
+		 
+		 return Unit();
+	}
+	//var countInsert:Int = 0n;
+	protected def tryInsertVector1( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
+		 var worstConf:Long = -1; // index of the worst conf in the pool (highest cost)
+		 var worstCost:Long = Long.MIN_VALUE;
+		 var victim:Long = -1;
+		 var simConf:Int = -1n;
+		 var minDiff:Long = Long.MAX_VALUE;
+		 
+		 
+		 if (nbEntries == 0n){
+		   bestPartialSolutions(nbEntries++) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place); 
+		 }else{
+		   // Searching the worst conf (highest cost)
+		   for ( i in 0n..(nbEntries-1n) ){
+		 		// Select worst conf
+		 		val thisCost = bestPartialSolutions(i).cost;
+		 		if (thisCost > worstCost){
+		 			 worstCost = thisCost;
+		 			 worstConf = i;
+		 		} 
+		 		//select similar cost configuration
+		 		val cdiff = Math.abs(thisCost - cost);
+		 		if (cdiff < minDiff){
+		 			 minDiff = cdiff;
+		 			 simConf = i; 
+		 		}	 
+		   }
+		   
+		   // Replace the worst conf in the pool with a new one
+		   if (cost < worstCost && distance(variables, bestPartialSolutions(simConf).vector) >= distanceT)
+		 		if (nbEntries < poolSize )
+		 			 victim = nbEntries++;
+		 		else{
+		 			 //if (distance(variables, bestPartialSolutions(simConf).vector) >= distanceT )
+		 			 victim = worstConf;					 
+		 		}
+		   if (victim >= 0n)
+		 		bestPartialSolutions(victim) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
+		 }
+		 return Unit();
 	}
 	
 	
@@ -131,13 +130,13 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 	 * Note: Check that all calls are from remote places. If so the copy of
 	 * variables will already have happened.
 	 */
-	public def tryInsertLM(cost:Int, variables:Rail[Int]{self.size==sz}, place:Int) {
+	public def tryInsertLM(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) {
 		 monitor.atomicBlock(()=>tryInsertLM0(cost,variables,place));		
 	}
 
 	//var countInsert:Int = 0n;
 	//val countLM = new Rail[Int](poolSize,1n);
-	protected def tryInsertLM0( cost : Int , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
+	protected def tryInsertLM0( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
 		 // Insert count similar conf 
 		 // var worstConf:Int = -1n; // index of the worst conf in the pool (highest cost)
 		 // var worstCost:Int = Int.MIN_VALUE;
@@ -191,12 +190,12 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 		 // return Unit();
 		 /*****/
 		 
-		 var worstConf:Int = -1n; // index of the worst conf in the pool (highest cost)
-		 var worstCost:Int = Int.MIN_VALUE;
-		 var victim:Int = -1n;
+		 var worstConf:Long = -1; // index of the worst conf in the pool (highest cost)
+		 var worstCost:Long = Long.MIN_VALUE;
+		 var victim:Long = -1;
 		 
 		 var simConf:Int = -1n;
-		 var minDiff:Int = Int.MAX_VALUE;
+		 var minDiff:Long = Long.MAX_VALUE;
 		 
 		 
 		 if (nbEntries == 0n){
@@ -305,7 +304,7 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 	public def getBestConf():Maybe[CSPSharedUnit(sz)]=
 		monitor.atomicBlock(()=> {
 			if (nbEntries < 1n) return null;
-			var bcost:Int = Int.MAX_VALUE;
+			var bcost:Long = Long.MAX_VALUE;
 			var victim:Long = -1;
 			for (i in 0n..(nbEntries-1n)){
 				if (bestPartialSolutions(i).cost < bcost){

@@ -39,8 +39,8 @@ public class RandomSearch(sz:Long){
 	 protected var nSwapTot : Int;
 	 // -> Result
 	 protected val bestConf:Rail[Int];
-	 protected var bestCost:Int = x10.lang.Int.MAX_VALUE;
-	 protected var currentCost:Int;
+	 protected var bestCost:Long = Long.MAX_VALUE;
+	 protected var currentCost:Long;
 	 // -> Stop search process 
 	 protected var kill:Boolean = false;
 	 // -> Max time
@@ -75,20 +75,20 @@ public class RandomSearch(sz:Long){
 	 /**
 	  * Solves the problem, which is specified by cop.
 	  */
-	 public def solve( cop : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Int {
+	 public def solve( cop : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Long {
 		  // Initialize all variables of the search process
 		  initVar(cop, tCost, sLow);
 		  // Initialize Cost
 		  this.currentCost = cop.costOfSolution(true);
 		  // Copy the first match to bestConf vector
 		  Rail.copy(cop.getVariables(), bestConf as Valuation(sz));
-		  if (currentCost == 0n)
+		  if (currentCost == 0)
 				bestCost = currentCost;
 		  else
 				bestCost = x10.lang.Int.MAX_VALUE;
 		  
 		  // Main Loop 
-		  while( currentCost != 0n ){
+		  while( currentCost != 0 ){
 				if (this.nIter >= this.maxIters){
 					 //restart or finish
 					 if(nRestart >= maxRestarts){
@@ -162,7 +162,7 @@ public class RandomSearch(sz:Long){
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Int{
+	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  // Swap two random variables
 		  //Console.OUT.println("HS");
 		  move.setFirst(random.nextLong(sz));
@@ -210,7 +210,7 @@ public class RandomSearch(sz:Long){
 	 /**
 	  * 	Return the cost of the best Configuration
 	  */
-	 public def getBestCost():Int{
+	 public def getBestCost():Long{
 		  return this.bestCost;
 	 }
 	 

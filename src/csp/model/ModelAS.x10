@@ -1,6 +1,5 @@
 package csp.model;
 
-import csp.util.RandomTools;
 import csp.util.Utils;
 import csp.util.Logger;
 import csp.solver.Valuation;
@@ -21,10 +20,10 @@ import csp.solver.MovePermutation;
  *  @version 0.1 April 9, 2013
  */
 public class ModelAS(sz:Long) {
-	protected val size = sz as Int;
+	protected val size = sz;
 	protected val variables = new Rail[Int]( sz, (i:Long) => i as Int);
 	protected var baseValue:Int;
-	protected val r:RandomTools;
+	protected val r:Random;
 	
 	//protected val solverParams = new ASSolverParameters();
 	
@@ -46,7 +45,7 @@ public class ModelAS(sz:Long) {
 		//this.initParameters(1000n);
 		this.opts = opts;
 		this.baseValue = opts("-bv", 1n);
-		this.r  = new RandomTools(seed);
+		this.r  = new Random(seed);
 		this.inPath = opts("-if","."); 
 		this.inVector = inPath.equals(".") ? false : true;
 	}
@@ -87,17 +86,17 @@ public class ModelAS(sz:Long) {
 	/**
 	 * 	Cost on variable function (may be virtual)
 	 */
-	public def costOnVariable(i:Long):Int{
+	public def costOnVariable(i:Long):Long{
 		Console.OUT.println("Error bad costOnVariable");
-		return 0n;
+		return 0;
 	}
 	
 	/**
 	 * 	Cost if swap function
 	 */
-	public def costIfSwap(current_cost:Int, i1:Long, i2:Long):Int{
+	public def costIfSwap(current_cost:Long, i1:Long, i2:Long):Long{
 		Console.OUT.println("Error costIfSwap");
-		return 0n;
+		return 0;
 	}
 	
 	/**
@@ -117,9 +116,9 @@ public class ModelAS(sz:Long) {
 		 variables(j) = x;
 	}
 	
-	public def costOfSolution(shouldBeRecorded : Boolean):Int {
-		//Console.OUT.println("Error costOfSolution");
-		return 0n;
+	public def costOfSolution(shouldBeRecorded : Boolean):Long {
+		Console.OUT.println("Error costOfSolution");
+		return 0;
 	}
 	
 	static def show(s:String, d: Rail[Int]) {
@@ -136,7 +135,7 @@ public class ModelAS(sz:Long) {
 			  val fileIn = new FileReader(new File(inPath));
 			  val line = fileIn.readLine();
 			  var i : Int;
-			  var j : Int = 0n;
+			  var j : Long = 0;
 			  var buffer:String = "";
 			  
 			  for(i = 0n ; i < line.length() ; i++)
@@ -180,9 +179,9 @@ public class ModelAS(sz:Long) {
 					variables(k) = this.baseValue + k as Int;
 			  }
 			  //Main.show("before ini",variables);
-			  for( var i:Int = this.size - 1n ; i >	0n ; i-- )
+			  for( var i:Long = this.size - 1 ; i > 0 ; i-- )
 			  {
-					val j = r.randomInt( i + 1n );
+					val j = r.nextLong( i + 1 );
 					swapVariables(i,j);
 			  }
 		 }
@@ -194,11 +193,11 @@ public class ModelAS(sz:Long) {
 	 * 	@param totalcost not used (for support more complex implementations)
 	 * 	@return -1 for recompute cost
 	 */
-	public def reset ( var n : Long, totalCost : Int ) : Int {
+	public def reset ( var n : Long, totalCost : Long ) : Long {
 		
 		while( n-- != 0 ) {
-			val i = r.randomInt(this.size);
-			val j = r.randomInt(this.size);
+			val i = r.nextLong(this.size);
+			val j = r.nextLong(this.size);
 			swapVariables(i,j);
 		}
 		return -1n;

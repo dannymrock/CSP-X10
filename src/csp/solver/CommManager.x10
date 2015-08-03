@@ -109,7 +109,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	 * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
 	 * 
 	 */
-	public def communicate(totalCost : Int, variables : Rail[Int]{self.size==sz} ) {
+	public def communicate(totalCost : Long, variables : Rail[Int]{self.size==sz} ) {
 		 Logger.debug(()=>" communicate: entering.");
 		 val placeid = here.id as Int;
 		 val ss = solvers;
@@ -146,7 +146,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	/**
 	 *  Receive Local Minimum Confs. from Team member
 	 */
-	public def communicateLM(totalCost : Int, variables : Rail[Int]{self.size==sz} ) {
+	public def communicateLM(totalCost : Long, variables : Rail[Int]{self.size==sz} ) {
 		 Logger.debug(()=>" communicate: entering.");
 		 val placeid = here.id as Int;
 		 val ss = solvers;
@@ -186,7 +186,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	 * If the return value is -1n (fail), csp_ will not be changed.
 	 * 
 	 */
-	public def getIPVector(csp_ : ModelAS(sz), myCost : Int):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
+	public def getIPVector(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		 // if (commOption == NO_COMM) return false;
 		 Logger.debug(()=> "CommManager: getIPVector: entering.");
 		 var a : Maybe[CSPSharedUnit(sz)];
@@ -221,7 +221,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	/**
 	 * 
 	 */
-	public def getLM(csp_ : ModelAS(sz), myCost : Int):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
+	public def getLM(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		 Logger.debug(()=> "CommManager: getLM: entering.");
 		 var a : Maybe[CSPSharedUnit(sz)];
 		 if (solverMode == USE_PLACES) {

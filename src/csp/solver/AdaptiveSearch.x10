@@ -122,8 +122,8 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Int{
-		  var newCost:Int = -1n;
+	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+		  var newCost:Long = -1;
 		  
 		  
 		  if( !this.exhaustive ){
@@ -193,12 +193,12 @@ public class AdaptiveSearch extends RandomSearch {
 	 }
 	 
 	 private def doReset(n:Long, cop_ : ModelAS ) {
-		  var cost : Int = -1n;		//reset(n, csp);
+		  var cost : Long = -1;		//reset(n, csp);
 		  cost = cop_.reset( n, currentCost );
 		  mark.clear();
 		  nReset++;
 		  //Console.OUT.println("Do reset...: "+ nbReset);
-		  currentCost = (cost < 0n) ? cop_.costOfSolution(true) : cost; //Arg costofsol(1)
+		  currentCost = (cost < 0) ? cop_.costOfSolution(true) : cost; //Arg costofsol(1)
 	 }
 	 
 	 
@@ -213,7 +213,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  */
 	 private def selectVarHighCost( cop_ : ModelAS , move:MovePermutation){
 		  var i: Long =-1;
-		  var maxCost: Int = 0n;
+		  var maxCost: Long = 0;
 		  var maxVar:Long = -1;
 		  
 		  this.listInb = 0n; //Number of elements
@@ -259,12 +259,12 @@ public class AdaptiveSearch extends RandomSearch {
 	  * 	@param move object (permutation)
 	  * 	@return new cost of the possible move
 	  */
-	 private def selectVarMinConflict( cop : ModelAS, move:MovePermutation ) : Int {
+	 private def selectVarMinConflict( cop : ModelAS, move:MovePermutation ) : Long {
 		  var j: Long;
-		  var cost: Int;
+		  var cost: Long;
 		  var flagOut:Boolean = false; 
 		  var second : Long = -1;
-		  var nCost:Int;
+		  var nCost:Long;
 		  var first:Long = move.getFirst();
 		  
 		  do {
@@ -331,13 +331,13 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  @param move object (permutation)
 	  *  @return new cost of the possible move
 	  */
-	 private def selectVarsToSwap(cop : ModelAS, move:MovePermutation):Int {
+	 private def selectVarsToSwap(cop : ModelAS, move:MovePermutation):Long {
 		  var first : Long;
 		  var second : Long;
 		  //var x : Int;
 		  
 		  this.nListIJ = 0n;
-		  var nCost: Int = x10.lang.Int.MAX_VALUE ;
+		  var nCost:Long = Long.MAX_VALUE ;
 		  this.nVarMarked = 0n;
 		  
 		  //Console.OUT.println("TC =>"+totalCost);

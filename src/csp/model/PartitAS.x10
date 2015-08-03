@@ -49,9 +49,9 @@ public class PartitAS extends ModelAS{
 	 * 	@param shouldBeRecorded 0 for no record 1 for record
 	 * 	@return cost of solution
 	 */
-	public def costOfSolution( shouldBeRecorded : Boolean ) : Int {
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Long {
 		var i : Int;
-		var r : Int;
+		var r : Long;
 		var x : Int;
 
 		curMidX = 0n;
@@ -77,7 +77,7 @@ public class PartitAS extends ModelAS{
 	 * 	@param i2 second variable to swap
 	 * 	@return cost if swap
 	 */
-	public def costIfSwap( currentCost:Int, i1:Long, i2:Long ) : Int
+	public def costIfSwap( currentCost:Long, i1:Long, i2:Long ) : Long
 	{
 		var xi1 : Int, xi12 : Int, xi2 : Int, xi22 : Int, cmX : Int, cmX2 : Long, r : Int;
 

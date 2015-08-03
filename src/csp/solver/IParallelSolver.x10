@@ -28,29 +28,29 @@ public interface IParallelSolver {
      * cost is less than myCost, update csp_ in place, and return true,
      * else return false.
      */
-    def getIPVector(csp_:ModelAS(sz), myCost:Int):Boolean;
-    def getLM(csp_:ModelAS(sz), myCost:Int):Boolean;
+    def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean;
+    def getLM(csp_:ModelAS(sz), myCost:Long):Boolean;
 
     
     /**
      * Send this configuration (cost, current assignment of values to variables) to
      * communication partner(s).
      */
-    def communicate(totalCost:Int, variables:Valuation(sz)):void;
+    def communicate(totalCost:Long, variables:Valuation(sz)):void;
     
     /**
      * Send Local Minimum configuration (cost, assignment of values to variables) to
      * communication partner(s).
      */
-    def communicateLM(totalCost:Int, variables:Valuation(sz)):void;
+    def communicateLM(totalCost:Long, variables:Valuation(sz)):void;
     
-    def tryInsertLM(cost:Int, locMin:Rail[Int]{self.size==sz}, place:Int):void;
+    def tryInsertLM(cost:Long, locMin:Rail[Int]{self.size==sz}, place:Int):void;
   
     /**
      * Insert this configuration (sent from place) into the pool P at the current place,
      * if the cost is lower than the best cost in P.
      */
-    def tryInsertVector(cost:Int, variables:Valuation(sz), place:Int):void;
+    def tryInsertVector(cost:Long, variables:Valuation(sz), place:Int):void;
 
     /** Return the value of the parameter used to control communication within the team
      * (intraTeamInterval).
@@ -91,7 +91,7 @@ public interface IParallelSolver {
     
     def verifyWinner(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     
-    public def getCost():Int;
+    public def getCost():Long;
     def setStats_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     
     def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), 

@@ -73,7 +73,7 @@ public class MagicSquareAS extends ModelAS{
 	  *  Compute the cost of the variables current assignation for the Magic Square problem.
 	  *  @return Integer with the value of the cost of the variables current assignation.
 	  */
-	 public def costOfSolution(shouldBeRecorded : Boolean) : Int {
+	 public def costOfSolution(shouldBeRecorded : Boolean) : Long {
 		  
 		  var k:Long;
 		  var r:Long;
@@ -133,7 +133,7 @@ public class MagicSquareAS extends ModelAS{
 	  * 	@param i This is the variable that we want to know the cost
 	  *  @return Int value with the cost of this variable
 	  */
-	 public def costOnVariable( i:Long ) : Int{
+	 public def costOnVariable( i:Long ) : Long{
 		  val xr = xref(i);
 		  val r = err_l_abs(xr.l) + err_c_abs(xr.c) + 
 		  (xr.d1 ? err_d1_abs : 0) + (xr.d2 ? err_d2_abs : 0);
@@ -154,7 +154,7 @@ public class MagicSquareAS extends ModelAS{
 	  *  @param i2 second variable to swap
 	  *  @return cost of the problem if the swap is done
 	  */
-	 public def costIfSwap( current_cost:Int, i1:Long, i2:Long ) : Int {
+	 public def costIfSwap( current_cost:Long, i1:Long, i2:Long ) : Long {
 		  
 		  val xr1  = xref(i1), l1 = xr1.l, c1 = xr1.c;
 		  val xr2  = xref(i2), l2 = xr2.l, c2 = xr2.c;

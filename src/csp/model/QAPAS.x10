@@ -154,7 +154,7 @@ public class QAPAS extends ModelAS
 	 
 	 
 	 
-	 public def costOfSolution(shouldBeRecorded : Boolean) : Int
+	 public def costOfSolution(shouldBeRecorded : Boolean) : Long
 	 {
 		  var i : Long, j : Long;
 		  var r : Long  = 0;
@@ -168,11 +168,11 @@ public class QAPAS extends ModelAS
 					 for(j = i + 1; j < size; j++)
 						  delta(i,j) = computeDelta(i, j);
 		  
-		  return r as Int;
+		  return r;
 	 }
 	 
 	 
-	 public def costIfSwap(currentCost:Int, i1:Long, i2:Long) : Int
+	 public def costIfSwap(currentCost:Long, i1:Long, i2:Long) : Long
 	 {
 		  //return currentCost + delta(i1 as Int , i2 as Int) as Int;
 		  var i1v:Long = i1;
@@ -184,7 +184,7 @@ public class QAPAS extends ModelAS
 			 i2v = i1;
 		  }
 		  
-		  return currentCost + delta(i1v, i2v) as Int;
+		  return currentCost + delta(i1v, i2v);
 	 }
 	 
 	 
@@ -214,18 +214,18 @@ public class QAPAS extends ModelAS
 	  * 	@param i This is the variable that we want to know the cost
 	  *  @return Int value with the cost of this variable
 	  */
-	 public def costOnVariable( i : Long ) : Int{
+	 public def costOnVariable( i : Long ) : Long{
 		  // val xr = xref(i);
 		  // val r = err_l_abs(xr.l) + err_c_abs(xr.c) + 
 		  // (xr.d1 ? err_d1_abs : 0n) + (xr.d2 ? err_d2_abs : 0n);		  
 		  
-		  var r : Int = Int.MIN_VALUE; 
+		  var r : Long = Long.MIN_VALUE; 
 		  
 		  for (var j:Long = 0; j < size; j++)
 		  {
 				if (i == j)
 					 continue;
-				var d : Int = (i < j)? delta(i,j) as Int:delta(j,i) as Int;
+				var d : Long = (i < j)? delta(i,j) :delta(j,i) ;
 				d = -d;
 				if (d > r)
 					 r = d;

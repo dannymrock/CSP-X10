@@ -133,7 +133,7 @@ public class LangfordAS extends ModelAS{
 	 * 	@param shouldBeRecorded 0 for no record 1 for record
 	 * 	@return cost of solution
 	 */
-	public def costOfSolution( shouldBeRecorded : Boolean ) : Int {
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Long {
 		var i : Int;
 		var r : Int = 0n;
 
@@ -154,8 +154,7 @@ public class LangfordAS extends ModelAS{
 	 * 	@param i variable
 	 * 	@return cost of variable i
 	 */
-	public def costOnVariable( i:Long ) : Int
-	{
+	public def costOnVariable( i:Long ) : Long {
 		val x = i % order;
 		return (err(x) != 0n ? 1n : 0n); /* for K == 3 return if the variable is in error (i.e. 1 or 2 errors are the same) */
 	}
@@ -167,9 +166,9 @@ public class LangfordAS extends ModelAS{
 	 * 	@param i2 second variable to swap
 	 * 	@return cost if swap
 	 */
-	public def costIfSwap( currentCost:Int, i1:Long, i2:Long ) : Int
+	public def costIfSwap( currentCost:Long, i1:Long, i2:Long ) : Long
 	{
-		var r : Int = currentCost;
+		var r : Long = currentCost;
 		
 		val x = i1 % order;           /* value to exchange (in 0..order - 1) */
 		val y = i2 % order;

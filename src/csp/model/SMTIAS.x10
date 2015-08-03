@@ -35,7 +35,7 @@ public class SMTIAS extends ModelAS{
 	val sgV = new Rail[Long](size,-1);
 	
 	/** weight: weight to compute the total cost (cost = bp*weight + singles)**/
-	var weight:Int = size;
+	var weight:Long = size;
 	
 	var singlei:Int = 0n;
 	
@@ -173,8 +173,7 @@ public class SMTIAS extends ModelAS{
 	 *  @param shouldBeRecorded if true saves the computatuon in global variables
 	 * 	@return cost
 	 */
-	public def costOfSolution( shouldBeRecorded : Boolean ) : Int 
-	{	
+	public def costOfSolution( shouldBeRecorded : Boolean ) : Long {	
 		 var w : Int;
 		 var pmi : Int = 0n; // index of current match of mi 
 		 var pwi : Int = 0n; // index of current match of wi
@@ -200,7 +199,7 @@ public class SMTIAS extends ModelAS{
 			  
 			  if(levelPM == 0n )   //verify if m is single (pm is not a valid match)
 			  { 
-					levelPM = size + 1n;  // FIX (single should be size +1 )
+					levelPM = size as Int + 1n;  // FIX (single should be size +1 )
 					singles++;
 					
 					// if (shouldBeRecorded && r.randomInt(singles) == 0n)
@@ -338,7 +337,7 @@ public class SMTIAS extends ModelAS{
 	 * 	@param i This is the variable that we want to know the cost
 	 *  @return Int value with the cost of this variable
 	 */
-	public def costOnVariable( i : Long ) : Int {		
+	public def costOnVariable( i : Long ) : Long {		
 		return errV(i);
 	}
 	
@@ -369,9 +368,9 @@ public class SMTIAS extends ModelAS{
 	 *  @param i2 second variable to swap
 	 *  @return cost of the problem if the swap is done
 	 */
-	public def costIfSwap(current_cost:Int, var i1:Long, var i2:Long) : Int {
+	public def costIfSwap(current_cost:Long, var i1:Long, var i2:Long) : Long {
 		swapVariables(i1, i2);
-		var r : Int = costOfSolution(false);
+		var r : Long = costOfSolution(false);
 		swapVariables(i1, i2);
 		return r;
 	}
@@ -392,7 +391,7 @@ public class SMTIAS extends ModelAS{
 				maxErr = e;
 				maxNb = 1n;
 			} 
-			else if (e == maxErr && r.randomInt(++maxNb) == 0n){
+			else if (e == maxErr && r.nextInt(++maxNb) == 0n){
 				maxi = i;
 			}
 		}
@@ -401,7 +400,7 @@ public class SMTIAS extends ModelAS{
 		return maxi;
 	}
 	
-	public def reset ( var n:Long , totalCost : Int ) : Int {			
+	public def reset ( var n:Long , totalCost : Long ) : Long {			
 		
 		// 1st BLOCKING PAIRS
 		if (nbBP > 0n){
@@ -410,7 +409,7 @@ public class SMTIAS extends ModelAS{
 			var otheri:Int; 
 			///Console.OUT.println("Reset maxi= "+maxi+" bpiMaxi = "+ bpiMaxi);
 			swapVariables(maxi, bpiMaxi);
-			if (nbBP > 1n && r.randomDouble() < 0.98 &&  (otheri = findMax(maxi,bpiMaxi)) >= 0n){
+			if (nbBP > 1n && r.nextDouble() < 0.98 &&  (otheri = findMax(maxi,bpiMaxi)) >= 0n){
 				///Console.OUT.println("Reset otheri= "+otheri+" bpi(otheri) = "+ bpi(otheri));
 				swapVariables(otheri, bpi(otheri));
 				return -1n;
@@ -437,9 +436,9 @@ public class SMTIAS extends ModelAS{
 			 
 			 
 			 // select a single man
-			 val singleman = sgV( r.randomInt( nbSingles ) );
+			 val singleman = sgV( r.nextInt( nbSingles ) );
 			 // select a woman in the pref list of the single
-			 val j = r.randomInt( mprefsize(singleman) ); 
+			 val j = r.nextInt( mprefsize(singleman) ); 
 			 val bestpar = Math.abs( menPref(singleman)(j) );
 			 // find man paired with bestpar woman
 			 val manToSwap = variablesW( bestpar - 1 ) - 1n ;
@@ -462,8 +461,8 @@ public class SMTIAS extends ModelAS{
 				//   swapVariables(singleman2 as Int, manToSwap2);	
 			 // }
 		} else {
-			val i = r.randomInt(size);
-			val j = r.randomInt(size);
+			val i = r.nextLong(size);
+			val j = r.nextLong(size);
 			///Console.OUT.println("Reset no 2nd BP i= "+i+" j = "+ j);
 			swapVariables(i, j);
 		}
@@ -510,7 +509,7 @@ public class SMTIAS extends ModelAS{
 			
 			if( revpM(mi)(pmi)==0n )
 			{
-				levelPM = size; //put some value
+				levelPM = size as Int; //put some value
 				singles++;
 				// Console.OUT.println("m "+ (mi+1n) +" is SINGLE (not a valid match with w "+(pmi+1n)+")");
 				val hos = mapTable(pmi);

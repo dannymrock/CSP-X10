@@ -4,6 +4,7 @@ import x10.util.StringUtil;
 import x10.util.RailUtils;
 import csp.util.Logger;
 import csp.model.ParamManager;
+import x10.util.Pair;
 
 /**
  * Class EOSearch
@@ -15,9 +16,10 @@ public class EOSearch extends RandomSearch {
 	 
 	 // PDF for EO
 	 private val pdf:Rail[Double];
-	 private val fit:Rail[PairAS];
+	 private val fit:Rail[Pair[Long, Long]];
 	 //Here i -> index   j->cost (fitness)
-	 private val cmp : (PairAS,PairAS) => Int = (a:PairAS,b:PairAS) => {return b.j - a.j ;}; 
+	 private val cmp : (Pair[Long,Long],Pair[Long,Long]) => Int = 
+		  (a:Pair[Long,Long], b:Pair[Long, Long]) => {return b.second as Int - a.second as Int ;}; 
 	 
 
 	 val powFnc = (tau : Double, x : Long):Double => {
@@ -37,7 +39,7 @@ public class EOSearch extends RandomSearch {
 	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
 		  super(sz, opts);
 		  this.pdf = new Rail[Double] (this.sz, 0.0);
-		  fit = new Rail[PairAS] (this.sz); 
+		  fit = new Rail[Pair[Long,Long]](this.sz); 
 		  this.solver = solver;
 		  
 		  // Parameters
@@ -59,7 +61,7 @@ public class EOSearch extends RandomSearch {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Int{
+	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  //Console.OUT.println("EO");
 		  
 		  selFirstVar( cop_, move );
@@ -126,25 +128,25 @@ public class EOSearch extends RandomSearch {
 	 
 	 private def selFirstVar( cop_ : ModelAS, move:MovePermutation){
 		  var i: Long =-1n;
-		  var cost: Int;
-		  var selIndex:Int=0n; 
+		  var cost: Long;
+		  var selIndex:Long = 0; 
 		  
 		  while((i = cop_.nextI(i)) as ULong < this.sz as ULong) { //False if i < 0
 				cost = cop_.costOnVariable(i);
-				fit(i) = new PairAS(i as Int , cost);
+				fit(i) = new Pair(i , cost );
 		  }
 		  //[PairAS]
 		  RailUtils.sort(fit, cmp);	
 		  val index = pdfPick();
-		  val selFit = fit(index).j;
+		  val selFit = fit(index).second;
 		  var nSameFit:Int = 0n;
 
 		  for(var k:Int=0n; k < this.sz; k++){
-				if (fit(k).j < selFit)   // descending order
+				if (fit(k).second < selFit)   // descending order
 					 break;
 				
-				if (fit(k).j == selFit && random.nextInt(++nSameFit)==0n)
-					 selIndex = fit(k).i;
+				if (fit(k).second == selFit && random.nextInt(++nSameFit)==0n)
+					 selIndex = fit(k).first;
 		  }
 		  //Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
 		  move.setFirst(selIndex);
@@ -157,12 +159,12 @@ public class EOSearch extends RandomSearch {
 	  *   @param move object
 	  * 	@return the cost of the best move
 	  */
-	 private def selSecondMinConf( csp : ModelAS, move:MovePermutation) : Int {
+	 private def selSecondMinConf( csp : ModelAS, move:MovePermutation) : Long {
 		  var j: Long;
-		  var cost: Int;
+		  var cost: Long;
 		  var second : Long = 0;
 		  var nSameMin:Int = 0n;
-		  var minCost:Int = Int.MAX_VALUE;
+		  var minCost:Long = Long.MAX_VALUE;
 		  val first = move.getFirst();
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
@@ -186,7 +188,7 @@ public class EOSearch extends RandomSearch {
 		  return minCost;
 	 }
 	 
-	 private def selSecondRandom( csp : ModelAS, move:MovePermutation) : Int {
+	 private def selSecondRandom( csp : ModelAS, move:MovePermutation) : Long {
 		  val randomJ = random.nextLong(this.sz);
 		  val newCost = csp.costIfSwap(this.currentCost, randomJ, move.getFirst());	 
 		  move.setSecond(randomJ);

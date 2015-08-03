@@ -50,7 +50,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 val poolSize:Int;
 	 //val commOption : Int;
 	 
-	 var bcost : Int;
+	 var bcost : Long;
 	 val stats = new CSPStats();
 	 val sampleAccStats = new CSPStats();
 	 val genAccStats = new CSPStats();
@@ -162,7 +162,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  val random = new Random(seed);
 		  //val random = new Random(here.id);
 		  
-		  var cost:Int = x10.lang.Int.MAX_VALUE;
+		  var cost:Long = Long.MAX_VALUE;
 		  
 		  commM.setSeed(random.nextLong());
 		  solver.setSeed(random.nextLong()); 
@@ -254,13 +254,13 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 	 }
 	 
-	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Int):Boolean 
+	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
 	 = commM.getIPVector(csp_, myCost);
 	 
-	 @Inline public def getLM(csp_:ModelAS(sz), myCost:Int):Boolean 
+	 @Inline public def getLM(csp_:ModelAS(sz), myCost:Long):Boolean 
 	 = commM.getLM(csp_, myCost);
 	
-	 public def communicate(totalCost:Int, variables:Rail[Int]{self.size==sz})
+	 public def communicate(totalCost:Long, variables:Rail[Int]{self.size==sz})
 	 {
 		  commM.communicate(totalCost, variables);
 	 }
@@ -268,7 +268,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 @Inline public def inTeamReportI():Int = commM.inTeamReportI;
 	 @Inline public def inTeamUpdateI():Int = commM.inTeamUpdateI;
 	 
-	 public def communicateLM(totalCost:Int, variables:Rail[Int]{self.size==sz})
+	 public def communicateLM(totalCost:Long, variables:Rail[Int]{self.size==sz})
 	 {
 		  commM.communicateLM(totalCost, variables);
 	 }
@@ -387,12 +387,12 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  genAccStats.printAVG(count,oF, problem);
 	 }
 	 
-	 public def tryInsertVector(cost:Int, variables:Rail[Int]{self.size==sz}, place:Int) 
+	 public def tryInsertVector(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) 
 	 {
 		  commM.ep.tryInsertVector(cost, variables, place);
 	 }
 	 
-	 public def tryInsertLM(cost:Int, locMin:Rail[Int]{self.size==sz}, place:Int) 
+	 public def tryInsertLM(cost:Long, locMin:Rail[Int]{self.size==sz}, place:Int) 
 	 {
 		  commM.lmp.tryInsertVector(cost, locMin, place); 
 	 }
@@ -433,8 +433,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 // 	return new Maybe(sol);
 	 // }
 	 
-	 public def getCost():Int
-	 {
+	 public def getCost():Long {
 		  return solver.getBestCost();
 	 }
 	 
@@ -443,7 +442,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  // detect if no winner has been found
 		  // search best solution in all places
 		  // set stats objects
-		  var minCost:Int = x10.lang.Int.MAX_VALUE;
+		  var minCost:Long = Long.MAX_VALUE;
 		  var bestPlace:Place = here; 
 		  
 		  if (stats.explorer == -1n)
