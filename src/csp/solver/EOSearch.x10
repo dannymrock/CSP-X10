@@ -5,6 +5,7 @@ import x10.util.RailUtils;
 import csp.util.Logger;
 import csp.model.ParamManager;
 import x10.util.Pair;
+import x10.compiler.NonEscaping;
 
 /**
  * Class EOSearch
@@ -28,6 +29,29 @@ public class EOSearch extends RandomSearch {
 	 val expFnc = (tau : Double, x : Long):Double => {
 		  return Math.exp(-tau * x);
 	 };
+	 val gammaFnc = (tau : Double, x : Long):Double => {
+		  
+		  val k = tau;
+		  val theta = Math.exp(tau);
+		  
+		  val constk = Math.pow(theta,k)*EOSearch.gamma(k);
+		  
+		  val f =  Math.pow(x, k-1) * Math.exp(-x/theta) / constk;
+		  
+		  return f;
+	 };
+	
+	 static def gamma(n:Double):Double{
+		  val invn = 1.0 / n;
+		  val g = ( 2.506628274631 * Math.sqrt(invn) + 
+					 0.208885689552583 * Math.pow(invn, 1.5) + 
+					 0.00870357039802431 * Math.pow(invn, 2.5) - 
+					 (174.210665086855 * Math.pow(invn, 3.5)) / 25920.0 - 
+					 (715.642372407151 * Math.pow(invn, 4.5)) / 1244160.0
+		  ) * Math.exp((-Math.log(invn) - 1) * n);
+		  return g;
+	 }
+	 
 	 
 	 // Communication Variables
 	 private var bestSent:Boolean = false;
@@ -45,12 +69,19 @@ public class EOSearch extends RandomSearch {
 		  // Parameters
 		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
 		  this.pdfS = opts("--EO_pdf", 1n);
-		  
 		  this.selSecond = opts("--EO_selSec", 1n);
+		  
+		  var PDFname:String = "";
+		  if ( this.pdfS == 1n )
+				PDFname = "pow";
+		  else if(this.pdfS == 2n)
+				PDFname = "exp";
+		  else
+				PDFname = "gamma";
 		  
 		  if (here.id == 0)
 				Console.OUT.println("Parameters EO: TAU= "+tau+", pdf= "
-						  +(pdfS == 1n ? "Power":"Exp")+ ", Second_variable_selection="+
+						  +PDFname+ ", Second_variable_selection="+
 						  (selSecond==0n?"Random":"MinConflict"));
 
 	 }
@@ -89,8 +120,10 @@ public class EOSearch extends RandomSearch {
 		  
 		  if ( this.pdfS == 1n )
 				initPDF( this.powFnc );
-		  else
+		  else if(this.pdfS == 2n)
 				initPDF( this.expFnc );
+		  else
+				initPDF( this.gammaFnc );
 		  
 		  Logger.debug(()=>{"EOSolver"});
 
@@ -111,7 +144,7 @@ public class EOSearch extends RandomSearch {
 				pdf(x) /= sum;
 		  }
 		  // for (x in 1n..this.sz)
-		  // Console.OUT.println( x+"-"+pdf(x)+" ");
+				// Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 	 
 	 private def pdfPick():Int {

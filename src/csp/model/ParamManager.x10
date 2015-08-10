@@ -33,6 +33,7 @@ public class ParamManager extends OptionsParser {
 					  Option("b", "bench", "Number of (b)enchmark tests"),
 					  Option("pf", "param_file", "path of the parameters file"),
 					  Option("v", "verify", "verify and print solution., 0 or 1"),
+					  Option("ca", "comp_AVG", "compute AVG cost for each run at each place"),
 					  // CPLS 
 					  Option("N", "nodes_per_team", "nodes_per_team parameter. Default 4."),
 					  Option("U", "update", "Update Interval Intra-team Communication (iterations) . Default 0 - no communication."),

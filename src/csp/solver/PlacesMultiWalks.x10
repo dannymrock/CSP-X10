@@ -90,6 +90,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 
 	 var solString : String =  new String();
 	 
+	 val compAVG:Int;
+	 
 	 /**
 	  * 	Constructor of the class
 	  */
@@ -110,6 +112,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  this.minDistance = opts("-D", 0.3);
 		  this.iniDelay = opts("-W", 0);
 		  this.affectedPer = opts("-A", 0.0);
+		  
+		  this.compAVG = opts("-ca", 0n);
 		  
 		  //commOption = commOpt;
 		  this.nTeams = Place.MAX_PLACES as Int / expPerTeam ;
@@ -444,6 +448,20 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  // set stats objects
 		  var minCost:Long = Long.MAX_VALUE;
 		  var bestPlace:Place = here; 
+		  
+		  if (this.compAVG == 1n){
+				//Compute avg cost in places
+				var avgCost:Long = 0;
+				for (k in Place.places())
+				{
+					 //val cBP = at(k) ss().getBP();
+					 val cCost = at(k) ss().getCost();
+					 Console.OUT.println(k+"\t"+ cCost);
+					 avgCost += cCost;
+				}
+				Console.OUT.println("avgCost\t"+(avgCost/Place.MAX_PLACES));
+				// end avg cost
+		  }
 		  
 		  if (stats.explorer == -1n)
 		  {
