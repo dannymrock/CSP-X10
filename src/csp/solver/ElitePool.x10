@@ -47,7 +47,8 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 	 * variables will already have happened.
 	 */
 	public def tryInsertVector(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) {
-		monitor.atomicBlock(()=>tryInsertVector0(cost,variables,place));		
+		//monitor.atomicBlock(()=>tryInsertVector0(cost,variables,place));
+		 monitor.atomicBlock(()=>tryInsertVector1(cost,variables,place));
 	}
 
 	//var countInsert:Int = 0n;
@@ -90,7 +91,7 @@ public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
 		 var minDiff:Long = Long.MAX_VALUE;
 		 
 		 
-		 if (nbEntries == 0n){
+		 if (nbEntries == 0n){  // I'm the first in the pool!
 		   bestPartialSolutions(nbEntries++) = new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place); 
 		 }else{
 		   // Searching the worst conf (highest cost)

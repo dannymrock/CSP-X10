@@ -52,8 +52,8 @@ public class RandomSearch(sz:Long){
 	 protected var maxRestarts:Int;
 	 
 	 // not sure
-	 private var forceRestart : Boolean = false;
-	 private var forceReset : Boolean = false;
+	 protected var forceRestart : Boolean = false;
+	 protected var forceReset : Boolean = false;
 	 
 	 // Report results
 	 protected val reportPart:Boolean;
@@ -271,11 +271,11 @@ public class RandomSearch(sz:Long){
 	 
 	 
 	 public def forceRestart(){
-		  Logger.info(()=>"EOSolver: Force Restart True");
+		  Logger.info(()=>"ASSolver: Force Restart True");
 		  forceRestart = true;
 	 }
 	 public def forceReset(){
-		  Logger.info(()=>"EOSolver: Force Reset True");
+		  Logger.info(()=>"ASSolver: Force Reset True");
 		  forceReset = true;
 	 }
 	 

@@ -157,8 +157,8 @@ public class AdaptiveSearch extends RandomSearch {
 				if (this.nVarMarked + 1 >= this.resetLimit)
 				{				
 					 // communicate Local Minimum
-					// if (random.nextDouble() < pSendLM)
-						//  solver.communicateLM( this.currentCost, cop_.getVariables());
+					 if (random.nextDouble() < pSendLM)
+						  solver.communicateLM( this.currentCost, cop_.getVariables());
 					 
 					 doReset(this.nVarToReset, cop_);//doReset(nb_var_to_reset,csp);
 					 //Utils.show("after reset= ",csp_.getVariables());
@@ -437,6 +437,48 @@ public class AdaptiveSearch extends RandomSearch {
 					 //Console.OUT.println("Changing vector in "+ here);
 				}
 		  }
+		  
+		  /**
+		   *  Force Restart: Inter Team Communication
+		   */
+		  if (this.forceRestart){
+				//restart
+				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
+				this.forceRestart = false;
+				this.nForceRestart++;
+				//restartVar(csp_);
+				
+				val result = this.solver.getLM(cop_, this.currentCost );
+				//Utils.show("new conf: ", csp_.getVariables());
+				if (result){
+					 //nbChangeV++;
+					 this.mark.clear();
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.doReset(nVarToReset, cop_);
+					 this.bestSent = true;
+					 //Console.OUT.println("Changing vector in "+ here);
+				}
+				
+				// get a conf from the Local Min Pool
+
+				
+				
+				
+				//restart
+				// Logger.info(()=>{"   ASSolverPermut : force Restart"});
+				// this.forceRestart = false;
+				// this.nForceRestart++;
+				// this.restartVar(cop_);
+		  }
+		  
+		  if (this.forceReset){
+				//reset
+				Logger.info(()=>{"   ASSolverPermut : force Reset"});
+				this.forceReset = false;
+				this.nForceRestart++;
+				//doReset(size as Int / 8n , csp_);
+				this.doReset(this.nVarToReset , cop_); // This reset should be bigger than the normal reset
+		  }
 	 }	
 	 
 	 /**
@@ -475,6 +517,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  c.reset = this.nResetTot;
 		  c.same = this.nSameVarTot;
 		  c.change = this.nChangeV;
+		  c.forceRestart = this.nForceRestart;
 	 }
 	 
 	 protected def updateTotStats(){

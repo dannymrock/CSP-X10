@@ -3,6 +3,7 @@ import csp.util.Logger;
 import csp.model.ModelAS;
 import x10.util.Random;
 import x10.util.StringUtil;
+import csp.util.Utils;
 /**	This class containts all the basic CommManager configuration info, for the
  * 	Adaptive search solver x10 implementation ASSolverPermut
  * 	
@@ -58,6 +59,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	val changeProb:Int;
 	var deltaFact : Double = 1.0;
+	val nSteps:Long;
 	/**
 	 * The reference to all team members, for communication.
 	 */
@@ -65,7 +67,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[IParallelSolver(sz)], 
 	        inTeamReportI : Int, inTeamUpdateI : Int, interTeamI : Int ,  intPoolSize: Int, teamsNumber : Int,
-	        changeProb:Int,  divPoolSize: Int){
+	        changeProb:Int,  divPoolSize: Int, nSteps:Long){
 		property(sz, intPoolSize, divPoolSize);
 		solvers = ss;
 		//ep = new ElitePool( sz, poolSize, ss); 
@@ -78,6 +80,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 		myTeamId = here.id as Int % nbTeams;
 		//headNodeId = 
 
+		this.nSteps = nSteps;
 		val m = myTeamId; val s = solverMode;
 		Logger.debug(()=>{(s==0n ? ("My team is: " + m):("My team is:"+here.id))});
 		//Console.OUT.println(s==0n ? ("My team is: " + m):("My team is:"+here.id));
@@ -220,30 +223,100 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	/**
 	 * 
-	 */
+	 */ 
 	public def getLM(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		 Logger.debug(()=> "CommManager: getLM: entering.");
 		 var a : Maybe[CSPSharedUnit(sz)];
+		 var b : Maybe[CSPSharedUnit(sz)];
 		 if (solverMode == USE_PLACES) {
 			  Logger.debug(()=>"CommManager: getLM solver mode: Places.");
 			  val place = Place(myTeamId);
 			  val ss=solvers;
 			  
-			  if (place == Place(1) )
+			  if (place == Place(1) ){
 					a = lmp.getRandomConf();
+					b = lmp.getRandomConf();
+			  }
 			  else{
 					a = at(Place(1)) ss().getLMRandomConf();
+					b = at(Place(1)) ss().getLMRandomConf();
 			  }
+			  
 			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
 		 }else{
-			  a= null;
+			  a = null;
+			  b = null;
 			  Console.OUT.println("ERROR: Unknown solver mode");
 		 }
-		 if (a != null){
-			  csp_.setVariables(a().vector);
-			  return true; 
+		 
+		 var steps:Int = 0n;
+		 val c = new Rail[Int](sz,0n);
+		 
+		 if (a != null && b != null){
+			  
+			  Utils.show("a=",a().vector);
+			  Utils.show("b=",b().vector);
+			  
+			  Rail.copy(a().vector, c);
+			  //val n = 20;
+			  for(i in 0..nSteps) {
+					val bi = random.nextLong(sz);
+					val bval = b().vector(bi);
+					var ci:Long = -1;
+					
+					// search bval in vector a
+					for (cit in a().vector.range()){
+						 if (c(cit) == bval){
+							  ci = cit;
+							  break;
+						 }
+					}
+					// swap variables
+					if(bi != ci){
+						 steps++;
+						 val tmp = c(bi);
+						 c(bi) = c(ci);
+						 c(ci) = tmp;
+						 Utils.show("c=",c);
+					}
+			  }
+			  
+			  if( steps > 0n ){
+					val st = steps; 
+					Logger.info(()=>"sending mutated configuration with "+st+" steps");
+					csp_.setVariables(c);
+					return true; 
+			  }else
+					return false;
 		 }
+		 Logger.debug(()=>"The pool is probably empty");
+		 
 		 return false;
+		 // Logger.debug(()=> "CommManager: getLM: entering.");
+		 // var a : Maybe[CSPSharedUnit(sz)];
+		 // if (solverMode == USE_PLACES) {
+			//   Logger.debug(()=>"CommManager: getLM solver mode: Places.");
+			//   val place = Place(myTeamId);
+			//   val ss=solvers;
+			//   
+			//   if (place == Place(1) )
+			// 		a = lmp.getRandomConf();
+			//   else{
+			// 		a = at(Place(1)) ss().getLMRandomConf();
+			//   }
+			//   
+			//   
+			//   
+			//   //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
+		 // }else{
+			//   a= null;
+			//   Console.OUT.println("ERROR: Unknown solver mode");
+		 // }
+		 // if (a != null){
+			//   csp_.setVariables(a().vector);
+			//   return true; 
+		 // }
+		 // return false;
 	}
 	
 	public def restartPool(){

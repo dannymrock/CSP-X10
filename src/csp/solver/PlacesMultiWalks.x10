@@ -134,11 +134,14 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  val pStr = System.getenv("P");
 		  divPoolSz = (pStr==null)? 4n : StringUtil.parseInt(pStr);
 		  
+		  val nsStr = System.getenv("NS");
+		  val ns = (nsStr==null)? 2n : StringUtil.parseInt(nsStr);
+		  
 		  
 		  solver = solGen();
 		  //Console.OUT.println("Aqui");
 		  commM = new CommManager(sz, 0n , st, inTeamReportI, inTeamUpdateI ,0n, poolSize, 
-					 nTeams, changeProb,divPoolSz); // check parameteres 
+					 nTeams, changeProb,divPoolSz, ns as Long); // check parameteres 
 	 }
 	 
 	 var option : Long = 0;
@@ -181,8 +184,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 		  // verify if inter team comm is able, if the number of teams is greater than 1 and 
 		  //        if place(here) is a head node 
-		  if (outTeamTime > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
-				//if (outTeamTime > 0 && nTeams > 1n && here.id == 1) //node O to nteams
+		  //if (outTeamTime > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
+		  if (outTeamTime > 0 && nTeams > 1n && here.id == 1)
 				// if (outTeamTime > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
 		  {
 				//val delay = random.nextLong(outTeamTime);
@@ -352,7 +355,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  val fft = c.cost - tcost;
 		  c.time = time;
 		  c.team = winPlace as Int;
-		  c.groupR = gR;
+		  c.groupR = gReset;
 		  c.fftarget = fft as Int;
 		  c.explorer = 0n; //To notify that there was a solution
 		  
@@ -526,10 +529,10 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 		  //1. Compare local against a random team  (head node)
 		  //The Head node for each team is the node with id==team_number
-		  var remote : Long = r.nextLong(nTeams); 
-		  while (here.id == remote){
-				remote = r.nextLong(nTeams);
-		  }
+		  // var remote : Long = r.nextLong(nTeams); 
+		  // while (here.id == remote){
+				// remote = r.nextLong(nTeams);
+		  // }
 		  
 		  //2. Compare only two random teams each time
 		  // var head1 : Long = r.nextLong(nTeams); 
@@ -539,17 +542,17 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  // }
 		  
 		  //3. Select the worst Team
-		  // var worstTeam:Long = -1;
-		  // var worstCost:Int = Int.MIN_VALUE;
-		  // for (head in 1..nTeams) {
-				// val conf = at(Place(head)) ss().getBestConf();
-				// if(conf == null) continue;
-				// if (conf().cost > worstCost){
-				// 	 worstTeam = head;
-				// 	 worstCost = conf().cost;
-				// }
-		  // }
-		  // if (worstTeam == -1) return;
+		  var worstTeam:Long = -1;
+		  var worstCost:Long = Long.MIN_VALUE;
+		  for (head in 1..nTeams) {
+				val conf = at(Place(head)) ss().getBestConf();
+				if(conf == null) continue;
+				if (conf().cost > worstCost){
+					 worstTeam = head;
+					 worstCost = conf().cost;
+				}
+		  }
+		  if (worstTeam == -1) return;
 		  
 		  //val vremote = remote;
 		  //Logger.info(()=> "MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
@@ -557,20 +560,20 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  //if(interTeamKill) return;
 		  
 		  // 1.
-		  val localConf = getBestConf();
-		  //compute distance between Teams
-		  if( localConf == null) {
-				//Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
-				return;
-		  }
-		  val remoteConf = at(Place(remote)) ss().getBestConf();
-		  if(remoteConf == null) {
-				//Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
-				return;
-		  }
-		  val dis = csp_.distance(localConf().vector, remoteConf().vector);
-		  val rem = remote;
-		  Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis}); 
+		  // val localConf = getBestConf();
+		  // //compute distance between Teams
+		  // if( localConf == null) {
+				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
+				// return;
+		  // }
+		  // val remoteConf = at(Place(remote)) ss().getBestConf();
+		  // if(remoteConf == null) {
+				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
+				// return;
+		  // }
+		  // val dis = csp_.distance(localConf().vector, remoteConf().vector);
+		  // val rem = remote;
+		  // Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis}); 
 		  
 		  // 2. 
 		  // val remote1 = at(Place(head1)) ss().getBestConf();
@@ -590,29 +593,30 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  // val h1 = head1;
 		  // val h2 = head2;
 		  // Logger.info(()=>{"MW - interTeamComm : distance between "+h1+" and "+h2+" is= "+dis});
+		  	  
+		  //1.
+		  // if (dis > maxDis) maxDis = dis;
+		  // if (dis < minDis) minDis = dis;
+		  // avgDis += dis;
+		  // cDis++;
 		  
-		  if (dis > maxDis) maxDis = dis;
-		  if (dis < minDis) minDis = dis;
-		  avgDis += dis;
-		  cDis++;
-		  
-		  if (dis <= minDistance){ 
-				Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+localConf().cost+" remote cost "+remoteConf().cost);
-				val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
-				//Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+remote1().cost+" remote cost "+remote2().cost);
-				//val teamToRest = remote1().cost < remote2().cost ? head2 : head1;
+		  // if (dis <= minDistance){ 
+				// Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+localConf().cost+" remote cost "+remoteConf().cost);
+				// val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
+				// //Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+remote1().cost+" remote cost "+remote2().cost);
+				// //val teamToRest = remote1().cost < remote2().cost ? head2 : head1;
 					
 		  //3.
-		  // val wT = worstTeam; val wC = worstCost;
-				// Logger.info(()=>"MW - interTeamComm : force Restart - worstTeam "+wT+" cost "+wC);
-				// val teamToRest = worstTeam;
+		  val wT = worstTeam; val wC = worstCost;
+		  Logger.info(()=>"MW - interTeamComm : force Restart - worstTeam "+wT+" cost "+wC);
+		  val teamToRest = worstTeam;
 				
 				//val teamToRest = r.nextInt(nTeams);
 				
 
 				
 				// Count total group partial restart
-				at(Place(teamToRest)) ss().incGroupReset();
+				at(Place(teamToRest)) ss().incGroupReset(); 
 				Logger.info(()=>{"reset team "+teamToRest});
 				
 				for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){ //i < Place.MAX_PLACES
@@ -623,7 +627,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 						  at(Place(i)) ss().diversify();
 				}
 				at(Place(teamToRest)) ss().clearIntPool();
-		  }
+		 // }
 	 }
 	 
 	 public def getGroupReset():Int{
