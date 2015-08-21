@@ -29,7 +29,7 @@ public interface IParallelSolver {
      * else return false.
      */
     def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean;
-    def getLM(csp_:ModelAS(sz), myCost:Long):Boolean;
+    def getLM(vector : Rail[Int]{self.size==sz}, myCost:Long):Boolean;
 
     
     /**

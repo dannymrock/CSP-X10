@@ -133,15 +133,13 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 		  val pStr = System.getenv("P");
 		  divPoolSz = (pStr==null)? 4n : StringUtil.parseInt(pStr);
-		  
-		  val nsStr = System.getenv("NS");
-		  val ns = (nsStr==null)? 2n : StringUtil.parseInt(nsStr);
+		
 		  
 		  
 		  solver = solGen();
 		  //Console.OUT.println("Aqui");
 		  commM = new CommManager(sz, 0n , st, inTeamReportI, inTeamUpdateI ,0n, poolSize, 
-					 nTeams, changeProb,divPoolSz, ns as Long); // check parameteres 
+					 nTeams, changeProb,divPoolSz); // check parameteres 
 	 }
 	 
 	 var option : Long = 0;
@@ -264,8 +262,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
 	 = commM.getIPVector(csp_, myCost);
 	 
-	 @Inline public def getLM(csp_:ModelAS(sz), myCost:Long):Boolean 
-	 = commM.getLM(csp_, myCost);
+	 @Inline public def getLM(vector : Rail[Int]{self.size==sz}, myCost:Long):Boolean 
+	 = commM.getLM(vector, myCost);
 	
 	 public def communicate(totalCost:Long, variables:Rail[Int]{self.size==sz})
 	 {

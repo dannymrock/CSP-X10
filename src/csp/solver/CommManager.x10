@@ -59,7 +59,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	val changeProb:Int;
 	var deltaFact : Double = 1.0;
-	val nSteps:Long;
+	//val nSteps:Long;
 	/**
 	 * The reference to all team members, for communication.
 	 */
@@ -67,7 +67,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[IParallelSolver(sz)], 
 	        inTeamReportI : Int, inTeamUpdateI : Int, interTeamI : Int ,  intPoolSize: Int, teamsNumber : Int,
-	        changeProb:Int,  divPoolSize: Int, nSteps:Long){
+	        changeProb:Int,  divPoolSize: Int){
 		property(sz, intPoolSize, divPoolSize);
 		solvers = ss;
 		//ep = new ElitePool( sz, poolSize, ss); 
@@ -80,7 +80,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 		myTeamId = here.id as Int % nbTeams;
 		//headNodeId = 
 
-		this.nSteps = nSteps;
+		//this.nSteps = nSteps;
 		val m = myTeamId; val s = solverMode;
 		Logger.debug(()=>{(s==0n ? ("My team is: " + m):("My team is:"+here.id))});
 		//Console.OUT.println(s==0n ? ("My team is: " + m):("My team is:"+here.id));
@@ -224,8 +224,14 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	/**
 	 * 
 	 */ 
-	public def getLM(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
-		 Logger.debug(()=> "CommManager: getLM: entering.");
+	
+	//public def getLM(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
+	public def getLM( vector : Rail[Int]{self.size==sz}, myCost : Long):Boolean { 
+		 
+		  	 
+	
+	/***
+	Logger.debug(()=> "CommManager: getLM: entering.");
 		 var a : Maybe[CSPSharedUnit(sz)];
 		 var b : Maybe[CSPSharedUnit(sz)];
 		 if (solverMode == USE_PLACES) {
@@ -292,31 +298,31 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 		 Logger.debug(()=>"The pool is probably empty");
 		 
 		 return false;
-		 // Logger.debug(()=> "CommManager: getLM: entering.");
-		 // var a : Maybe[CSPSharedUnit(sz)];
-		 // if (solverMode == USE_PLACES) {
-			//   Logger.debug(()=>"CommManager: getLM solver mode: Places.");
-			//   val place = Place(myTeamId);
-			//   val ss=solvers;
-			//   
-			//   if (place == Place(1) )
-			// 		a = lmp.getRandomConf();
-			//   else{
-			// 		a = at(Place(1)) ss().getLMRandomConf();
-			//   }
-			//   
-			//   
-			//   
-			//   //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
-		 // }else{
-			//   a= null;
-			//   Console.OUT.println("ERROR: Unknown solver mode");
-		 // }
-		 // if (a != null){
-			//   csp_.setVariables(a().vector);
-			//   return true; 
-		 // }
-		 // return false;
+		 **/
+		 
+		 Logger.debug(()=> "CommManager: getLM: entering.");
+		 var a : Maybe[CSPSharedUnit(sz)];
+		 if (solverMode == USE_PLACES) {
+			  Logger.debug(()=>"CommManager: getLM solver mode: Places.");
+			  val place = Place(myTeamId);
+			  val ss = solvers;
+			  
+			  if (place == Place(1) )
+					a = lmp.getRandomConf();
+			  else{
+					a = at(Place(1)) ss().getLMRandomConf();
+			  }
+			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
+		 }else{
+			  a= null;
+			  Console.OUT.println("ERROR: Unknown solver mode");
+		 }
+		 if (a != null){
+			  Rail.copy(a().vector,vector);
+			  //csp_.setVariables(a().vector);
+			  return true; 
+		 }
+		 return false;
 	}
 	
 	public def restartPool(){

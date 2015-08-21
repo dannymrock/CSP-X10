@@ -3,6 +3,7 @@ import x10.util.StringUtil;
 import csp.model.ModelAS;
 import csp.util.Logger;
 import csp.model.ParamManager;
+import csp.util.Utils;
 
 /**
  * Class AdaptiveSearch
@@ -55,6 +56,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 private val probSelectLocMin:Int;
 	 private val firstBest:Boolean;
 	 
+	 val ns:Long;
 	 
 	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
 		  super(sz, opts);
@@ -66,6 +68,11 @@ public class AdaptiveSearch extends RandomSearch {
 		  val str = System.getenv("LM");
 		  if (str != null)
 				pSendLM = StringUtil.parseInt(str)/ 100.0;
+		  
+		  
+		  
+		  val nsStr = System.getenv("NS");
+		  ns = (nsStr==null)? 2n : StringUtil.parseInt(nsStr);
 		  
 		  // Set parameters from the ParamManager object
 		  this.nVarToReset = opts("--AS_varToReset",-1);
@@ -448,22 +455,67 @@ public class AdaptiveSearch extends RandomSearch {
 				this.nForceRestart++;
 				//restartVar(csp_);
 				
-				val result = this.solver.getLM(cop_, this.currentCost );
-				//Utils.show("new conf: ", csp_.getVariables());
-				if (result){
-					 //nbChangeV++;
+				// get a random conf from the global pool
+				// val result = this.solver.getLM(cop_, this.currentCost );
+				// //Utils.show("new conf: ", csp_.getVariables());
+				// if (result){
+				// 	 //nbChangeV++;
+				// 	 this.mark.clear();
+				// 	 this.currentCost = cop_.costOfSolution(true);
+				// 	 //this.doReset(nVarToReset, cop_);
+				// 	 this.bestSent = true;
+				// 	 //Console.OUT.println("Changing vector in "+ here);
+				// }
+				
+				// PATH RELINKING-based approach
+				val a = new Rail[Int](sz, 0n);
+				val b = new Rail[Int](sz, 0n);
+				val c = new Rail[Int](sz, 0n);
+				
+				val geta = this.solver.getLM(a, this.currentCost);
+				val getb = this.solver.getLM(b, this.currentCost);
+				
+				if(geta && getb){
+				
+					 Utils.show("a=",a);
+					 Utils.show("b=",b);
+					 
+					 Rail.copy(a, c);
+					 val nSteps = random.nextLong(ns);
+					 
+					 for(i in 0..nSteps) {
+						  val bi = random.nextLong(sz);
+						  val bval = b(bi);
+						  var ci:Long = -1;
+						  
+						  // search bval in vector a
+						  for (cit in a.range()){
+								if (c(cit) == bval){
+									 ci = cit;
+									 break;
+								}
+						  }
+						  // swap variables
+						  if(bi != ci){
+								//steps++;
+								val tmp = c(bi);
+								c(bi) = c(ci);
+								c(ci) = tmp;
+								Utils.show("c=", c);
+						  }
+					 }
+					 
+					 cop_.setVariables(c);
 					 this.mark.clear();
 					 this.currentCost = cop_.costOfSolution(true);
-					 this.doReset(nVarToReset, cop_);
 					 this.bestSent = true;
-					 //Console.OUT.println("Changing vector in "+ here);
+					 
 				}
 				
+				
+				
+				
 				// get a conf from the Local Min Pool
-
-				
-				
-				
 				//restart
 				// Logger.info(()=>{"   ASSolverPermut : force Restart"});
 				// this.forceRestart = false;
