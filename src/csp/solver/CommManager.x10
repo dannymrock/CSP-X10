@@ -27,7 +27,8 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	
 	/**elite pool
 	 */
-	val ep = new ElitePool( sz, intPoolSize); // : ElitePool;
+	//val ep = new ElitePool( sz, intPoolSize); // : ElitePool;
+	val ep = new SmartPool( sz, intPoolSize); // : ElitePool;
 	
 	/** Local Minimum pool
 	 */
@@ -87,12 +88,9 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 		this.changeProb = changeProb;
 		
 		
-		val str = System.getenv("D");
+		val str = System.getenv("DELTA");
 		if (str != null)
 			 deltaFact = StringUtil.parseInt(str)/ 100.0;
-		
-		
-		
 		//ep.setSolvers(ss);
 	}
 	

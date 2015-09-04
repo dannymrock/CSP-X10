@@ -477,8 +477,8 @@ public class AdaptiveSearch extends RandomSearch {
 				
 				if(geta && getb){
 				
-					 Utils.show("a=",a);
-					 Utils.show("b=",b);
+					 // Utils.show("a=",a);
+					 // Utils.show("b=",b);
 					 
 					 Rail.copy(a, c);
 					 val nSteps = random.nextLong(ns);
@@ -501,7 +501,7 @@ public class AdaptiveSearch extends RandomSearch {
 								val tmp = c(bi);
 								c(bi) = c(ci);
 								c(ci) = tmp;
-								Utils.show("c=", c);
+								// Utils.show("c=", c);
 						  }
 					 }
 					 

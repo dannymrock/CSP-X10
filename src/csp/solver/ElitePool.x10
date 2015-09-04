@@ -11,7 +11,7 @@ import x10.util.StringUtil;
  * 
  */
 
-public class ElitePool(sz:Long, poolSize:Int/*, seed:Long*/) {
+public class ElitePool(sz:Long, poolSize:Int) {
 	var nbEntries : Int = 0n;
 	val bestPartialSolutions = new Rail(poolSize, CSPSharedUnit(sz,0n as Int,null,0n as Int)); // dummy value
 	var random:Random = new Random();
