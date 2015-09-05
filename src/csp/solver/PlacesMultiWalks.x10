@@ -40,15 +40,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 property sz()=sz;
 	 // Shared state, accessible from any place, via at(
 	 var csp_:ModelAS(sz);
-	 //var solver:ASSolverPermut(sz);
-	 //var solver:ISolver(sz);
 	 var solver:RandomSearch(sz);
 	 
 	 var time:Long;	
-	 val inTeamReportI : Int;
-	 val inTeamUpdateI : Int;
-	 val poolSize:Int;
-	 //val commOption : Int;
 	 
 	 var bcost : Long;
 	 val stats = new CSPStats();
@@ -66,7 +60,6 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 
 	 var seed:Long;
 	 
-	 val changeProb:Int;
 	 
 	 //InterTeam Communication
 	 var interTeamKill:Boolean = false;
@@ -91,28 +84,24 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 var solString : String =  new String();
 	 
 	 val compAVG:Int;
+	 val opts:ParamManager;
 	 
 	 /**
 	  * 	Constructor of the class
 	  */
-	 public def this(vectorSize:Long, opts:ParamManager){
-				//inTeamReportI : Int, inTeamUpdateI : Int, interTI : Long, ps : Int, npT : Int, 
-				//changeProb:Int, minDistance:Double, maxTime : Long, verify : Boolean, delay:Long, affectedP : Double ){
+	 public def this(vectorSize:Long, opt:ParamManager){
 		  property(vectorSize);
+		  this.opts = opt;
 		  // Parameters of the CPLS framework
 		  this.verify = opts("-v", 0n) == 1n; // verify == 1 : true
-		  // Intra team 
-		  this.inTeamReportI = opts("-R", 0n);
-		  this.inTeamUpdateI = opts("-U", 0n);
 		  this.expPerTeam = opts("-N", 1n);
-		  this.changeProb = opts("-C", 100n);
-		  this.poolSize = opts("-P",4n);
-		  // Inter team
+		  // Inter team communication
 		  this.outTeamTime = opts("-I", 0);
 		  this.minDistance = opts("-D", 0.3);
 		  this.iniDelay = opts("-W", 0);
 		  this.affectedPer = opts("-A", 0.0);
 		  
+		  // Compute the average final cost on each place (tune parameters in seq)
 		  this.compAVG = opts("-ca", 0n);
 		  
 		  //commOption = commOpt;
@@ -120,26 +109,10 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	  
 	 }
 	 
-	 var divPoolSz:Int=4n;
 	 
-	 //public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void{ 
 	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>RandomSearch(sz) ):void{
-	 //Logger.debug(()=>{"Installing solver"});
-		  //val ss = st() as IParallelSolver(sz);
-		  //val size = sz as Int;
-		  //var nsize:Int = size;
-		  //solver = new ASSolverPermut( sz, nsize, ss, maxTime) as ISolver(sz);
-		  //solver = new EOSolver( sz, nsize, ss, maxTime) as ISolver(sz);
-		  
-		  val pStr = System.getenv("P");
-		  divPoolSz = (pStr==null)? 4n : StringUtil.parseInt(pStr);
-		
-		  
-		  
 		  solver = solGen();
-		  //Console.OUT.println("Aqui");
-		  commM = new CommManager(sz, 0n , st, inTeamReportI, inTeamUpdateI ,0n, poolSize, 
-					 nTeams, changeProb,divPoolSz); // check parameteres 
+		  commM = new CommManager(sz, opts, st, nTeams); 
 	 }
 	 
 	 var option : Long = 0;
@@ -392,21 +365,21 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  genAccStats.printAVG(count,oF, problem);
 	 }
 	 
-	 public def tryInsertVector(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) 
+	 public def tryInsertConf(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) 
 	 {
-		  commM.ep.tryInsertVector(cost, variables, place);
+		  commM.ep.tryInsertConf(cost, variables, place);
 	 }
 	 
 	 public def tryInsertLM(cost:Long, locMin:Rail[Int]{self.size==sz}, place:Int) 
 	 {
-		  commM.lmp.tryInsertVector(cost, locMin, place); 
+		  commM.lmp.tryInsertConf(cost, locMin, place); 
 	 }
 	 
-	 public def getRandomConf():Maybe[CSPSharedUnit(sz)]=commM.ep.getRandomConf();
-	 public def getLMRandomConf():Maybe[CSPSharedUnit(sz)]=commM.lmp.getRandomConf();
+	 public def getConf():Maybe[CSPSharedUnit(sz)] = commM.getEPConf(sz);
+	 public def getLMConf():Maybe[CSPSharedUnit(sz)] = commM.lmp.getPConf();
 	 
 	 
-	 public def getBestConf():Maybe[CSPSharedUnit(sz)]=commM.ep.getBestConf();
+	 public def getBestConf():Maybe[CSPSharedUnit] = commM.ep.getBestConf();
 	 
 	 public def clear()
 	 {

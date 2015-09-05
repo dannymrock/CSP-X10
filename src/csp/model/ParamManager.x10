@@ -39,11 +39,17 @@ public class ParamManager extends OptionsParser {
 					  Option("U", "update", "Update Interval Intra-team Communication (iterations) . Default 0 - no communication."),
 					  Option("R", "report", "Report Interval Intra-team Communication (iterations) . Default 0 - no communication."),
 					  Option("C", "p_change_vector", "Probability to change vector in Intra-Team Communication "),
-					  Option("P", "poolsize", "poolsize."),
 					  Option("I", "Inter_Team_Interval", "Inter-team Communication Interval (miliseconds) . Default 0 - no communication."),
 					  Option("D", "Inter_Team_Distance", "minimum permisible distance."),
 					  Option("W", "Inter_Team_Wait", "initial (W)ait  before start Inter-team Communication (miliseconds). Default 0"),
 					  Option("A", "Inter_Team_Affected_Explorers", "Inter Team Communicaction Diversification - Percentage of Places (A)ffected . Default 0."),
+					  // Pool Options
+					  Option("P_e", "poolsize_elite", "Max. number of configurations for the Elite Pool"),
+					  Option("P_lm", "poolsize_locmin", "Max. number of configuration for the local min. Pool"),
+					  Option("P_eM", "ep_mode", "elite pool mode, 0 normal, 1 smart "),
+					  Option("P_lmM", "lmp_mode", "elite pool mode, 0 normal, 1 smart "),
+					  Option("P_eD", "ep_dist", "elite pool min. distance allowed, 0 normal, 1 smart "),
+					  Option("P_lmD", "lmp_dist", "elite pool mode, 0 normal, 1 smart "),
 					  // Parameters for parent Meta-heuristic solver
 					  Option("mt", "max_time", "Max. time  default 0"),
 					  Option("mi", "max_iter", "Max. iterations limit"),

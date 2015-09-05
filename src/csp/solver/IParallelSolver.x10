@@ -50,7 +50,7 @@ public interface IParallelSolver {
      * Insert this configuration (sent from place) into the pool P at the current place,
      * if the cost is lower than the best cost in P.
      */
-    def tryInsertVector(cost:Long, variables:Valuation(sz), place:Int):void;
+    def tryInsertConf(cost:Long, variables:Valuation(sz), place:Int):void;
 
     /** Return the value of the parameter used to control communication within the team
      * (intraTeamInterval).
@@ -82,8 +82,8 @@ public interface IParallelSolver {
             fr : Int, gr:Int, target:Boolean, fft:Int):void;
     def setStats(c:CSPStats):void;
 
-    def getRandomConf():Maybe[CSPSharedUnit(sz)];
-    def getLMRandomConf():Maybe[CSPSharedUnit(sz)];
+    def getConf():Maybe[CSPSharedUnit(sz)];
+    def getLMConf():Maybe[CSPSharedUnit(sz)];
     
     def getBestConf():Maybe[CSPSharedUnit(sz)];
 

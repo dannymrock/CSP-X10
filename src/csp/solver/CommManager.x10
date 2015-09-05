@@ -4,6 +4,7 @@ import csp.model.ModelAS;
 import x10.util.Random;
 import x10.util.StringUtil;
 import csp.util.Utils;
+import csp.model.ParamManager;
 /**	This class containts all the basic CommManager configuration info, for the
  * 	Adaptive search solver x10 implementation ASSolverPermut
  * 	
@@ -12,7 +13,7 @@ import csp.util.Utils;
  * Every place has an ASSolverPermutRW. This points to an CommManager.
  * comm is stored in ASSolverPermutRW.
  */
-public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*/) {
+public class CommManager(sz:Long) {
 	
 	
 	public static USE_PLACES  = 0n;
@@ -25,79 +26,63 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	public static TEAM = 4n;
 	
 	
-	/**elite pool
-	 */
-	//val ep = new ElitePool( sz, intPoolSize); // : ElitePool;
-	val ep = new SmartPool( sz, intPoolSize); // : ElitePool;
+	// Elite pool
+	val ep:SmartPool;
+	val epSize:Int;
+	// Local Minimums pool
+	val lmp:SmartPool;
+	val lmpSize:Int;
 	
-	/** Local Minimum pool
-	 */
-	val lmp = new ElitePool( sz, divPoolSize);
-	
-	/** Solver use activities or places */
+	// Solver use activities or places 
 	var solverMode : Int;
-	
-	/** Number of iterations between each communication activity */
+	// Number of iterations between each communication activity
 	var inTeamReportI : Int;
 	var inTeamUpdateI : Int;
-	
-	
-	/** Number of iterations between each communication activity */
+	// Number of iterations between each communication activity
 	var interTI : Int;
-	
-	/** inter-places reset enable */
-	//var commOption : Int;
-	
-	/** probability of change vector if bad cost */
-	//val pChange : Int;
-	
 	var delta : Int=0n;
-	
-	val nbTeams : Int;
+	val nTeams : Int;
 	val myTeamId : Int;
-	
 	var random :Random = new Random();
-	
 	val changeProb:Int;
 	var deltaFact : Double = 1.0;
-	//val nSteps:Long;
-	/**
-	 * The reference to all team members, for communication.
-	 */
+	// reference to team members, communication.
 	val solvers:PlaceLocalHandle[IParallelSolver(sz)];
 	
-	def this( sz:Long, solverModeIn : Int , ss: PlaceLocalHandle[IParallelSolver(sz)], 
-	        inTeamReportI : Int, inTeamUpdateI : Int, interTeamI : Int ,  intPoolSize: Int, teamsNumber : Int,
-	        changeProb:Int,  divPoolSize: Int){
-		property(sz, intPoolSize, divPoolSize);
-		solvers = ss;
-		//ep = new ElitePool( sz, poolSize, ss); 
-	    solverMode = solverModeIn;
-		this.inTeamReportI = inTeamReportI;
-		this.inTeamUpdateI = inTeamUpdateI;
-		interTI = interTeamI;
-		//commOption = cOption;
-		nbTeams = teamsNumber;
-		myTeamId = here.id as Int % nbTeams;
-		//headNodeId = 
-
-		//this.nSteps = nSteps;
+	def this(sz:Long, opts:ParamManager, ss: PlaceLocalHandle[IParallelSolver(sz)], nTeams:Int ){
+		property(sz);
+		this.solvers = ss;
+		this.epSize = opts("P_e", 4n);
+		this.lmpSize = opts("P_lm", 4n);
+		
+		val epM = opts("P_eM", 0);
+		val lmM = opts("P_lmM", 0);
+		val epD = opts("P_eD", 0.5);
+		val lmD = opts("P_lmD", 0.5);
+		
+		this.ep = new SmartPool(sz, epSize, epM, epD); 
+		this.lmp = new SmartPool(sz, lmpSize, lmM, lmD); 
+		// solver mode is always place TODO
+		this.solverMode = 0n;
+		
+		this.inTeamReportI = opts("-R", 0n);;
+		this.inTeamUpdateI = opts("-U", 0n);;
+		this.changeProb = opts("-C", 100n);
+		
+		this.nTeams = nTeams;
+		this.myTeamId = here.id as Int % nTeams;
 		val m = myTeamId; val s = solverMode;
 		Logger.debug(()=>{(s==0n ? ("My team is: " + m):("My team is:"+here.id))});
-		//Console.OUT.println(s==0n ? ("My team is: " + m):("My team is:"+here.id));
-		this.changeProb = changeProb;
-		
 		
 		val str = System.getenv("DELTA");
 		if (str != null)
 			 deltaFact = StringUtil.parseInt(str)/ 100.0;
-		//ep.setSolvers(ss);
 	}
 	
 	public def setSeed(seed:Long){
-		ep.setSeed(seed);
-		lmp.setSeed(seed);
-		random = new Random(seed);
+		 random = new Random(seed);
+		 ep.setSeed(random.nextLong());
+		 lmp.setSeed(random.nextLong());
 	}
 	
 	public def setValues(toSet: CommManager{self.sz==this.sz}){
@@ -123,10 +108,10 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 			  
 			  if (Place(myTeamId)==here){
 					Logger.debug(()=>"CommManager: try to insert in local place: "+here);
-					ep.tryInsertVector( totalCost , variables, placeid);
+					ep.tryInsertConf( totalCost , variables, placeid);
 			  }else{
 					Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
-					at(Place(myTeamId)) async ss().tryInsertVector( totalCost , variables, placeid);
+					at(Place(myTeamId)) async ss().tryInsertConf( totalCost , variables, placeid);
 			  }
 			  //Debug
 			  // if(here.id as Int == myTeamId ){ //group head
@@ -137,7 +122,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 		 }else if (solverMode == USE_ACTIVITIES){
 			  Logger.debug(()=>"CommManager: solver mode: Activities.");
 			  Logger.debug(()=>"CommManager: try to insert in local place. ");
-			  ep.tryInsertVector( totalCost , variables, placeid);
+			  ep.tryInsertConf( totalCost , variables, placeid);
 		 }else{
 			  Console.OUT.println("ERROR: Unknown solver mode");
 		 }
@@ -160,7 +145,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 			  
 			  if (Place(myTeamId)==Place(1)){
 					Logger.debug(()=>"CommManager: try to insert in local place: "+here);
-					lmp.tryInsertLM( totalCost , variables, placeid);
+					lmp.tryInsertConf( totalCost , variables, placeid);
 			  }else{
 					Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
 					at(Place(1)) ss().tryInsertLM( totalCost , variables, placeid);
@@ -174,7 +159,7 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 		 }else if (solverMode == USE_ACTIVITIES){
 			  Logger.debug(()=>"CommManager: solver mode: Activities.");
 			  Logger.debug(()=>"CommManager: try to insert in local place. ");
-			  ep.tryInsertVector( totalCost , variables, placeid);
+			  ep.tryInsertConf( totalCost , variables, placeid);
 		 }else{
 			  Console.OUT.println("ERROR: Unknown solver mode");
 		 }
@@ -190,21 +175,21 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	public def getIPVector(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		 // if (commOption == NO_COMM) return false;
 		 Logger.debug(()=> "CommManager: getIPVector: entering.");
-		 var a : Maybe[CSPSharedUnit(sz)];
+		 var a : Maybe[CSPSharedUnit(ep.sz)];
 		 if (solverMode == USE_PLACES) {
 			  Logger.debug(()=>"CommManager: getIPVector solver mode: Places.");
 			  val place = Place(myTeamId);
 			  val ss=solvers;
 			  
 			  if (place == here )
-					a = ep.getRandomConf();
+					a = ep.getPConf();
 			  else{
-					a = at(place) ss().getRandomConf();
+					a = at(place) ss().getConf();
 			  }
 			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
 		 }else if (solverMode == USE_ACTIVITIES){
 			  Logger.debug(()=>"CommManager: getIPVector solver mode: Act.");
-			  a = ep.getRandomConf();
+			  a = ep.getPConf();
 		 }else{
 			  a= null;
 			  Console.OUT.println("ERROR: Unknown solver mode");
@@ -219,6 +204,14 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	}
 	
 	
+	public def getEPConf():Maybe[CSPSharedUnit(ep.sz)]{
+		return ep.getPConf();
+	}
+	
+	public def getLMPConf():Maybe[CSPSharedUnit(lmp.sz)]{
+		 return lmp.getPConf();
+	}
+	
 	/**
 	 * 
 	 */ 
@@ -227,76 +220,6 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 	public def getLM( vector : Rail[Int]{self.size==sz}, myCost : Long):Boolean { 
 		 
 		  	 
-	
-	/***
-	Logger.debug(()=> "CommManager: getLM: entering.");
-		 var a : Maybe[CSPSharedUnit(sz)];
-		 var b : Maybe[CSPSharedUnit(sz)];
-		 if (solverMode == USE_PLACES) {
-			  Logger.debug(()=>"CommManager: getLM solver mode: Places.");
-			  val place = Place(myTeamId);
-			  val ss=solvers;
-			  
-			  if (place == Place(1) ){
-					a = lmp.getRandomConf();
-					b = lmp.getRandomConf();
-			  }
-			  else{
-					a = at(Place(1)) ss().getLMRandomConf();
-					b = at(Place(1)) ss().getLMRandomConf();
-			  }
-			  
-			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
-		 }else{
-			  a = null;
-			  b = null;
-			  Console.OUT.println("ERROR: Unknown solver mode");
-		 }
-		 
-		 var steps:Int = 0n;
-		 val c = new Rail[Int](sz,0n);
-		 
-		 if (a != null && b != null){
-			  
-			  Utils.show("a=",a().vector);
-			  Utils.show("b=",b().vector);
-			  
-			  Rail.copy(a().vector, c);
-			  //val n = 20;
-			  for(i in 0..nSteps) {
-					val bi = random.nextLong(sz);
-					val bval = b().vector(bi);
-					var ci:Long = -1;
-					
-					// search bval in vector a
-					for (cit in a().vector.range()){
-						 if (c(cit) == bval){
-							  ci = cit;
-							  break;
-						 }
-					}
-					// swap variables
-					if(bi != ci){
-						 steps++;
-						 val tmp = c(bi);
-						 c(bi) = c(ci);
-						 c(ci) = tmp;
-						 Utils.show("c=",c);
-					}
-			  }
-			  
-			  if( steps > 0n ){
-					val st = steps; 
-					Logger.info(()=>"sending mutated configuration with "+st+" steps");
-					csp_.setVariables(c);
-					return true; 
-			  }else
-					return false;
-		 }
-		 Logger.debug(()=>"The pool is probably empty");
-		 
-		 return false;
-		 **/
 		 
 		 Logger.debug(()=> "CommManager: getLM: entering.");
 		 var a : Maybe[CSPSharedUnit(sz)];
@@ -306,9 +229,9 @@ public class CommManager(sz:Long, intPoolSize:Int, divPoolSize:Int/*, seed:Long*
 			  val ss = solvers;
 			  
 			  if (place == Place(1) )
-					a = lmp.getRandomConf();
+					a = lmp.getPConf();
 			  else{
-					a = at(Place(1)) ss().getLMRandomConf();
+					a = at(Place(1)) ss().getLMConf();
 			  }
 			  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
 		 }else{
