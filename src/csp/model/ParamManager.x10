@@ -177,7 +177,7 @@ public class ParamManager extends OptionsParser {
 		  val updateI        = this("-U", 0n);
 		  val reportI        = this("-R", 0n);
 		  val changeProb     = this("-C", 100n);
-		  val poolSize       = this("-P", 4n);
+		  val poolSize       = this("-P_e", 4n);
 		  val interTI        = this("-I", 0);
 		  val minDistance    = this("-D", 0.3);
 		  val delayI         = this("-W", 0);

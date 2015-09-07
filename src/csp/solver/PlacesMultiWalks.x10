@@ -375,11 +375,11 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  commM.lmp.tryInsertConf(cost, locMin, place); 
 	 }
 	 
-	 public def getConf():Maybe[CSPSharedUnit(sz)] = commM.getEPConf(sz);
+	 public def getConf():Maybe[CSPSharedUnit(sz)] = commM.ep.getPConf();
 	 public def getLMConf():Maybe[CSPSharedUnit(sz)] = commM.lmp.getPConf();
 	 
 	 
-	 public def getBestConf():Maybe[CSPSharedUnit] = commM.ep.getBestConf();
+	 public def getBestConf():Maybe[CSPSharedUnit(sz)] = commM.ep.getBestConf();
 	 
 	 public def clear()
 	 {

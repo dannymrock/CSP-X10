@@ -27,10 +27,10 @@ public class CommManager(sz:Long) {
 	
 	
 	// Elite pool
-	val ep:SmartPool;
+	val ep:SmartPool(sz);
 	val epSize:Int;
-	// Local Minimums pool
-	val lmp:SmartPool;
+	// Local Min pool
+	val lmp:SmartPool(sz);
 	val lmpSize:Int;
 	
 	// Solver use activities or places 
@@ -59,6 +59,9 @@ public class CommManager(sz:Long) {
 		val lmM = opts("P_lmM", 0);
 		val epD = opts("P_eD", 0.5);
 		val lmD = opts("P_lmD", 0.5);
+		
+		// Console.OUT.println("Elite Pool Parameters - Size"+epSize+" mode "+epM+" Dist "+epD);
+		// Console.OUT.println("LM Pool Parameters - Size"+lmpSize+" mode "+lmM+" Dist "+lmD);
 		
 		this.ep = new SmartPool(sz, epSize, epM, epD); 
 		this.lmp = new SmartPool(sz, lmpSize, lmM, lmD); 
@@ -175,7 +178,7 @@ public class CommManager(sz:Long) {
 	public def getIPVector(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		 // if (commOption == NO_COMM) return false;
 		 Logger.debug(()=> "CommManager: getIPVector: entering.");
-		 var a : Maybe[CSPSharedUnit(ep.sz)];
+		 var a : Maybe[CSPSharedUnit(sz)];
 		 if (solverMode == USE_PLACES) {
 			  Logger.debug(()=>"CommManager: getIPVector solver mode: Places.");
 			  val place = Place(myTeamId);
@@ -204,13 +207,13 @@ public class CommManager(sz:Long) {
 	}
 	
 	
-	public def getEPConf():Maybe[CSPSharedUnit(ep.sz)]{
-		return ep.getPConf();
-	}
-	
-	public def getLMPConf():Maybe[CSPSharedUnit(lmp.sz)]{
-		 return lmp.getPConf();
-	}
+	// public def getEPConf():Maybe[CSPSharedUnit(ep.sz)]{
+	// 	return ep.getPConf();
+	// }
+	// 
+	// public def getLMPConf():Maybe[CSPSharedUnit(lmp.sz)]{
+	// 	 return lmp.getPConf();
+	// }
 	
 	/**
 	 * 
@@ -218,9 +221,6 @@ public class CommManager(sz:Long) {
 	
 	//public def getLM(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 	public def getLM( vector : Rail[Int]{self.size==sz}, myCost : Long):Boolean { 
-		 
-		  	 
-		 
 		 Logger.debug(()=> "CommManager: getLM: entering.");
 		 var a : Maybe[CSPSharedUnit(sz)];
 		 if (solverMode == USE_PLACES) {

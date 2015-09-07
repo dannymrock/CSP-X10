@@ -21,7 +21,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	 
 	 // Three level Pool 
 	 protected val nbEntries = new Rail[Int](3, 0n);
-	 protected val pool = new Rail[Rail[CSPSharedUnit(sz)]](3);
+	 //protected val pool = new Rail[Rail[CSPSharedUnit(sz)]](3);
 	 protected val short = new Rail(poolSize, CSPSharedUnit(sz,0n as Int,null,0n as Int));
 	 protected val med = new Rail(poolSize, CSPSharedUnit(sz,0n as Int,null,0n as Int));
 	 protected val long = new Rail(poolSize, CSPSharedUnit(sz,0n as Int,null,0n as Int));
@@ -30,7 +30,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	 protected val poolMode:Long;
 	 
 	 protected var random:Random = new Random();
-	 protected val monitor = new Monitor("ElitePool");
+	 protected val monitor = new Monitor("SmartPool");
 	 protected var distance:double; 
 	 
 	 public def this(sz:Long, pSize:Int, pMode:Long, minDist:Double){
@@ -39,9 +39,9 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  poolMode = pMode;
 		  distance = minDist;
 		  // Initialize Pool
-		  this.pool(SHORT) = this.short; 
-		  this.pool(MEDIUM) = this.med; 
-		  this.pool(LONG) = this.long; 
+		  // this.pool(SHORT) = this.short; 
+		  // this.pool(MEDIUM) = this.med; 
+		  // this.pool(LONG) = this.long; 
 	 }
 	 
 	 public def setSeed(seed:Long){
@@ -82,9 +82,11 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  var simConf:Int = -1n;
 		  var minDiff:Long = Long.MAX_VALUE;
 		  
+		  val currentPool = poolType == SHORT ? short: poolType == MEDIUM ? med : long;
+		  
 		  // Searching the worst conf (highest cost)
 		  if (this.nbEntries(poolType) == 0n){  // I'm the first in the pool!
-				this.pool(poolType)(nbEntries(poolType)++) = 
+				currentPool(nbEntries(poolType)++) = 
 					 new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 				// Return dummy value, there isn't victim
 				return new CSPSharedUnit( sz, 0n as Int, null, -1n as Int);
@@ -92,7 +94,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				//for ( i in 0n..(nbEntries(poolType)-1n) ){
 			   for ( var i:Int = 0n; i < this.nbEntries(poolType); i++){
 					 // Select worst conf
-					 val thisCost = pool(poolType)(i).cost;
+					 val thisCost = currentPool(i).cost;
 					 if (thisCost > worstCost){
 						  worstCost = thisCost;
 						  worstConf = i;
@@ -107,16 +109,16 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				
 				// Replace the worst conf in the pool with a new one
 				if (this.nbEntries(poolType) < this.poolSize && cost < worstCost && 
-						  distance(variables, this.pool(poolType)(simConf).vector) >= dist ){
-					 this.pool(poolType)(this.nbEntries(poolType)++) = 
+						  distance(variables, currentPool(simConf).vector) >= dist ){
+					 currentPool(this.nbEntries(poolType)++) = 
 						  new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 					 return new CSPSharedUnit( sz, 0n as Int, null, -1n as Int);
 				}
 				
 				if (worstConf >= 0n && cost < worstCost && 
-						  distance(variables, this.pool(poolType)(simConf).vector) >= dist){
-					 val victim = this.pool(poolType)(worstConf);
-					 pool(poolType)(worstConf) = 
+						  distance(variables, currentPool(simConf).vector) >= dist){
+					 val victim = currentPool(worstConf);
+					 currentPool(worstConf) = 
 						  new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 					 return victim;
 				}
@@ -190,8 +192,10 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	 public def printVectors(){
 		  for (i in 0n..2n)
 				for (j in 0..(nbEntries(i)-1)) {
-					 Console.OUT.print((i==2n?"long ":i==1n?"med ":"short ")+j+". Cost = "+pool(i)(j).cost+" place "+pool(i)(j).place); //+" count "+countLM(i));
-					 Utils.show(" Vector",pool(i)(j).vector);
+					 val currentPool = i == SHORT ? short: i == MEDIUM ? med : long;	
+					 Console.OUT.print((i==2n?"long ":i==1n?"med ":"short ")+j+". Cost = "+
+								currentPool(j).cost+" place "+ currentPool(j).place); //+" count "+countLM(i));
+					 Utils.show(" Vector",currentPool(j).vector);
 		  }
 	 }
 	 
@@ -233,26 +237,26 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				
 				//if (index >= nbEntries) Console.OUT.println("Golden: index is " + index + " needed to be < " + nbEntries);
 				//if (here.id==0)Console.OUT.println(here+"alli");
-				return new Maybe(pool(mem)(index-1));
+				val currentPool = mem == SHORT ? short: mem == MEDIUM ? med : long;	
+				return new Maybe(currentPool(index-1));
 		  });
 	 
 	 /**
 	  * Get THE BEST configuration from the pool.
 	  * The best configuration is always on the SHORT term pool  
 	  */
-	 public def getBestConf(size:Long):Maybe[CSPSharedUnit(size)]=
+	 public def getBestConf():Maybe[CSPSharedUnit(sz)]=
 		  monitor.atomicBlock(()=> {
 				if (this.nbEntries(SHORT) < 1n) return null; // empty pool
 				var bcost:Long = Long.MAX_VALUE;
 				var best:Long = -1;
 				for (i in 0n..(this.nbEntries(SHORT)-1n)){
-					 if (this.pool(SHORT)(i).cost < bcost){
-						  bcost = this.pool(SHORT)(i).cost;
+					 if (this.short(i).cost < bcost){
+						  bcost = this.short(i).cost;
 						  best = i;
 					 }
 				}
-				val a:CSPSharedUnit= pool(SHORT)(best);
-				return new Maybe(a as CPSSharedUnit(size));
+				return new Maybe(short(best));
 		  });
 	 
 	 
@@ -267,4 +271,4 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  });
 	 }
 }
-//public type SmartPool(s:Long) = SmartPool{self.sz==s};
+public type SmartPool(s:Long) = SmartPool{self.sz==s};
