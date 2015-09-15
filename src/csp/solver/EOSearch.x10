@@ -13,14 +13,15 @@ import x10.compiler.NonEscaping;
 public class EOSearch extends RandomSearch {
 	 	 
 	 /** Number time to change vector due to communication */ 
-	 private var nChangeV : Int = 0n;
+	 //private var nChangeV : Int = 0n;
 	 
 	 // PDF for EO
 	 private val pdf:Rail[Double];
-	 private val fit:Rail[Pair[Long, Long]];
+	 //private val fit:Rail[Pair[Long, Long]];
+	 private val fit:Rail[Long];
 	 //Here i -> index   j->cost (fitness)
-	 private val cmp : (Pair[Long,Long],Pair[Long,Long]) => Int = 
-		  (a:Pair[Long,Long], b:Pair[Long, Long]) => {return b.second as Int - a.second as Int ;}; 
+	 private val cmp : (Long,Long) => Int = 
+	 	  (a:Long, b:Long) => {return b as Int - a as Int ;}; 
 	 
 
 	 val powFnc = (tau : Double, x : Long):Double => {
@@ -54,17 +55,19 @@ public class EOSearch extends RandomSearch {
 	 
 	 
 	 // Communication Variables
-	 private var bestSent:Boolean = false;
-	 private solver:IParallelSolver(sz);
+	 //private var bestSent:Boolean = false;
+	 //private solver:IParallelSolver(sz);
+	 
 	 private val tau:Double;
 	 private val pdfS:Int;
 	 private val selSecond:Int;
 	 
 	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
-		  super(sz, opts);
+		  super(sz, solver, opts);
 		  this.pdf = new Rail[Double] (this.sz, 0.0);
-		  fit = new Rail[Pair[Long,Long]](this.sz); 
-		  this.solver = solver;
+		  //fit = new Rail[Pair[Long,Long]](this.sz); 
+		  this.fit = new Rail[Long](this.sz, 0);
+		  //this.solver = solver;
 		  
 		  // Parameters
 		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
@@ -163,25 +166,45 @@ public class EOSearch extends RandomSearch {
 		  var i: Long =-1n;
 		  var cost: Long;
 		  var selIndex:Long = 0; 
+		  var locMin:Boolean = true;
 		  
 		  while((i = cop_.nextI(i)) as ULong < this.sz as ULong) { //False if i < 0
 				cost = cop_.costOnVariable(i);
-				fit(i) = new Pair(i , cost );
+				// each position on the fit array is divided to contain both i and cost
+				// variable index "i" is stored in the 10 LSB 
+				// the cost is stored in the remaining MSB 
+				fit(i) = cost << 10 | i;
+				//Console.OUT.printf("%d %X %X \n",cost,cost,fit(i));
+				
+				// Detect local min: 
+				// can be applied on "first variable selction" only for QAP
+				if (cost < this.currentCost)
+					 locMin = false;
+				
 		  }
-		  //[PairAS]
 		  RailUtils.sort(fit, cmp);	
+		  
+		  if (locMin) onLocMin(cop_);
+		  
+		  // for (v in fit)
+		  //   Console.OUT.printf("%d %d \n",(v & 0xFFF),(v >>12));
+		  		
 		  val index = pdfPick();
-		  val selFit = fit(index).second;
+		  val sVar = fit(index) & 0x3FF;
+		  val sCost = fit(index) >> 10;
+		  //Console.OUT.printf("svar %d scost %d \n",sVar,sCost);
 		  var nSameFit:Int = 0n;
-
+		 
 		  for(var k:Int=0n; k < this.sz; k++){
-				if (fit(k).second < selFit)   // descending order
+            val cCost = fit(k) >> 10; 
+		      //Console.OUT.printf("cCost %d scost %d \n",cCost,sCost);
+				if ( cCost < sCost)   // descending order
 					 break;
 				
-				if (fit(k).second == selFit && random.nextInt(++nSameFit)==0n)
-					 selIndex = fit(k).first;
+				if (cCost == sCost && random.nextInt(++nSameFit) == 0n)
+					 selIndex = fit(k) & 0x3FF;
 		  }
-		  //Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
+		  // Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
 		  move.setFirst(selIndex);
 	 } 
 	 
@@ -199,6 +222,8 @@ public class EOSearch extends RandomSearch {
 		  var nSameMin:Int = 0n;
 		  var minCost:Long = Long.MAX_VALUE;
 		  val first = move.getFirst();
+		  // Loc Min detection
+		  var locMin:Boolean = true; 
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
@@ -215,11 +240,18 @@ public class EOSearch extends RandomSearch {
 				} else if (cost == minCost && random.nextInt(++nSameMin) == 0n){
 					 second = j;
 				}
+				
+				// if (cost < this.currentCost)
+				// 	 locMin = false;	
 		  }
+		  
+		  //if (locMin) this.onLocMin(csp);
 		  //Console.OUT.println("minJ = "+ minJ+" newCost "+ minCost+" totalcost "+ totalCost);
 		  move.setSecond(second);
 		  return minCost;
 	 }
+	 
+	 
 	 
 	 private def selSecondRandom( csp : ModelAS, move:MovePermutation) : Long {
 		  val randomJ = random.nextLong(this.sz);
@@ -227,6 +259,15 @@ public class EOSearch extends RandomSearch {
 		  move.setSecond(randomJ);
 		  return newCost; 
 	 }
+	 
+	 /**
+	  *  Interact when Loc min is reached
+	  */
+	 private def onLocMin(cop : ModelAS){
+		  // communicate Local Minimum
+		  solver.communicateLM( this.currentCost, cop.getVariables());
+	 }
+	 
 	 
 	 /**
 	  *  Interact with other entities
@@ -254,42 +295,73 @@ public class EOSearch extends RandomSearch {
 					 //Console.OUT.println("Changing vector in "+ here);
 				}
 		  }
-	 }	
-	 
-	 /**
-	  *  Update the cost for the optimization variables
-	  *  Reimplemente here to include communication flag "best send"
-	  */
-	 protected def updateCosts(cop : ModelAS){
-		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
-				this.bestCost = this.currentCost;
+		  
+		  /**
+		   *  Force Restart: Inter Team Communication
+		   */
+		  if (this.forceRestart){
+				//restart
+				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
+				this.forceRestart = false;
+				this.nForceRestart++;
+				// PATH RELINKING-based approach
+				val c = new Rail[Int](sz, 0n);
 				
-				bestSent = false; // new best found, I must send it!
+				val result = this.solver.getPR(c);
 				
-				if (this.reportPart){
-					 val eT = (System.nanoTime() - initialTime)/1e9;
-					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-				}
-				
-				// Console.OUT.println(here+" best cost= "+bestCost);
-				// Compare cost and break if target is accomplished
-				if ((this.strictLow && this.bestCost < this.target)
-						  ||(!this.strictLow && this.bestCost <= this.target)){
-					 this.targetSucc = true;
-					 this.kill = true;
+				if (result){
+					 cop_.setVariables(c);
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.bestSent = true;
 				}
 		  }
-	 }
+		  
+		  // if (this.forceReset){
+				// //reset
+				// Logger.info(()=>{"   ASSolverPermut : force Reset"});
+				// this.forceReset = false;
+				// this.nForceRestart++;
+				// //doReset(size as Int / 8n , csp_);
+				// this.doReset(this.nVarToReset , cop_); // This reset should be bigger than the normal reset
+		  // }
+		  
+		  
+	 }	
 	 
-	 /**
-	  * 	Report statistics from the solving process
-	  */
-	 public def reportStats( c : CSPStats){
-	 super.reportStats(c);
-	 c.change = this.nChangeV;
-	 }
+	 // /**
+	 //  *  Update the cost for the optimization variables
+	 //  *  Reimplemente here to include communication flag "best send"
+	 //  */
+	 // protected def updateCosts(cop : ModelAS){
+		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
+		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
+		// 		this.bestCost = this.currentCost;
+		// 		
+		// 		bestSent = false; // new best found, I must send it!
+		// 		
+		// 		if (this.reportPart){
+		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
+		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+		// 		}
+		// 		
+		// 		// Console.OUT.println(here+" best cost= "+bestCost);
+		// 		// Compare cost and break if target is accomplished
+		// 		if ((this.strictLow && this.bestCost < this.target)
+		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
+		// 			 this.targetSucc = true;
+		// 			 this.kill = true;
+		// 		}
+		//   }
+	 // }
+	 
+	 // /**
+	 //  * 	Report statistics from the solving process
+	 //  */
+	 // public def reportStats( c : CSPStats){
+	 // super.reportStats(c);
+	 // //c.change = this.nChangeV;
+	 // }
 	 
 }
 public type EOSearch(s:Long)=EOSearch{self.sz==s};

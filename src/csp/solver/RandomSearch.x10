@@ -34,6 +34,8 @@ public class RandomSearch(sz:Long){
 	 protected var nRestart : Int = 0n;
 	 protected var nIter : Int;
 	 protected var nSwap : Int;
+	 protected var nForceRestart : Int = 0n;
+	 
 	 /** Total Statistics */
 	 protected var nIterTot : Int;
 	 protected var nSwapTot : Int;
@@ -58,11 +60,20 @@ public class RandomSearch(sz:Long){
 	 // Report results
 	 protected val reportPart:Boolean;
 	 
-	 public def this(size:Long, opt:ParamManager){
+	 
+	 protected val solver:IParallelSolver(sz); 
+	 /** Number time to change vector due to communication */ 
+	 protected var nChangeV : Int = 0n;
+	 protected var bestSent:Boolean=false;
+	 
+	 
+	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
 		  property(size);
 		  //this.vectorSize = size;
 		  this.opts = opt;
 		  this.bestConf = new Rail[Int](this.sz, 0n);
+		  
+		  this.solver = solver;
 		  
 		  // Parameters
 		  this.maxTime = this.opts("-mt", 0);
@@ -156,6 +167,11 @@ public class RandomSearch(sz:Long){
 		  this.nIterTot = 0n;
 		  this.nSwapTot = 0n;
 		  this.initialTime = System.nanoTime();
+		  // Comm
+		  this.bestSent = false;
+		  this.nForceRestart = 0n;
+		  this.nChangeV = 0n;
+		  
 	 }
 	 
 	 /**
@@ -191,6 +207,57 @@ public class RandomSearch(sz:Long){
 	  */
 	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
 		  // To be implemented  
+		  // To be implemented  
+		  /**
+		   *  Interaction with other places
+		   */
+		  if( solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
+				if(!bestSent){ 
+					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
+					 bestSent = true;
+				}else{
+					 solver.communicate( this.currentCost, cop_.getVariables());
+				}
+		  }
+		  
+		  if(solver.inTeamReportI() != 0n && this.nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
+				val result = solver.getIPVector(cop_, this.currentCost );
+				if (result){
+					 this.nChangeV++;
+					 this.currentCost = cop_.costOfSolution(true);
+					 bestSent = true;
+					 //Console.OUT.println("Changing vector in "+ here);
+				}
+		  }
+		  
+		  /**
+		   *  Force Restart: Inter Team Communication
+		   */
+		  if (this.forceRestart){
+				//restart
+				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
+				this.forceRestart = false;
+				this.nForceRestart++;
+				// PATH RELINKING-based approach
+				val c = new Rail[Int](sz, 0n);
+				
+				val result = this.solver.getPR(c);
+				
+				if (result){
+					 cop_.setVariables(c);
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.bestSent = true;
+				}
+		  }
+		  
+		  // if (this.forceReset){
+		  // //reset
+		  // Logger.info(()=>{"   ASSolverPermut : force Reset"});
+		  // this.forceReset = false;
+		  // this.nForceRestart++;
+		  // //doReset(size as Int / 8n , csp_);
+		  // this.doReset(this.nVarToReset , cop_); // This reset should be bigger than the normal reset
+		  // }
 	 }
 	 
 	 /**
@@ -231,23 +298,48 @@ public class RandomSearch(sz:Long){
 		  c.target = this.targetSucc;
 		  c.cost = this.bestCost;
 		  c.restart = this.nRestart;
+		  c.change = this.nChangeV;
+		  c.forceRestart = this.nForceRestart;
 	 }
 	 
 	 protected def restartVar(cop : ModelAS){
 		  cop.initialize(); 
 		  currentCost = cop.costOfSolution(true);
 		  updateTotStats();
+		  bestSent = false;
 		  nSwap = 0n;
 		  nIter = 0n;
 	 }
 	 
+	 // protected def updateCosts(cop : ModelAS){
+		//   /**
+		//    *  optimization
+		//    */
+		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
+		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
+		// 		this.bestCost = this.currentCost;
+		// 		
+		// 		if (this.reportPart){
+		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
+		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+		// 		}
+		// 		
+		// 		// Compare cost and break if target is accomplished
+		// 		if ((this.strictLow && this.bestCost < this.target)
+		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
+		// 			 this.targetSucc = true;
+		// 			 this.kill = true;
+		// 		}
+		//   }
+	 // }
+	 
 	 protected def updateCosts(cop : ModelAS){
-		  /**
-		   *  optimization
-		   */
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
+				
+				bestSent = false; // new best found, I must send it!
 				
 				if (this.reportPart){
 					 val eT = (System.nanoTime() - initialTime)/1e9;
@@ -255,6 +347,7 @@ public class RandomSearch(sz:Long){
 					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
 				}
 				
+				// Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished
 				if ((this.strictLow && this.bestCost < this.target)
 						  ||(!this.strictLow && this.bestCost <= this.target)){
@@ -263,6 +356,8 @@ public class RandomSearch(sz:Long){
 				}
 		  }
 	 }
+	 
+	 
 	 
 	 protected def updateTotStats(){
 		  this.nIterTot += this.nIter;

@@ -11,8 +11,6 @@ import csp.util.Utils;
 public class AdaptiveSearch extends RandomSearch {
 	 
 	 private val mark : Rail[Int]; 
-	 //private var maxI : Int;		
-	 //private var minJ : Int;
 	 
 	 private var listInb : Int;
 	 private var listJnb : Int;
@@ -23,12 +21,9 @@ public class AdaptiveSearch extends RandomSearch {
 	 private var nVarMarked : Int = 0n; 
 	 
 	 /**	Statistics	*/
-	 private var nForceRestart : Int = 0n;
 	 private var nReset : Int;
 	 private var nSameVar : Int;
 	 private var nLocalMin : Int;
-	 /** Number time to change vector due to communication */ 
-	 private var nChangeV : Int = 0n;
 	 
 	 /** Total Statistics */
 	 private var nResetTot : Int;	
@@ -39,13 +34,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 
 	 /** For Exhaustive search */
 	 private var nListIJ : Int;
-	 
-	 private solver:IParallelSolver(sz); 
-	 
-	 private var pSendLM:Double = 0.5;
-	 
-	 private var bestSent:Boolean=false;
-	 
+	 	 
 	 /** Parameters of the AS solver */
 	 private var nVarToReset:Long;
 	 private var resetPercent:Int;
@@ -56,23 +45,11 @@ public class AdaptiveSearch extends RandomSearch {
 	 private val probSelectLocMin:Int;
 	 private val firstBest:Boolean;
 	 
-	 val ns:Long;
-	 
 	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
-		  super(sz, opts);
+		  super(sz, solver, opts);
 		  this.mark = new Rail[Int] (this.sz, 0n);
 		  this.listIJ = new Rail[MovePermutation](this.sz);
 		  this.listI = new Rail[Long](this.sz, 0);
-		  this.solver = solver;
-		  
-		  val str = System.getenv("LM");
-		  if (str != null)
-				pSendLM = StringUtil.parseInt(str)/ 100.0;
-		  
-		  
-		  
-		  val nsStr = System.getenv("NS");
-		  ns = (nsStr==null)? 2n : StringUtil.parseInt(nsStr);
 		  
 		  // Set parameters from the ParamManager object
 		  this.nVarToReset = opts("--AS_varToReset",-1);
@@ -104,10 +81,6 @@ public class AdaptiveSearch extends RandomSearch {
 				}
 		  }
 		  
-		  
-		  val nStr = System.getenv("N");
-		  val nbVarReset = (nStr==null)? 0 : StringUtil.parseLong(nStr);
-		  
 		  mark.clear();
 		  listI.clear();
 		  
@@ -115,14 +88,13 @@ public class AdaptiveSearch extends RandomSearch {
 		  nSameVar = 0n;
 		  nLocalMin = 0n;
 		  nReset = 0n;
-		  nChangeV = 0n;
 		  nInPlateau = 0n;
 		  
 		  nResetTot = 0n;	
 		  nSameVarTot = 0n;
 		  nLocalMinTot = 0n; 
-		  nForceRestart = 0n;
-		  bestSent = false;
+		  
+		 
 	 }
 	 
 	 /**
@@ -162,10 +134,8 @@ public class AdaptiveSearch extends RandomSearch {
 				mark(move.getFirst()) = this.nSwap + this.freezeLocMin; //Mark(maxI, freeze_loc_min);
 				//Console.OUT.println("nVarMarked "+nVarMarked+"resetLimit= "+solverP.resetLimit);
 				if (this.nVarMarked + 1 >= this.resetLimit)
-				{				
-					 // communicate Local Minimum
-					 if (random.nextDouble() < pSendLM)
-						  solver.communicateLM( this.currentCost, cop_.getVariables());
+				{	
+					 onLocMin(cop_);
 					 
 					 doReset(this.nVarToReset, cop_);//doReset(nb_var_to_reset,csp);
 					 //Utils.show("after reset= ",csp_.getVariables());
@@ -186,7 +156,6 @@ public class AdaptiveSearch extends RandomSearch {
 		  super.restartVar(cop);
 		  //Rail.copy(csp.getVariables() as Valuation(sz),bestConf as Valuation(sz));
 		  //bestCost = totalCost;
-		  bestSent = false;
 		  mark.clear();
 		  //nbRestart++;			
 		  //Update Total statistics
@@ -453,74 +422,17 @@ public class AdaptiveSearch extends RandomSearch {
 				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
 				this.forceRestart = false;
 				this.nForceRestart++;
-				//restartVar(csp_);
-				
-				// get a random conf from the global pool
-				// val result = this.solver.getLM(cop_, this.currentCost );
-				// //Utils.show("new conf: ", csp_.getVariables());
-				// if (result){
-				// 	 //nbChangeV++;
-				// 	 this.mark.clear();
-				// 	 this.currentCost = cop_.costOfSolution(true);
-				// 	 //this.doReset(nVarToReset, cop_);
-				// 	 this.bestSent = true;
-				// 	 //Console.OUT.println("Changing vector in "+ here);
-				// }
-				
 				// PATH RELINKING-based approach
-				val a = new Rail[Int](sz, 0n);
-				val b = new Rail[Int](sz, 0n);
 				val c = new Rail[Int](sz, 0n);
 				
-				val geta = this.solver.getLM(a, this.currentCost);
-				val getb = this.solver.getLM(b, this.currentCost);
+				val result = this.solver.getPR(c);
 				
-				if(geta && getb){
-				
-					 // Utils.show("a=",a);
-					 // Utils.show("b=",b);
-					 
-					 Rail.copy(a, c);
-					 val nSteps = random.nextLong(ns);
-					 
-					 for(i in 0..nSteps) {
-						  val bi = random.nextLong(sz);
-						  val bval = b(bi);
-						  var ci:Long = -1;
-						  
-						  // search bval in vector a
-						  for (cit in a.range()){
-								if (c(cit) == bval){
-									 ci = cit;
-									 break;
-								}
-						  }
-						  // swap variables
-						  if(bi != ci){
-								//steps++;
-								val tmp = c(bi);
-								c(bi) = c(ci);
-								c(ci) = tmp;
-								// Utils.show("c=", c);
-						  }
-					 }
-					 
+				if (result){
 					 cop_.setVariables(c);
 					 this.mark.clear();
 					 this.currentCost = cop_.costOfSolution(true);
 					 this.bestSent = true;
-					 
 				}
-				
-				
-				
-				
-				// get a conf from the Local Min Pool
-				//restart
-				// Logger.info(()=>{"   ASSolverPermut : force Restart"});
-				// this.forceRestart = false;
-				// this.nForceRestart++;
-				// this.restartVar(cop_);
 		  }
 		  
 		  if (this.forceReset){
@@ -537,28 +449,28 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  Update the cost for the optimization variables
 	  *  Reimplemente here to include communication flag "best send"
 	  */
-	 protected def updateCosts(cop : ModelAS){
-		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
-				this.bestCost = this.currentCost;
-				
-				bestSent = false; // new best found, I must send it!
-				
-				if (this.reportPart){
-					 val eT = (System.nanoTime() - initialTime)/1e9;
-					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-				}
-				
-				// Console.OUT.println(here+" best cost= "+bestCost);
-				// Compare cost and break if target is accomplished
-				if ((this.strictLow && this.bestCost < this.target)
-						  ||(!this.strictLow && this.bestCost <= this.target)){
-					 this.targetSucc = true;
-					 this.kill = true;
-				}
-		  }
-	 }
+	 // protected def updateCosts(cop : ModelAS){
+		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
+		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
+		// 		this.bestCost = this.currentCost;
+		// 		
+		// 		bestSent = false; // new best found, I must send it!
+		// 		
+		// 		if (this.reportPart){
+		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
+		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+		// 		}
+		// 		
+		// 		// Console.OUT.println(here+" best cost= "+bestCost);
+		// 		// Compare cost and break if target is accomplished
+		// 		if ((this.strictLow && this.bestCost < this.target)
+		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
+		// 			 this.targetSucc = true;
+		// 			 this.kill = true;
+		// 		}
+		//   }
+	 // }
 	 
 	 /**
 	  * 	Report statistics from the solving process
@@ -568,8 +480,6 @@ public class AdaptiveSearch extends RandomSearch {
 		  c.locmin = this.nLocalMinTot;
 		  c.reset = this.nResetTot;
 		  c.same = this.nSameVarTot;
-		  c.change = this.nChangeV;
-		  c.forceRestart = this.nForceRestart;
 	 }
 	 
 	 protected def updateTotStats(){
@@ -579,6 +489,13 @@ public class AdaptiveSearch extends RandomSearch {
 		  nLocalMinTot += nLocalMin;
 	 }
 	 
+	 /**
+	  *  Interact when Loc min is reached
+	  */
+	 private def onLocMin(cop : ModelAS){
+		  // communicate Local Minimum
+		  solver.communicateLM( this.currentCost, cop.getVariables());
+	 }
 	 
 }
 public type AdaptiveSearch(s:Long)=AdaptiveSearch{self.sz==s};

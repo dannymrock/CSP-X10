@@ -29,8 +29,8 @@ public interface IParallelSolver {
      * else return false.
      */
     def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean;
-    def getLM(vector : Rail[Int]{self.size==sz}, myCost:Long):Boolean;
-
+    def getLM(vector : Rail[Int]{self.size==sz}):Boolean;
+    def getPR(vector : Rail[Int]{self.size==sz}):Boolean;
     
     /**
      * Send this configuration (cost, current assignment of values to variables) to

@@ -56,7 +56,7 @@ public class Main {
 					 return new AdaptiveSearch( size, ss , opts) ;
 				if (kind == EO_SOL) 
 					 return new EOSearch( size, ss, opts);
-				return new RandomSearch( size, opts);
+				return new RandomSearch( size, ss, opts);
 		  }
 	 } 
 	 

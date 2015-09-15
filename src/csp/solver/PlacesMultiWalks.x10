@@ -235,8 +235,11 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
 	 = commM.getIPVector(csp_, myCost);
 	 
-	 @Inline public def getLM(vector : Rail[Int]{self.size==sz}, myCost:Long):Boolean 
-	 = commM.getLM(vector, myCost);
+	 @Inline public def getLM(vector : Rail[Int]{self.size==sz}):Boolean 
+	 = commM.getLM(vector);
+	 
+	 @Inline public def getPR(vector : Rail[Int]{self.size==sz}):Boolean 
+	 = commM.getPR(vector);
 	
 	 public def communicate(totalCost:Long, variables:Rail[Int]{self.size==sz})
 	 {
@@ -248,7 +251,10 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 
 	 public def communicateLM(totalCost:Long, variables:Rail[Int]{self.size==sz})
 	 {
-		  commM.communicateLM(totalCost, variables);
+		  // If diversification mechanism is activated, then send info 
+		  if (outTeamTime > 0 && nTeams > 1n ){
+				commM.communicateLM(totalCost, variables);
+		  }
 	 }
 	 	 
 	 public def kill()
