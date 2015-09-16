@@ -270,8 +270,8 @@ public class RandomSearch(sz:Long){
 	 /**
 	  * 	Return the Configuration with the best cost
 	  */
-	 public def getBestConfiguration(){
-		  return this.bestConf;
+	 public def getBestConfiguration():Valuation(sz){
+		  return this.bestConf as Valuation(sz);
 	 }
 	 
 	 /**
@@ -336,7 +336,7 @@ public class RandomSearch(sz:Long){
 	 
 	 protected def updateCosts(cop : ModelAS){
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-				Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
+				Rail.copy(cop.getVariables() as Valuation(sz), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
 				
 				bestSent = false; // new best found, I must send it!

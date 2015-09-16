@@ -45,11 +45,12 @@ public class AdaptiveSearch extends RandomSearch {
 	 private val probSelectLocMin:Int;
 	 private val firstBest:Boolean;
 	 
-	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
-		  super(sz, solver, opts);
-		  this.mark = new Rail[Int] (this.sz, 0n);
-		  this.listIJ = new Rail[MovePermutation](this.sz);
-		  this.listI = new Rail[Long](this.sz, 0);
+	 public def this(sizeS:Long, solver:IParallelSolver(sizeS), opts:ParamManager)
+	 :AdaptiveSearch(sizeS){
+		  super(sizeS, solver, opts);
+		  this.mark = new Rail[Int] (sizeS, 0n);
+		  this.listIJ = new Rail[MovePermutation](sizeS);
+		  this.listI = new Rail[Long](sizeS, 0);
 		  
 		  // Set parameters from the ParamManager object
 		  this.nVarToReset = opts("--AS_varToReset",-1);
@@ -494,7 +495,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  */
 	 private def onLocMin(cop : ModelAS){
 		  // communicate Local Minimum
-		  solver.communicateLM( this.currentCost, cop.getVariables());
+		  solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 	 }
 	 
 }

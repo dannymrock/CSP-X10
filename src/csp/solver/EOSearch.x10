@@ -65,11 +65,12 @@ public class EOSearch extends RandomSearch {
 	 private val pdfS:Int;
 	 private val selSecond:Int;
 	 
-	 public def this(sz:Long, solver:IParallelSolver(sz), opts:ParamManager){
-		  super(sz, solver, opts);
-		  this.pdf = new Rail[Double] (this.sz, 0.0);
+	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
+	 :EOSearch(sizeP){
+		  super(sizeP, solver, opts);
+		  this.pdf = new Rail[Double] (sizeP, 0.0);
 		  //fit = new Rail[Pair[Long,Long]](this.sz); 
-		  this.fit = new Rail[Long](this.sz, 0);
+		  this.fit = new Rail[Long](sizeP, 0);
 		  //this.solver = solver;
 		  
 		  // Parameters
@@ -266,7 +267,7 @@ public class EOSearch extends RandomSearch {
 	  */
 	 private def onLocMin(cop : ModelAS){
 		  // communicate Local Minimum
-		  solver.communicateLM( this.currentCost, cop.getVariables());
+		  solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 	 }
 	 
 	 

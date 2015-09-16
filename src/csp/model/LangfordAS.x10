@@ -45,7 +45,7 @@ public class LangfordAS extends ModelAS{
 	val err:Rail[Int];
 	val order:Long;
 
-	def this (size:Long, seed : Long, opts:ParamManager) : LangfordAS(sz){
+	def this (size:Long, seed : Long, opts:ParamManager) : LangfordAS(size){
 		super(size, seed, opts);
 		this.paramK = opts("LNP_k", 3n);
 		this.order = this.sz / paramK; 
@@ -344,4 +344,4 @@ public class LangfordAS extends ModelAS{
 	}
 	
 }
-public type LangfordAS(s:Long) = LangfordAS{self.sz==s};
+public type LangfordAS(s:Long)=LangfordAS{self.sz==s};

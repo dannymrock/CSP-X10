@@ -130,10 +130,10 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  //if place == -1 then it is a dummy value (there's no victim)
 		  if ( victimShort.place > 0 ){ 
 				// try to insert conf in medium quality pool - min distance allowed 0.6
-				val victimMedium = insert(this.MEDIUM, 0.6, victimShort.cost, victimShort.vector, victimShort.place);
+				val victimMedium = insert(this.MEDIUM, 0.6, victimShort.cost, victimShort.vector as Valuation(sz), victimShort.place);
 				if ( victimMedium.place > 0){
 					 // try to insert conf in low quality pool - min distance allowed 0.9
-					 insert(this.LOW, 0.9, victimMedium.cost, victimMedium.vector, victimMedium.place);
+					 insert(this.LOW, 0.9, victimMedium.cost, victimMedium.vector as Valuation(sz), victimMedium.place);
 				}
 		  }
 		  return Unit();

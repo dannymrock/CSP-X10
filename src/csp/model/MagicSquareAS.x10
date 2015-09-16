@@ -38,9 +38,9 @@ public class MagicSquareAS extends ModelAS{
 	  *  @param lengthProblem Number of variables of the problem
 	  * 	@param seed Desired seed for randomness of  the problem
 	  */
-	 public def this(size:Long, seed:Long, opts:ParamManager){
-		  super(size, seed, opts);
-		  this.squareLength = Math.sqrt(this.sz) as Long;
+	 def this(sizeP:Long, seed:Long, opts:ParamManager):MagicSquareAS(sizeP){
+		  super(sizeP, seed, opts);
+		  this.squareLength = Math.sqrt(sizeP) as Long;
 		  this.squareLengthm1 = (squareLength-1);
 		  this.squareLengthP1 = (squareLength+1);
 		  this.err_l     = new Rail[Long] (squareLength, 0);
@@ -48,7 +48,7 @@ public class MagicSquareAS extends ModelAS{
 		  this.err_c     = new Rail[Long] (squareLength, 0);
 		  this.err_c_abs = new Rail[Long] (squareLength, 0);	
 		  this.avg = (squareLength * (squareLength + 1n) / 2n);		/* sum to reach for each l/c/d */
-		  for( k in 0..(this.sz-1))	
+		  for( k in 0..(sizeP-1))	
 				xref(k)= new XRef(squareLength, k /squareLength, k % squareLength);
 		  
 	 }
@@ -271,3 +271,4 @@ public class MagicSquareAS extends ModelAS{
 		  val d2 = (l+c)== m-1n; /* am I on the anti-diagonal? */
 	 }
 } //End of the Magic Square Class
+public type MagicSquareAS(s:Long)=MagicSquareAS{self.sz==s};
