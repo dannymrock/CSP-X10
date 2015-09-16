@@ -68,7 +68,8 @@ public class EOSearch extends RandomSearch {
 	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
 	 :EOSearch(sizeP){
 		  super(sizeP, solver, opts);
-		  this.pdf = new Rail[Double] (sizeP, 0.0);
+		  this.pdf = new Rail[Double] (sizeP+1, 0.0);// +1 since x in 1..size
+		  
 		  //fit = new Rail[Pair[Long,Long]](this.sz); 
 		  this.fit = new Rail[Long](sizeP, 0);
 		  //this.solver = solver;
@@ -140,18 +141,18 @@ public class EOSearch extends RandomSearch {
 		  var sum:Double = 0.0;
 		  var y:Double = 0.0;
 		  
-		  for (x in 1n..this.sz){
+		  for (var x:Int = 1n; x <= this.sz; x++){
 				y = fnc(tau, x);
 				if (y < 0)
 					 y = 0;
 				pdf(x) = y;
 				sum += y; 
 		  }
-		  for (x in 1n..this.sz){
-				pdf(x) /= sum;
+		  for (var x:Int = 1n; x <= this.sz; x++){
+					pdf(x) /= sum;
 		  }
-		  // for (x in 1n..this.sz)
-				// Console.OUT.println( x+"-"+pdf(x)+" ");
+		  //for (x in pdf.range())
+			//	Console.OUT.println(pdf(x)+" ");//Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 	 
 	 private def pdfPick():Int {
@@ -160,7 +161,7 @@ public class EOSearch extends RandomSearch {
 		  var fx:Double;
 		  var x:Int = 0n;
 		  
-		  while((fx = pdf(++x)) < p){
+		  while( (fx = pdf(++x)) < p ){
 				p -= fx;
 		  }
 		  return x - 1n ;
