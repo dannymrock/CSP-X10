@@ -19,17 +19,20 @@ public class EOSearch extends RandomSearch {
 	 private val pdf:Rail[Double];
 	 //private val fit:Rail[Pair[Long, Long]];
 	 private val fit:Rail[Long];
-	 //Here i -> index   j->cost (fitness)
-	 private val cmp : (Long,Long) => Int = 
-	 	  (a:Long, b:Long) => {return b as Int - a as Int ;}; 
-	 
+
+	 // var index is stored in the 10 LSB and the cost is stored on the remaining MSB
+	 private val cmp : (Long,Long) => Int = (a:Long, b:Long) => {
+	 			return((b >> 10) - (a >> 10))as Int;
+	 			}; 
 
 	 val powFnc = (tau : Double, x : Long):Double => {
 		  return Math.pow(x, -tau);
 	 };
+	 
 	 val expFnc = (tau : Double, x : Long):Double => {
 		  return Math.exp(-tau * x);
 	 };
+	 
 	 val gammaFnc = (tau : Double, x : Long):Double => {
 		  
 		  val k = tau;
@@ -178,7 +181,7 @@ public class EOSearch extends RandomSearch {
 				
 				// Detect local min: 
 				// can be applied on "first variable selction" only for QAP
-				if (cost < this.currentCost)
+				if ( cost > 0 ) // cost is -delta for QAP.
 					 locMin = false;
 				
 		  }
@@ -222,8 +225,6 @@ public class EOSearch extends RandomSearch {
 		  var nSameMin:Int = 0n;
 		  var minCost:Long = Long.MAX_VALUE;
 		  val first = move.getFirst();
-		  // Loc Min detection
-		  var locMin:Boolean = true; 
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
@@ -240,12 +241,12 @@ public class EOSearch extends RandomSearch {
 				} else if (cost == minCost && random.nextInt(++nSameMin) == 0n){
 					 second = j;
 				}
-				
-				// if (cost < this.currentCost)
-				// 	 locMin = false;	
+
 		  }
 		  
-		  //if (locMin) this.onLocMin(csp);
+		  // if (minCost > this.currentCost)
+		  // 	 this.onLocMin(csp);
+		  
 		  //Console.OUT.println("minJ = "+ minJ+" newCost "+ minCost+" totalcost "+ totalCost);
 		  move.setSecond(second);
 		  return minCost;
