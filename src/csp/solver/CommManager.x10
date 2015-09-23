@@ -5,6 +5,8 @@ import x10.util.Random;
 import x10.util.StringUtil;
 import csp.util.Utils;
 import csp.model.ParamManager;
+import x10.io.File;
+import x10.io.Printer;
 /**	This class containts all the basic CommManager configuration info, for the
  * 	Adaptive search solver x10 implementation ASSolverPermut
  * 	
@@ -16,7 +18,7 @@ import csp.model.ParamManager;
 public class CommManager(sz:Long) {
 	 
 	 // id of the node used to manage the Local Min Pool
-	 public static LOCAL_MIN_NODE = 1;
+	 public static LOCAL_MIN_NODE = 1;//Place.MAX_PLACES-1;
 	 
 	 public static USE_PLACES  = 0n;
 	 public static USE_ACTIVITIES  = 1n; 
@@ -44,17 +46,25 @@ public class CommManager(sz:Long) {
 	 var interTI : Int;
 	 var delta : Int=0n;
 	 val nTeams : Int;
-	 val myTeamId : Int;
+	 val myTeamId : Long;
 	 var random :Random = new Random();
 	 val changeProb:Int;
 	 // reference to team members, communication.
 	 val solvers:PlaceLocalHandle[IParallelSolver(sz)];
+	 
+	 val isHeadNode:Boolean;
 	 
 	 // Max number of steps in PR 
 	 private var ns:Int = 2n;
 	 private var deltaFact : Double = 1.0;
 	 private var pSendLM:Double = 0.0;
 	 
+	 private val divOption:Int;
+	 
+	 // Report status in alternative tty
+	 private val altTty:File;
+	 val p:Printer;
+	 private val debug:Boolean;
 	 
 	 def this(sz:Long, opts:ParamManager, ss: PlaceLocalHandle[IParallelSolver(sz)], nTeams:Int ){
 		  property(sz);
@@ -67,9 +77,12 @@ public class CommManager(sz:Long) {
 		  val epD = opts("P_eD", 0.5);
 		  val lmD = opts("P_lmD", 0.5);
 		  
+		  this.divOption = opts("O", 0n);
+		  
 		  if(here.id == 0){
 				Console.OUT.println("Elite Pool Parameters - Size "+epSize+" mode "+epM+(epM==1?"":(" Dist "+epD)));
 				Console.OUT.println("LM Pool Parameters - Size "+lmpSize+" mode "+lmM+(lmM==1?"":" Dist "+lmD));
+				Console.OUT.println("Diversification Technique: "+((divOption == 0n)?"from scratch":"path relinking based"));
 		  }
 		  
 		  this.ep = new SmartPool(sz, epSize, epM, epD); 
@@ -82,8 +95,10 @@ public class CommManager(sz:Long) {
 		  this.changeProb = opts("-C", 100n);
 		  
 		  this.nTeams = nTeams;
-		  this.myTeamId = here.id as Int % nTeams;
+		  this.myTeamId = here.id % nTeams;
 		  val m = myTeamId; val s = solverMode;
+		  this.isHeadNode = here.id == myTeamId;
+		  
 		  Logger.debug(()=>{(s==0n ? ("My team is: " + m):("My team is:"+here.id))});
 		  
 		  val str = System.getenv("DELTA");
@@ -97,6 +112,30 @@ public class CommManager(sz:Long) {
 		  val lmstr = System.getenv("LM");
 		  if (lmstr != null)
 				pSendLM = StringUtil.parseInt(lmstr)/ 100.0;
+		  
+		  
+		  val ttyName = opts("-dbg", "none");
+		  if (ttyName.equals("none")){
+				this.debug = false;
+				this.altTty = null;
+				this.p = null;
+		  }else{
+				this.debug = true;
+				this.altTty = new File(ttyName);
+				this.p = altTty.printer();
+		  }
+		  
+		  // val dbg = opts("-dbg", 0);
+		  // this.debug = dbg == 1;
+		  // this.altTty = new File("/dev/pts/1");
+		  // this.p = altTty.printer(); 
+		  
+		  if (debug && here.id == 0){
+				p.print("\033[2J\033[H");
+				p.printf("Debug \n");
+				for (i in 1..nTeams)
+					 p.printf("Team %3d          best cost \n",i);
+		  }
 	 }
 	 
 	 public def setSeed(seed:Long){
@@ -134,9 +173,19 @@ public class CommManager(sz:Long) {
 					 Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
 					 at(Place(myTeamId)) async ss().tryInsertConf( totalCost , variables, placeid);
 				}
+				
+				if (this.debug && this.isHeadNode){
+					 val bc = ep.getBestConf();
+					 if (bc != null){
+						  p.print("\033[H\033["+(myTeamId+1)+"B");
+						  p.printf("Team %3d          best cost %10d",myTeamId,bc().cost);
+						  p.flush();
+					 }
+				}
+				
 				//Debug
 				// if(here.id as Int == myTeamId ){ //group head
-				// Console.OUT.println("I'm "+myTeamId+" head group, here my ELITE pool Vectors");
+				//  Console.OUT.println("I'm "+myTeamId+" head group, here my ELITE pool Vectors");
 				// ep.printVectors();
 				// }
 				/*********************************************************/
@@ -180,6 +229,14 @@ public class CommManager(sz:Long) {
 				//   	Console.OUT.println("I'm "+myTeamId+" head group, here my Local MIN pool Vectors");
 				//   	lmp.printVectors();
 				// }
+				
+				if (this.debug && here.id == LOCAL_MIN_NODE){
+					 val s = lmp.getCostList();
+					 p.print("\033[H\033["+(nTeams+1)+"B");
+					 p.print("Div Pool Costs: "+s);
+					 p.flush();
+				}
+				
 				/*********************************************************/
 		  }else if (solverMode == USE_ACTIVITIES){
 				Logger.debug(()=>"CommManager: solver mode: Activities.");
@@ -271,6 +328,19 @@ public class CommManager(sz:Long) {
 	  * 
 	  */
 	 public def getPR( vector : Rail[Int]{self.size==sz}):Boolean { 
+		  
+		  if (divOption == 0n) //Restart from Scratch
+				return false;
+		  else                 // Restart PR-based
+				return getPR1(vector);
+
+	 }
+	  
+	 /**
+	  * get a mutated vector using Path-Relinking based approach
+	  * 
+	  */
+	 public def getPR1( vector : Rail[Int]{self.size==sz}):Boolean { 
 		  Logger.debug(()=> "CommManager: getPR: entering.");
 		  
 		  // PATH RELINKING-based approach
@@ -312,6 +382,7 @@ public class CommManager(sz:Long) {
 		  }else
 				return false;
 	 }
+	 
 	 
 	 public def restartPool(){
 		  Logger.debug(()=>"CommManager: clear Pool.");

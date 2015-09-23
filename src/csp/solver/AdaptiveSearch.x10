@@ -433,6 +433,11 @@ public class AdaptiveSearch extends RandomSearch {
 					 this.mark.clear();
 					 this.currentCost = cop_.costOfSolution(true);
 					 this.bestSent = true;
+				}else{
+					 cop_.initialize();
+					 this.mark.clear();
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.bestSent = true;
 				}
 		  }
 		  

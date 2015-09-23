@@ -151,7 +151,7 @@ public class EOSearch extends RandomSearch {
 		  for (var x:Int = 1n; x <= this.sz; x++){
 					pdf(x) /= sum;
 		  }
-		  //for (x in pdf.range())
+		  // for (x in pdf.range())
 			//	Console.OUT.println(pdf(x)+" ");//Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 	 
@@ -276,11 +276,12 @@ public class EOSearch extends RandomSearch {
 	  *  Interact with other entities
 	  */
 	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
-		  // To be implemented  
+		  //Console.OUT.println("AS interact");
 		  /**
 		   *  Interaction with other places
 		   */
-		  if( solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
+		  if( solver.inTeamReportI() != 0n && nIter % solver.inTeamReportI() == 0n){  //here.id as Int ){
+				//Console.OUT.println("report");
 				if(!bestSent){ 
 					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
 					 bestSent = true;
@@ -289,13 +290,18 @@ public class EOSearch extends RandomSearch {
 				}
 		  }
 		  
-		  if(solver.inTeamReportI() != 0n && this.nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
+		  if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
+				//Console.OUT.println("update");
 				val result = solver.getIPVector(cop_, this.currentCost );
 				if (result){
 					 this.nChangeV++;
 					 this.currentCost = cop_.costOfSolution(true);
 					 bestSent = true;
 					 //Console.OUT.println("Changing vector in "+ here);
+				}else{
+					 cop_.initialize();
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.bestSent = true;
 				}
 		  }
 		  

@@ -3,6 +3,7 @@ import csp.model.ModelAS;
 import x10.util.Random;
 import csp.util.Logger;
 import csp.model.ParamManager;
+import x10.io.File;
 
 /**
  * Basic Implementation of a Random Search Solver
@@ -66,20 +67,21 @@ public class RandomSearch(sz:Long){
 	 protected var nChangeV : Int = 0n;
 	 protected var bestSent:Boolean=false;
 	 
+	 protected val altTty:File;
+	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
 		  property(size);
 		  //this.vectorSize = size;
 		  this.opts = opt;
 		  this.bestConf = new Rail[Int](this.sz, 0n);
-		  
 		  this.solver = solver;
-		  
 		  // Parameters
 		  this.maxTime = this.opts("-mt", 0);
 		  this.maxIters = this.opts("-mi", 100000000);
 		  this.maxRestarts = this.opts("-mr", 0n);
 		  this.reportPart = this.opts("-rp", 0n) == 1n;
+		  this.altTty = new File("/dev/pts/1");
 		  
 	 }
 
@@ -247,6 +249,10 @@ public class RandomSearch(sz:Long){
 					 cop_.setVariables(c);
 					 this.currentCost = cop_.costOfSolution(true);
 					 this.bestSent = true;
+				}else{
+					 cop_.initialize();
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.bestSent = true;
 				}
 		  }
 		  
@@ -341,11 +347,15 @@ public class RandomSearch(sz:Long){
 				
 				bestSent = false; // new best found, I must send it!
 				
-				if (this.reportPart){
-					 val eT = (System.nanoTime() - initialTime)/1e9;
-					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-				}
+// 				if (this.reportPart){
+// 					 val eT = (System.nanoTime() - initialTime)/1e9;
+// 					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+// 
+// 					 // Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+// 					 // print on alternative tty
+// 					 val p = altTty.printer();
+// 					 p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+// 				}
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished

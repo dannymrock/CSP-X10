@@ -22,6 +22,9 @@ import x10.util.concurrent.AtomicBoolean;
 import x10.util.Team;
 import x10.util.StringUtil;
 import csp.model.ParamManager;
+import x10.io.File;
+import x10.io.Printer;
+import x10.util.RailUtils;
 
 /**
  * Each place has solvers, a PlaceLocalHandle[PlaceMultiWalk(sz)].
@@ -86,6 +89,13 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 val compAVG:Int;
 	 val opts:ParamManager;
 	 
+	 val confArray:Rail[CSPSharedUnit];
+	 
+	 val debug:Boolean;
+	 val altTty:File;
+	 val p:Printer;
+	 
+	 
 	 /**
 	  * 	Constructor of the class
 	  */
@@ -106,7 +116,20 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 		  //commOption = commOpt;
 		  this.nTeams = Place.MAX_PLACES as Int / expPerTeam ;
-		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	  
+		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	 
+		  
+		  this.confArray = new Rail[CSPSharedUnit](nTeams, CSPSharedUnit(sz,-1n,null,-1n)); 
+		  
+		  val ttyName = opts("-dbg", "none");
+		  if (ttyName.equals("none")){
+				this.debug = false;
+				this.altTty = null;
+				this.p = null;
+		  }else{
+				this.debug = true;
+				this.altTty = new File(ttyName);
+				this.p = altTty.printer();
+		  }
 	 }
 	 
 	 
@@ -156,7 +179,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  // verify if inter team comm is able, if the number of teams is greater than 1 and 
 		  //        if place(here) is a head node 
 		  //if (outTeamTime > 0 && nTeams > 1n && here.id < nTeams) //node O to nteams
-		  if (outTeamTime > 0 && nTeams > 1n && here.id == 1)
+		  if (outTeamTime > 0 && nTeams > 1n && here.id == commM.LOCAL_MIN_NODE)
 				// if (outTeamTime > 0 && nTeams > 1n && here.id >= nTeams && here.id < nTeams+nTeams) 
 		  {
 				//val delay = random.nextLong(outTeamTime);
@@ -474,7 +497,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				}
 		  }
 	 }
-	 
+	 	 
 	 //var err:Int=0n;
 	 /**
 	  * Inter Team Communication Functions
@@ -501,110 +524,69 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  }
 	 }
 	 
+	 
+	 private val cmp : (CSPSharedUnit,CSPSharedUnit) => Int = (a:CSPSharedUnit, b:CSPSharedUnit) => {
+		  return(a.cost - b.cost) as Int;
+	 };
+	 
 	 public def interTeamComm(ss:PlaceLocalHandle[IParallelSolver(sz)], r:Random){
-		  //Logger.debug(()=>{"MW - interTeamComm : entering..."+nTeams});
+		  var teamToRest:Long = -1;
 		  
-		  //1. Compare local against a random team  (head node)
-		  //The Head node for each team is the node with id==team_number
-		  // var remote : Long = r.nextLong(nTeams); 
-		  // while (here.id == remote){
-				// remote = r.nextLong(nTeams);
-		  // }
+		  //for ( head in 0..(nTeams-1) ) 
+		  for ( var head:Int = 0n; head < nTeams; head++) {
+				val h = head;
+				val conf = at( Place(h) ) ss().getBestConf();
+				if (conf == null) {
+					 confArray(h) = CSPSharedUnit(sz, -1n, null, h as Int);
+			   } else {
+			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int);
+			   }
+		  }
 		  
-		  //2. Compare only two random teams each time
-		  // var head1 : Long = r.nextLong(nTeams); 
-		  // var head2 : Long = r.nextLong(nTeams); 
-		  // while (head1 == head2){
-				// head2 = r.nextLong(nTeams);
-		  // }
+		  var nEqTeams:Int = 0n;
+		  var eqTeam:Long = -1;
 		  
-		  //3. Select the worst Team
-		  var worstTeam:Long = -1;
-		  var worstCost:Long = Long.MIN_VALUE;
-		  for (head in 1..nTeams) {
-				val conf = at(Place(head)) ss().getBestConf();
-				if(conf == null) continue;
-				if (conf().cost > worstCost){
-					 worstTeam = head;
-					 worstCost = conf().cost;
+		  RailUtils.sort(confArray, cmp);
+		  var c:Int; 
+		  // Console.OUT.println(0 +" cost "+confArray(0).cost+" team "+confArray(0).place);
+		  for (c = 0n; c < nTeams - 1 ; c++) {
+				// Console.OUT.println((c+1) +" cost "+confArray(c+1).cost+" team "+confArray(c+1).place);
+				if (confArray(c).cost != -1 && confArray(c).cost == confArray(c + 1).cost 
+						  && csp_.distance(confArray(c).vector,confArray(c+1).vector) == 0.0){
+					 if (r.nextInt(++nEqTeams) == 0n)
+						  eqTeam = confArray(c + 1).place;
 				}
 		  }
-		  if (worstTeam == -1) return;
 		  
-		  //val vremote = remote;
-		  //Logger.info(()=> "MW - interTeamComm : Comparing "+here.id+" vs "+vremote);
-		  // get current configuration and cost from local and  remote Team
-		  //if(interTeamKill) return;
+		  var worstTeam:Long = confArray(nTeams - 1).place; 
 		  
-		  // 1.
-		  // val localConf = getBestConf();
-		  // //compute distance between Teams
-		  // if( localConf == null) {
-				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
-				// return;
-		  // }
-		  // val remoteConf = at(Place(remote)) ss().getBestConf();
-		  // if(remoteConf == null) {
-				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
-				// return;
-		  // }
-		  // val dis = csp_.distance(localConf().vector, remoteConf().vector);
-		  // val rem = remote;
-		  // Logger.info(()=>{"MW - interTeamComm : distance between "+here.id+" and "+rem+" is= "+dis}); 
+		  // Console.OUT.println("eqTeam "+eqTeam+" worstTeam "+worstTeam);
 		  
-		  // 2. 
-		  // val remote1 = at(Place(head1)) ss().getBestConf();
-		  // if(remote1 == null) {
-				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
-				// return;
-		  // }
-		  // val remote2 = at(Place(head2)) ss().getBestConf();
-		  // if(remote2 == null) {
-				// //Logger.debug(()=>"MW - interTeamComm : null configurations, return");	
-				// return;
-		  // }
+		  if (eqTeam != -1 )
+				teamToRest = eqTeam;
+		  else if (worstTeam != -1)
+				teamToRest = worstTeam;
+		  else 
+				return;
 		  
-		  //compute distance between Teams
-		  // val dis = csp_.distance(remote1().vector, remote2().vector);
+		  val ttr = teamToRest; 
+		  if (debug) {
+				p.print("\033[H\033["+(nTeams+2)+"B");
+				p.printf("Restart Team %10d               ",ttr);
+				p.flush();
+		  }
 		  
-		  // val h1 = head1;
-		  // val h2 = head2;
-		  // Logger.info(()=>{"MW - interTeamComm : distance between "+h1+" and "+h2+" is= "+dis});
-		  	  
-		  //1.
-		  // if (dis > maxDis) maxDis = dis;
-		  // if (dis < minDis) minDis = dis;
-		  // avgDis += dis;
-		  // cDis++;
+		  // Count total group partial restart
+		  at(Place(teamToRest)) ss().incGroupReset(); 
+		  Logger.info(()=>{"reset team "+ttr});
 		  
-		  // if (dis <= minDistance){ 
-				// Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+localConf().cost+" remote cost "+remoteConf().cost);
-				// val teamToRest = localConf().cost < remoteConf().cost ? remote : here.id;
-				// //Logger.info(()=>"MW - interTeamComm : force Restart - local cost "+remote1().cost+" remote cost "+remote2().cost);
-				// //val teamToRest = remote1().cost < remote2().cost ? head2 : head1;
-					
-		  //3.
-		  val wT = worstTeam; val wC = worstCost;
-		  Logger.info(()=>"MW - interTeamComm : force Restart - worstTeam "+wT+" cost "+wC);
-		  val teamToRest = worstTeam;
-				
-				//val teamToRest = r.nextInt(nTeams);
-				
-
-				
-				// Count total group partial restart
-				at(Place(teamToRest)) ss().incGroupReset(); 
-				Logger.info(()=>{"reset team "+teamToRest});
-				
-				for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){ //i < Place.MAX_PLACES
-					 //Restart the members of the team "res"
-					 val vali = i;
-					 Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
-					 if (r.nextDouble() <= affectedPer)
-						  at(Place(i)) ss().diversify();
-				}
-				at(Place(teamToRest)) ss().clearIntPool();
-		 // }
+		  for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){
+				val vali = i;
+				Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
+				if (r.nextDouble() <= affectedPer)
+					 at(Place(i)) ss().diversify();
+		  }
+		  at(Place(teamToRest)) ss().clearIntPool();
 	 }
 	 
 	 public def getGroupReset():Int{

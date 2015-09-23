@@ -6,6 +6,7 @@ import csp.util.Utils;
 import x10.util.Random;
 import x10.util.StringUtil;
 import csp.model.ParamManager;
+import x10.util.StringBuilder;
 
 /**
  * Class SmartPool
@@ -34,7 +35,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  poolMode = pMode;
 		  distance = minDist;		  
 		  for (i in 0..2)
-				pool(i) = new Rail[CSPSharedUnit(sz)](poolSize, CSPSharedUnit(sz,0n as Int,null,0n as Int));
+				pool(i) = new Rail[CSPSharedUnit(sz)](poolSize, CSPSharedUnit(sz,0n,null,0n));
 	 }
 	 
 	 public def setSeed(seed:Long){
@@ -80,7 +81,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				pool(poolType)(nbEntries(poolType)++) = 
 					 new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 				// Return dummy value, there isn't victim
-				return new CSPSharedUnit( sz, 0n as Int, null, -1n as Int);
+				return new CSPSharedUnit( sz, 0n, null, -1n);
 		  }else{
 			   for ( var i:Int = 0n; i < this.nbEntries(poolType); i++){
 					 // Select worst conf
@@ -102,7 +103,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 						  distance(variables, pool(poolType)(simConf).vector) >= dist ){
 					 pool(poolType)(this.nbEntries(poolType)++) = 
 						  new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
-					 return new CSPSharedUnit( sz, 0n as Int, null, -1n as Int);
+					 return new CSPSharedUnit( sz, 0n, null, -1n);
 				}
 				
 				if (worstConf >= 0n && cost < worstCost && 
@@ -113,7 +114,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 					 return victim;
 				}
 		  }
-		  return new CSPSharedUnit( sz, 0n as Int, null, -1n as Int);
+		  return new CSPSharedUnit( sz, 0n, null, -1n);
 	 }
 	 
 	 /**
@@ -247,6 +248,17 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				return new Maybe(pool(HIGH)(best));
 		  });
 	 
+	 public def getCostList():String{
+		  val str = new StringBuilder();
+		  
+		  for (j in 0..2)
+				for (i in 0n..(this.nbEntries(j)-1n)){
+					 str.add(this.pool(j)(i).cost);
+					 str.add(" ");
+				}
+		  
+		  return str.toString();
+	 }
 	 
 	 /**
 	  *  Clear all the entries in the pool

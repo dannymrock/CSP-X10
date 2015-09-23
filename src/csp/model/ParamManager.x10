@@ -43,6 +43,7 @@ public class ParamManager extends OptionsParser {
 					  Option("D", "Inter_Team_Distance", "minimum permisible distance."),
 					  Option("W", "Inter_Team_Wait", "initial (W)ait  before start Inter-team Communication (miliseconds). Default 0"),
 					  Option("A", "Inter_Team_Affected_Explorers", "Inter Team Communicaction Diversification - Percentage of Places (A)ffected . Default 0."),
+					  Option("O", "Inter_Team_Option", "Diversification Option. 0 from Scratch 1 Path-Relinking."),
 					  // Pool Options
 					  Option("P_e", "poolsize_elite", "Max. number of configurations for the Elite Pool"),
 					  Option("P_lm", "poolsize_locmin", "Max. number of configuration for the local min. Pool"),
@@ -54,7 +55,8 @@ public class ParamManager extends OptionsParser {
 					  Option("mt", "max_time", "Max. time  default 0"),
 					  Option("mi", "max_iter", "Max. iterations limit"),
 					  Option("mr", "max_restart", "maximum number of restarts"),
-					  Option("rp", "rep_partial", "report partial results"),				  
+					  Option("rp", "rep_partial", "report partial results"),
+					  Option("dbg", "debug_terminal", "report debug info on alternative terminal, default none"),				  
 					  // Parameters for AS
 					  Option("AS_vtr", "AS_varToReset", "number of variables to swap in the reset procedure."),
 					  Option("AS_rp", "AS_resetPer", "Percentage of variables to swap in the reset procedure. Default 10%"),
