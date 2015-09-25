@@ -572,7 +572,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  val ttr = teamToRest; 
 		  if (debug) {
 				p.print("\033[H\033["+(nTeams+2)+"B");
-				p.printf("Restart Team %10d               ",ttr);
+				p.printf("\033[2K\rRestart Team %10d               ",ttr);
 				p.flush();
 		  }
 		  

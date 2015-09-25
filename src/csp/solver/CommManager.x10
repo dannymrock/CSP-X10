@@ -178,7 +178,7 @@ public class CommManager(sz:Long) {
 					 val bc = ep.getBestConf();
 					 if (bc != null){
 						  p.print("\033[H\033["+(myTeamId+1)+"B");
-						  p.printf("Team %3d          best cost %10d",myTeamId,bc().cost);
+						  p.printf("\033[2K\rTeam %3d          best cost %10d",myTeamId,bc().cost);
 						  p.flush();
 					 }
 				}
@@ -233,7 +233,7 @@ public class CommManager(sz:Long) {
 				if (this.debug && here.id == LOCAL_MIN_NODE){
 					 val s = lmp.getCostList();
 					 p.print("\033[H\033["+(nTeams+1)+"B");
-					 p.print("Div Pool Costs: "+s);
+					 p.print("\033[2K\rDiv Pool Costs: "+s);
 					 p.flush();
 				}
 				
