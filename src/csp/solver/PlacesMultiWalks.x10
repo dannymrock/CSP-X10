@@ -552,7 +552,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  for (c = 0n; c < nTeams - 1 ; c++) {
 				// Console.OUT.println((c+1) +" cost "+confArray(c+1).cost+" team "+confArray(c+1).place);
 				if (confArray(c).cost != -1 && confArray(c).cost == confArray(c + 1).cost 
-						  && csp_.distance(confArray(c).vector,confArray(c+1).vector) == 0.0){
+						  && csp_.distance( confArray(c).vector as Valuation(sz),
+									 confArray(c+1).vector as Valuation(sz)) == 0.0){
 					 if (r.nextInt(++nEqTeams) == 0n)
 						  eqTeam = confArray(c + 1).place;
 				}

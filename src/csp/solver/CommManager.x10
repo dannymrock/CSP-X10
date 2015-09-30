@@ -18,7 +18,8 @@ import x10.io.Printer;
 public class CommManager(sz:Long) {
 	 
 	 // id of the node used to manage the Local Min Pool
-	 public static LOCAL_MIN_NODE = 1;//Place.MAX_PLACES-1;
+	 //public static LOCAL_MIN_NODE = 1;
+	 public static LOCAL_MIN_NODE = Place.MAX_PLACES-1;
 	 
 	 public static USE_PLACES  = 0n;
 	 public static USE_ACTIVITIES  = 1n; 
@@ -225,11 +226,11 @@ public class CommManager(sz:Long) {
 					 at(Place(this.LOCAL_MIN_NODE)) ss().tryInsertLM( totalCost , variables, placeid);
 				}
 				//Debug
-				// if(here.id == 1 ){ //group head
+				// if(here.id == LOCAL_MIN_NODE ){ //group head
 				//   	Console.OUT.println("I'm "+myTeamId+" head group, here my Local MIN pool Vectors");
 				//   	lmp.printVectors();
 				// }
-				
+				// 
 				if (this.debug && here.id == LOCAL_MIN_NODE){
 					 val s = lmp.getCostList();
 					 p.print("\033[H\033["+(nTeams+1)+"B");

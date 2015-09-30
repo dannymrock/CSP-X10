@@ -73,8 +73,8 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	 protected def insert( poolType:Int, dist:Double, cost:Long, variables:Rail[Int]{self.size==sz}, place:Int ):CSPSharedUnit {
 		  var worstConf:Long = -1; // index of the worst conf in the pool (highest cost)
 		  var worstCost:Long = Long.MIN_VALUE;
-		  var simConf:Int = -1n;
-		  var minDiff:Long = Long.MAX_VALUE;
+		  // var simConf:Int = -1n;
+		  // var minDiff:Long = Long.MAX_VALUE;
 		  
 		  // Searching the worst conf (highest cost)
 		  if (this.nbEntries(poolType) == 0n){  // I'm the first in the pool!
@@ -84,30 +84,30 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				return new CSPSharedUnit( sz, 0n, null, -1n);
 		  }else{
 			   for ( var i:Int = 0n; i < this.nbEntries(poolType); i++){
-					 // Select worst conf
+			   	 // Select worst conf
 					 val thisCost = pool(poolType)(i).cost;
+					 if (thisCost == cost && distance(variables, pool(poolType)(i).vector) < dist)
+						  return new CSPSharedUnit( sz, 0n, null, -1n);
 					 if (thisCost > worstCost){
 						  worstCost = thisCost;
 						  worstConf = i;
 					 } 
 					 //select similar cost configuration
-					 val cdiff = Math.abs(thisCost - cost);
-					 if (cdiff < minDiff){
-						  minDiff = cdiff;
-						  simConf = i; 
-					 }	 
+					 // val cdiff = Math.abs(thisCost - cost);
+					 // if (cdiff < minDiff){
+						//   minDiff = cdiff;
+						//   simConf = i; 
+					 // }	 
 				}
 				
 				// Replace the worst conf in the pool with a new one
-				if (this.nbEntries(poolType) < this.poolSize && cost < worstCost && 
-						  distance(variables, pool(poolType)(simConf).vector) >= dist ){
+				if (this.nbEntries(poolType) < this.poolSize && cost < worstCost ){
 					 pool(poolType)(this.nbEntries(poolType)++) = 
 						  new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 					 return new CSPSharedUnit( sz, 0n, null, -1n);
 				}
 				
-				if (worstConf >= 0n && cost < worstCost && 
-						  distance(variables, pool(poolType)(simConf).vector) >= dist){
+				if (worstConf >= 0n && cost < worstCost){
 					 val victim = pool(poolType)(worstConf);
 					 pool(poolType)(worstConf) = 
 						  new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
@@ -207,12 +207,23 @@ public class SmartPool(sz:Long, poolSize:Int) {
 						  && this.nbEntries(LOW) > 0){
 					 // More probability to take the HIGH quality pool than the MEDIULM and LOW pool					 
 					 val pooln = random.nextInt(10n);
+					 
+					 //More probability to return a high quality conf
 					 if (pooln < 5n) // probability = 5/10 
 						  mem = HIGH;
 					 else if(pooln < 8) // probability = 3/10
 						  mem = MEDIUM;
 					 else  // probability = 2/10
 						  mem = LOW;
+					 
+					 //More probability to return a low quality conf
+					 // if (pooln < 2n) // probability = 2/10 
+						//   mem = HIGH;
+					 // else if(pooln < 5) // probability = 3/10
+						//   mem = MEDIUM;
+					 // else  // probability = 5/10
+						//   mem = LOW;
+					 
 					 
 					 index = random.nextInt(nbEntries(mem)) + 1n;
 				} else {	 
