@@ -12,7 +12,7 @@ import x10.io.File;
  * 
  */
 
-public class RandomSearch(sz:Long){
+public class RandomSearch(sz:Long) implements ISolver {
 	 property sz() = sz; //size of the problem
 	 
 	 //Parameters object
@@ -154,7 +154,7 @@ public class RandomSearch(sz:Long){
 	 /**
 	  *  Initialize variables of the solver
 	  */
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 public def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  // Set Target
 		  this.target = tCost;
 		  this.strictLow = sLow;
@@ -180,7 +180,7 @@ public class RandomSearch(sz:Long){
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 public def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  // Swap two random variables
 		  //Console.OUT.println("HS");
 		  move.setFirst(random.nextLong(sz));
@@ -207,7 +207,7 @@ public class RandomSearch(sz:Long){
 	 /**
 	  *  Interact with other entities
 	  */
-	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
+	 public def interact( cop_:ModelAS{self.sz==this.sz}){
 		  // To be implemented  
 		  // To be implemented  
 		  /**
@@ -308,7 +308,7 @@ public class RandomSearch(sz:Long){
 		  c.forceRestart = this.nForceRestart;
 	 }
 	 
-	 protected def restartVar(cop : ModelAS){
+	 public def restartVar(cop : ModelAS){
 		  cop.initialize(); 
 		  currentCost = cop.costOfSolution(true);
 		  updateTotStats();
@@ -317,7 +317,7 @@ public class RandomSearch(sz:Long){
 		  nIter = 0n;
 	 }
 	 
-	 // protected def updateCosts(cop : ModelAS){
+	 // public def updateCosts(cop : ModelAS){
 		//   /**
 		//    *  optimization
 		//    */
@@ -340,7 +340,7 @@ public class RandomSearch(sz:Long){
 		//   }
 	 // }
 	 
-	 protected def updateCosts(cop : ModelAS){
+	 public def updateCosts(cop : ModelAS){
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables() as Valuation(sz), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
@@ -369,7 +369,7 @@ public class RandomSearch(sz:Long){
 	 
 	 
 	 
-	 protected def updateTotStats(){
+	 public def updateTotStats(){
 		  this.nIterTot += this.nIter;
 		  this.nSwapTot += this.nSwap;  
 	 }

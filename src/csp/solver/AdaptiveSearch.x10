@@ -69,7 +69,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 }
 	 
 	 
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 public def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  Logger.debug(()=>{"ASSolver"});
@@ -102,7 +102,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 public def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  var newCost:Long = -1;
 		  
 		  
@@ -153,7 +153,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  return currentCost;
 	 }
 	 
-	 protected def restartVar(cop : ModelAS){
+	 public def restartVar(cop : ModelAS){
 		  super.restartVar(cop);
 		  //Rail.copy(csp.getVariables() as Valuation(sz),bestConf as Valuation(sz));
 		  //bestCost = totalCost;
@@ -387,7 +387,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 /**
 	  *  Interact with other entities
 	  */
-	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
+	 public def interact( cop_:ModelAS{self.sz==this.sz}){
 		  //Console.OUT.println("AS interact");
 		  
 		  /**
@@ -455,7 +455,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  Update the cost for the optimization variables
 	  *  Reimplemente here to include communication flag "best send"
 	  */
-	 // protected def updateCosts(cop : ModelAS){
+	 // public def updateCosts(cop : ModelAS){
 		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
 		// 		this.bestCost = this.currentCost;
@@ -488,7 +488,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  c.same = this.nSameVarTot;
 	 }
 	 
-	 protected def updateTotStats(){
+	 public def updateTotStats(){
 		  super.updateTotStats();
 		  nResetTot += nReset;
 		  nSameVarTot += nSameVar;

@@ -43,7 +43,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 property sz()=sz;
 	 // Shared state, accessible from any place, via at(
 	 var csp_:ModelAS(sz);
-	 var solver:RandomSearch(sz);
+	 var solver:ISolver(sz);
 	 
 	 var time:Long;	
 	 
@@ -133,7 +133,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 
-	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>RandomSearch(sz) ):void{
+	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void{
 		  solver = solGen();
 		  commM = new CommManager(sz, opts, st, nTeams); 
 	 }

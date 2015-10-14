@@ -19,6 +19,7 @@ import x10.util.StringBuilder;
 import csp.solver.RandomSearch;
 import csp.solver.EOSearch;
 import csp.solver.AdaptiveSearch;
+import csp.solver.ISolver;
 
 public class Main {
 	 
@@ -50,7 +51,7 @@ public class Main {
 	 {
 		  public def make( size : Long, ss : IParallelSolver(size),
 					 opts:ParamManager) 
-		  : RandomSearch(size) 
+		  : ISolver(size) 
 		  {
 				if (kind == AS_SOL) 
 					 return new AdaptiveSearch( size, ss , opts) ;
@@ -178,7 +179,7 @@ public class Main {
 		  var totalWallT :Long = 0;
 		  
 		  val sparam = solParam;
-		  val solGen = ():RandomSearch(valSize)=>Solver(sparam).make( valSize, 
+		  val solGen = ():ISolver(valSize)=>Solver(sparam).make( valSize, 
 					 solvers() as IParallelSolver(valSize), opts );
 		  
 		  /**

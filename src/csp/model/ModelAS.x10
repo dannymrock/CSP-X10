@@ -25,24 +25,15 @@ public class ModelAS(sz:Long) {
 	protected var baseValue:Int;
 	protected val r:Random;
 	
-	//protected val solverParams = new ASSolverParameters();
-	
 	val inVector:Boolean;
 	val inPath:String;
 	val opts:ParamManager;
-	// //Constants for Target COST
-	// public static val COST_FROM_COMMAND_LINE = 0;
-	// public static val COST_FROM_FILE_OPT = 1;
-	// public static val COST_FROM_FILE_BKS = 2;
-	// public static val STRICTLY_LOWER = -3;
-	// public static val LOWER_OR_EQUAL = -4;
 	
 	/**
 	 * 	Constructor of the class
 	 */
 	public def this( sizeProblem:Long, seed:Long, opts:ParamManager){
 		property(sizeProblem);
-		//this.initParameters(1000n);
 		this.opts = opts;
 		this.baseValue = opts("-bv", 1n);
 		this.r  = new Random(seed);
@@ -56,32 +47,6 @@ public class ModelAS(sz:Long) {
 	public def setSeed( seed : Long){
 		r.setSeed(seed);
 	}
-	
-	// /**
-	//  *  Initialize the default solver parameters for the model 
-	//  */
-	// private def initParameters(rLimit:Int){
-	// 	
-	// 	//Default values
-	// 	solverParams.probSelectLocMin = 0n;
-	// 	solverParams.freezeLocMin = 0n;
-	// 	solverParams.freezeSwap = 0n;
-	// 	solverParams.resetLimit = length;
-	// 	solverParams.resetPercent = 10n;
-	// 	solverParams.restartLimit = rLimit;
-	// 	solverParams.restartMax = 0n;
-	// 	solverParams.exhaustive = false;
-	// 	solverParams.firstBest = false;
-	// 	solverParams.nbVarToReset = -1n;
-	// }
-	
-	// /**
-	//  * 	Set the parameter in the solver
-	//  * 	@param solverParameters Solver parameter from the model
-	//  */
-	// public def setParameters(solverParameters : ASSolverParameters):void{
-	// 	solverParameters.setValues(solverParams);
-	// }
 	
 	/**
 	 * 	Cost on variable function (may be virtual)
