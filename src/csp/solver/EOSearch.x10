@@ -10,7 +10,7 @@ import x10.compiler.NonEscaping;
 /**
  * Class EOSearch
  */
-public class EOSearch extends RandomSearch {
+public class EOSearch extends RandomSearchP {
 	 	 
 	 /** Number time to change vector due to communication */ 
 	 //private var nChangeV : Int = 0n;
@@ -100,7 +100,7 @@ public class EOSearch extends RandomSearch {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 public def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  //Console.OUT.println("EO");
 		  
 		  selFirstVar( cop_, move );
@@ -116,7 +116,7 @@ public class EOSearch extends RandomSearch {
 		  return currentCost;
 	 }
 	 
-	 public def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  // val tStr = System.getenv("T");
@@ -275,7 +275,7 @@ public class EOSearch extends RandomSearch {
 	 /**
 	  *  Interact with other entities
 	  */
-	 public def interact( cop_:ModelAS{self.sz==this.sz}){
+	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
 		  //Console.OUT.println("AS interact");
 		  /**
 		   *  Interaction with other places
@@ -292,17 +292,17 @@ public class EOSearch extends RandomSearch {
 		  
 		  if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
 				//Console.OUT.println("update");
-				val result = solver.getIPVector(cop_, this.currentCost );
-				if (result){
-					 this.nChangeV++;
-					 this.currentCost = cop_.costOfSolution(true);
-					 bestSent = true;
-					 //Console.OUT.println("Changing vector in "+ here);
-				}else{
-					 cop_.initialize();
-					 this.currentCost = cop_.costOfSolution(true);
-					 this.bestSent = true;
-				}
+				// val result = solver.getIPVector(cop_, this.currentCost );
+				// if (result){
+				// 	 this.nChangeV++;
+				// 	 this.currentCost = cop_.costOfSolution(true);
+				// 	 bestSent = true;
+				// 	 //Console.OUT.println("Changing vector in "+ here);
+				// }else{
+				// 	 cop_.initialize();
+				// 	 this.currentCost = cop_.costOfSolution(true);
+				// 	 this.bestSent = true;
+				// }
 		  }
 		  
 		  /**
@@ -341,7 +341,7 @@ public class EOSearch extends RandomSearch {
 	 //  *  Update the cost for the optimization variables
 	 //  *  Reimplemente here to include communication flag "best send"
 	 //  */
-	 // public def updateCosts(cop : ModelAS){
+	 // protected def updateCosts(cop : ModelAS){
 		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
 		// 		this.bestCost = this.currentCost;

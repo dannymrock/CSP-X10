@@ -16,6 +16,7 @@ import x10.io.File;
 import x10.io.FileReader;
 import x10.io.FileWriter;
 import x10.util.StringBuilder;
+import csp.solver.RandomSearchP;
 import csp.solver.RandomSearch;
 import csp.solver.EOSearch;
 import csp.solver.AdaptiveSearch;
@@ -27,23 +28,24 @@ public class Main {
 	 {
 		  public def make( size : Long, seed : Long, opts:ParamManager, 
 					 mPrefs : Rail[Rail[Int]], wPrefs : Rail[Rail[Int]], mapTable : Rail[Int]) 
-		  : ModelAS(size) 
+		  : ICOPModel(size) 
 		  {
-				if (kind == MAGIC_SQUARE_PROBLEM) 
-					 return new MagicSquareAS(size, seed, opts);
-				if (kind == COSTAS_PROBLEM) 
-					 return new CostasAS(size, seed, opts);
-				if (kind == ALL_INTERVAL_PROBLEM) 
-					 return new AllIntervalAS(size, seed, opts);
-				if (kind == LANGFORD_PROBLEM) 
-					 return new LangfordAS(size, seed, opts);
-				if (kind == STABLE_MARRIAGE_PROBLEM) 
-					 return new SMTIAS(size, seed, opts, false, mPrefs, wPrefs, mapTable);
-				if (kind == HOSPITAL_RESIDENT_PROBLEM) 
-					 return new SMTIAS(size, seed, opts, true, mPrefs, wPrefs, mapTable);
-				if (kind == QA_PROBLEM) 
-					 return new QAPAS(size, seed, opts, mPrefs, wPrefs );
-				return new PartitAS(size, seed, opts);
+				// if (kind == MAGIC_SQUARE_PROBLEM) 
+				// 	 return new MagicSquareAS(size, seed, opts);
+				// if (kind == COSTAS_PROBLEM) 
+				// 	 return new CostasAS(size, seed, opts);
+				// if (kind == ALL_INTERVAL_PROBLEM) 
+				// 	 return new AllIntervalAS(size, seed, opts);
+				// if (kind == LANGFORD_PROBLEM) 
+				// 	 return new LangfordAS(size, seed, opts);
+				// if (kind == STABLE_MARRIAGE_PROBLEM) 
+				// 	 return new SMTIAS(size, seed, opts, false, mPrefs, wPrefs, mapTable);
+				// if (kind == HOSPITAL_RESIDENT_PROBLEM) 
+				// 	 return new SMTIAS(size, seed, opts, true, mPrefs, wPrefs, mapTable);
+				// if (kind == QA_PROBLEM) 
+				// 	 return new QAPAS(size, seed, opts, mPrefs, wPrefs );
+				// return new PartitAS(size, seed, opts);
+				return new PlanningCoverCOP(size, seed, opts);
 		  }
 	 }
 	 
@@ -53,10 +55,11 @@ public class Main {
 					 opts:ParamManager) 
 		  : ISolver(size) 
 		  {
-				if (kind == AS_SOL) 
-					 return new AdaptiveSearch( size, ss , opts) ;
-				if (kind == EO_SOL) 
-					 return new EOSearch( size, ss, opts);
+				// if (kind == AS_SOL) 
+				// 	 return new AdaptiveSearch( size, ss , opts) ;
+				// if (kind == EO_SOL) 
+				// 	 return new EOSearch( size, ss, opts);
+				// return new RandomSearchP( size, ss, opts);
 				return new RandomSearch( size, ss, opts);
 		  }
 	 } 
@@ -313,7 +316,7 @@ public class Main {
 					 val prob = problemParam;
 					 
 					 // Closure for the problem model
-					 val cspGen = ():ModelAS(valSize)=>CSPProblem(prob).make (valSize, 
+					 val cspGen = ():ICOPModel(valSize)=>CSPProblem(prob).make (valSize, 
 								modelSeed, opts, matrix1, matrix2, mapTable);
 					 
 					 /**

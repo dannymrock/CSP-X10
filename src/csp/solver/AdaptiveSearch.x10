@@ -8,7 +8,7 @@ import csp.util.Utils;
 /**
  * Class AdaptiveSearch
  */
-public class AdaptiveSearch extends RandomSearch {
+public class AdaptiveSearch extends RandomSearchP {
 	 
 	 private val mark : Rail[Int]; 
 	 
@@ -68,8 +68,19 @@ public class AdaptiveSearch extends RandomSearch {
 					 " probSelectLocMin="+probSelectLocMin+" exhaustive="+exhaustive+" firstBest="+firstBest);
 	 }
 	 
+	 /**
+	  *  Report statistics from the solving process
+	  *  From Isolver Interface
+	  */
+	 public def reportStats( c : CSPStats){
+		  super.reportStats(c);
+		  c.locmin = this.nLocalMinTot;
+		  c.reset = this.nResetTot;
+		  c.same = this.nSameVarTot;
+	 }
 	 
-	 public def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 
+	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  Logger.debug(()=>{"ASSolver"});
@@ -102,7 +113,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 public def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  var newCost:Long = -1;
 		  
 		  
@@ -153,7 +164,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  return currentCost;
 	 }
 	 
-	 public def restartVar(cop : ModelAS){
+	 protected def restartVar(cop : ModelAS){
 		  super.restartVar(cop);
 		  //Rail.copy(csp.getVariables() as Valuation(sz),bestConf as Valuation(sz));
 		  //bestCost = totalCost;
@@ -387,7 +398,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 /**
 	  *  Interact with other entities
 	  */
-	 public def interact( cop_:ModelAS{self.sz==this.sz}){
+	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
 		  //Console.OUT.println("AS interact");
 		  
 		  /**
@@ -405,14 +416,14 @@ public class AdaptiveSearch extends RandomSearch {
 		  
 		  if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
 				//Console.OUT.println("update");
-				val result = solver.getIPVector(cop_, this.currentCost );
-				if (result){
-					 this.nChangeV++;
-					 this.mark.clear();
-					 this.currentCost = cop_.costOfSolution(true);
-					 bestSent = true;
-					 //Console.OUT.println("Changing vector in "+ here);
-				}
+				// val result = solver.getIPVector(cop_, this.currentCost );
+				// if (result){
+				// 	 this.nChangeV++;
+				// 	 this.mark.clear();
+				// 	 this.currentCost = cop_.costOfSolution(true);
+				// 	 bestSent = true;
+				// 	 //Console.OUT.println("Changing vector in "+ here);
+				// }
 		  }
 		  
 		  /**
@@ -478,17 +489,7 @@ public class AdaptiveSearch extends RandomSearch {
 		//   }
 	 // }
 	 
-	 /**
-	  * 	Report statistics from the solving process
-	  */
-	 public def reportStats( c : CSPStats){
-		  super.reportStats(c);
-		  c.locmin = this.nLocalMinTot;
-		  c.reset = this.nResetTot;
-		  c.same = this.nSameVarTot;
-	 }
-	 
-	 public def updateTotStats(){
+	 protected def updateTotStats(){
 		  super.updateTotStats();
 		  nResetTot += nReset;
 		  nSameVarTot += nSameVar;

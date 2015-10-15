@@ -1,6 +1,6 @@
 package csp.solver; 
 import csp.util.Logger;
-import csp.model.ModelAS;
+//import csp.model.ModelAS;
 import x10.util.Random;
 import x10.util.StringUtil;
 import csp.util.Utils;
@@ -255,7 +255,7 @@ public class CommManager(sz:Long) {
 	  * If the return value is -1n (fail), csp_ will not be changed.
 	  * 
 	  */
-	 public def getIPVector(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
+	 public def getIPVector(vector : Rail[Int]{self.size==sz}):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		  // if (commOption == NO_COMM) return false;
 		  Logger.debug(()=> "CommManager: getIPVector: entering.");
 		  var a : Maybe[CSPSharedUnit(sz)];
@@ -277,8 +277,10 @@ public class CommManager(sz:Long) {
 				Console.OUT.println("ERROR: Unknown solver mode");
 		  }
 		  // if ( a!=null && (myCost + delta) > a().cost &&  random.nextInt(100n) < changeProb ){
-		  if ( a!=null && myCost  > a().cost * deltaFact &&  random.nextInt(100n) < changeProb ){
-				csp_.setVariables(a().vector);
+		 //if ( a!=null && myCost  > a().cost * deltaFact &&  random.nextInt(100n) < changeProb ){
+				//csp_.setVariables(a().vector);
+		  if ( a!=null){
+				Rail.copy(a().vector,vector);
 				return true; 
 		  }
 		  return false;

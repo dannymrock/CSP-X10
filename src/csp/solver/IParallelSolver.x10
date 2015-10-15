@@ -1,5 +1,5 @@
 package csp.solver;
-import csp.model.ModelAS;
+import csp.model.ICOPModel;
 /**
  * A PARALLEL solver runs a local solver in every place, within the frame of a
  * IParallelSolver instance. All communication by a solver with other solvers
@@ -28,9 +28,9 @@ public interface IParallelSolver {
      * cost is less than myCost, update csp_ in place, and return true,
      * else return false.
      */
-    def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean;
-    def getLM(vector : Rail[Int]{self.size==sz}):Boolean;
-    def getPR(vector : Rail[Int]{self.size==sz}):Boolean;
+    def getIPVector(conf : Rail[Int]{self.size==sz}):Boolean;
+    def getLM(conf : Rail[Int]{self.size==sz}):Boolean;
+    def getPR(conf : Rail[Int]{self.size==sz}):Boolean;
     
     /**
      * Send this configuration (cost, current assignment of values to variables) to
@@ -94,7 +94,7 @@ public interface IParallelSolver {
     public def getCost():Long;
     def setStats_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     
-    def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), 
+    def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ICOPModel(sz), 
    			seed :Long, targetCost : Long, strictLow: Boolean ):void;
         
     def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;

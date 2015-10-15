@@ -14,7 +14,7 @@
 package csp.solver;
 import csp.util.Logger;
 import csp.util.Utils;
-import csp.model.ModelAS;
+import csp.model.ICOPModel;
 import x10.util.Random;
 import x10.array.*;
 import x10.compiler.Inline;
@@ -42,7 +42,7 @@ import x10.util.RailUtils;
 public class PlacesMultiWalks(sz:Long) implements IParallelSolver {  
 	 property sz()=sz;
 	 // Shared state, accessible from any place, via at(
-	 var csp_:ModelAS(sz);
+	 var cop_:ICOPModel(sz);
 	 var solver:ISolver(sz);
 	 
 	 var time:Long;	
@@ -149,7 +149,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	  * 	@return cost of the solution
 	  */
 	 var tcost:Int;
-	 public def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
+	 public def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ICOPModel(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
 	 { 
 		  tcost = targetCost as Int;
 		  stats.setTarget(tcost);
@@ -195,13 +195,13 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  }
 		  
 		  
-		  csp_ = cspGen(); // use the supplied generator to generate the problem
-		  csp_.setSeed(random.nextLong()); //This is important to ensure different paths into each problem
+		  cop_ = cspGen(); // use the supplied generator to generate the problem
+		  cop_.setSeed(random.nextLong()); //This is important to ensure different paths into each problem
 		  
 		  //Logger.info(()=>"  PlacesMultiWalks: Start solve process: solver.solve() function ");
 		  
 		  time = -System.nanoTime();
-		  cost = solver.solve(csp_, targetCost, strictLow);
+		  cost = solver.solve(cop_, targetCost, strictLow);
 		  time += System.nanoTime();
 		  
 		  // Logger.debug(()=>"  PlacesMultiWalks: end solve process: solver.solve() function ");
@@ -227,23 +227,23 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 					 setStats_(solvers);
 					 if (verify)
 					 {
-					   csp_.displaySolution(solver.getBestConfiguration());
+					   cop_.displaySolution(solver.getBestConfiguration());
 					   Console.OUT.println(", Solution is " + 
-					 		 (csp_.verify(solver.getBestConfiguration())? "perfect !!!" : "not perfect "));
-					   //Console.OUT.println("," + csp_.verify(solver.getBestConfiguration()));
+					 		 (cop_.verify(solver.getBestConfiguration())? "perfect !!!" : "not perfect "));
+					   //Console.OUT.println("," + cop_.verify(solver.getBestConfiguration()));
 					 } 
 					 // else Console.OUT.println();
 				}
 		  } else
 		  {
-				solString = "Solution "+here+ " is "+(csp_.verify(solver.getBestConfiguration())? "perfect !!!" : "not perfect, maybe wrong ...");
+				solString = "Solution "+here+ " is "+(cop_.verify(solver.getBestConfiguration())? "perfect !!!" : "not perfect, maybe wrong ...");
 				Rail.copy(solver.getBestConfiguration(),bestSolHere as Valuation(sz));
 		  }			
 		  
 		  // if (verify){
-				// csp_.displaySolution(solver.getBestConfiguration());
+				// cop_.displaySolution(solver.getBestConfiguration());
 				// Console.OUT.println("   Solution is " + 
-				// 		  (csp_.verify(solver.getBestConfiguration())? "ok" : "WRONG"));
+				// 		  (cop_.verify(solver.getBestConfiguration())? "ok" : "WRONG"));
 		  // }
 		  
 		  
@@ -255,8 +255,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 	 }
 	 
-	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
-	 = commM.getIPVector(csp_, myCost);
+	 @Inline public def getIPVector(conf : Rail[Int]{self.size==sz}):Boolean 
+	 = commM.getIPVector(conf);
 	 
 	 @Inline public def getLM(vector : Rail[Int]{self.size==sz}):Boolean 
 	 = commM.getLM(vector);
@@ -435,7 +435,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 // public def getCurrentData():Maybe[CSPSharedUnit(sz)]{
-	 // 	var sol:CSPSharedUnit(sz) = new CSPSharedUnit(sz,solver.totalCost,csp_.variables, 
+	 // 	var sol:CSPSharedUnit(sz) = new CSPSharedUnit(sz,solver.totalCost,cop_.variables, 
 	 // 			here.id as Int);
 	 // 	return new Maybe(sol);
 	 // }
@@ -552,7 +552,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  for (c = 0n; c < nTeams - 1 ; c++) {
 				// Console.OUT.println((c+1) +" cost "+confArray(c+1).cost+" team "+confArray(c+1).place);
 				if (confArray(c).cost != -1 && confArray(c).cost == confArray(c + 1).cost 
-						  && csp_.distance( confArray(c).vector as Valuation(sz),
+						  && cop_.distance( confArray(c).vector as Valuation(sz),
 									 confArray(c+1).vector as Valuation(sz)) == 0.0){
 					 if (r.nextInt(++nEqTeams) == 0n)
 						  eqTeam = confArray(c + 1).place;

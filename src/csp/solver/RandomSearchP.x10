@@ -1,5 +1,5 @@
 package csp.solver;
-import csp.model.ICOPModel;
+import csp.model.ModelAS;
 import x10.util.Random;
 import csp.util.Logger;
 import csp.model.ParamManager;
@@ -7,12 +7,13 @@ import x10.io.File;
 
 /**
  * Basic Implementation of a Random Search Solver
+ * This implementation is specialized on Permutation Problems 
  * 
- * <p> Therefore to design a new iterative search solver, simply have it extend RandomSearch
+ * <p> Therefore to design a new iterative search solver, simply have it extend RandomSearchP
  * 
  */
 
-public class RandomSearch(sz:Long) implements ISolver {
+public class RandomSearchP(sz:Long) /*implements ISolver*/ {
 	 property sz() = sz; //size of the problem
 	 
 	 //Parameters object
@@ -34,8 +35,7 @@ public class RandomSearch(sz:Long) implements ISolver {
 	 // -> Statistics
 	 protected var nRestart : Int = 0n;
 	 protected var nIter : Int;
-	 //protected var nSwap : Int;
-	 protected var nMoves : Int;
+	 protected var nSwap : Int;
 	 protected var nForceRestart : Int = 0n;
 	 
 	 /** Total Statistics */
@@ -70,8 +70,6 @@ public class RandomSearch(sz:Long) implements ISolver {
 	 
 	 protected val altTty:File;
 	 
-	 protected val maxDomain = 10; 
-	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
 		  property(size);
@@ -92,7 +90,7 @@ public class RandomSearch(sz:Long) implements ISolver {
 	  * Solves the problem, which is specified by cop.
 	  * From ISolver Interface
 	  */
-	 public def solve( cop : ICOPModel{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Long {
+	 public def solve( cop : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Long {
 		  // Initialize all variables of the search process
 		  initVar(cop, tCost, sLow);
 		  // Initialize Cost
@@ -223,14 +221,14 @@ public class RandomSearch(sz:Long) implements ISolver {
 	 /**
 	  *  Initialize variables of the solver
 	  */
-	 protected def initVar( cop_:ICOPModel{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  // Set Target
 		  this.target = tCost;
 		  this.strictLow = sLow;
 		  this.targetSucc = false;
 		  cop_.initialize(); 
 		  //Main.show("initial= ",csp.variables);
-		  this.nMoves = 0n;
+		  this.nSwap = 0n;
 		  this.nIter = 0n;
 		  this.nRestart = 0n;
 		  
@@ -249,28 +247,23 @@ public class RandomSearch(sz:Long) implements ISolver {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ICOPModel{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  // Swap two random variables
 		  //Console.OUT.println("HS");
-		  //move.setFirst(random.nextLong(sz));
-		  //move.setSecond(random.nextLong(sz));
-		  val i = random.nextLong(sz); // worst variable
+		  move.setFirst(random.nextLong(sz));
+		  move.setSecond(random.nextLong(sz));
 		  
-		  //Change its value on its domain
-		  val value = random.nextInt(cop_.getMaxDomain()+1n)+cop_.getMinDomain();
+		  cop_.swapVariables(move.getFirst(), move.getSecond());
+		  nSwap++;
 		  
-		  cop_.executeMove(i, value);
-		  //cop_.swapVariables(move.getFirst(), move.getSecond());
-		  nMoves++;
-		  
-		  //cop_.executedSwap(move.getFirst(), move.getSecond());
+		  cop_.executedSwap(move.getFirst(), move.getSecond());
 		  return cop_.costOfSolution(true);
 	 }	 
 	 
 	 /**
 	  *  Interact with other entities
 	  */
-	 protected def interact( cop_:ICOPModel{self.sz==this.sz}){
+	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
 		  // To be implemented  
 		  // To be implemented  
 		  /**
@@ -286,16 +279,13 @@ public class RandomSearch(sz:Long) implements ISolver {
 		  }
 		  
 		  if(solver.inTeamReportI() != 0n && this.nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
-				val c = new Rail[Int](sz, 0n);
-				val result = solver.getIPVector(c);
-				if (result){
-					 cop_.setVariables(c);
-					 //this.currentCost = cop_.costOfSolution(true);
-					 this.nChangeV++;
-					 this.currentCost = cop_.costOfSolution(true);
-					 bestSent = true;
-					 //Console.OUT.println("Changing vector in "+ here);
-				}
+				// val result = solver.getIPVector(cop_, this.currentCost );
+				// if (result){
+				// 	 this.nChangeV++;
+				// 	 this.currentCost = cop_.costOfSolution(true);
+				// 	 bestSent = true;
+				// 	 //Console.OUT.println("Changing vector in "+ here);
+				// }
 		  }
 		  
 		  /**
@@ -321,22 +311,70 @@ public class RandomSearch(sz:Long) implements ISolver {
 					 this.bestSent = true;
 				}
 		  }
+		  
+		  // if (this.forceReset){
+		  // //reset
+		  // Logger.info(()=>{"   ASSolverPermut : force Reset"});
+		  // this.forceReset = false;
+		  // this.nForceRestart++;
+		  // //doReset(size as Int / 8n , csp_);
+		  // this.doReset(this.nVarToReset , cop_); // This reset should be bigger than the normal reset
+		  // }
 	 }
-	
-	 protected def restartVar(cop : ICOPModel){
+	 
+	 
+	 
+	 protected def restartVar(cop : ModelAS){
 		  cop.initialize(); 
 		  currentCost = cop.costOfSolution(true);
 		  updateTotStats();
 		  bestSent = false;
-		  nMoves = 0n;
+		  nSwap = 0n;
 		  nIter = 0n;
 	 }
 	 
-	 protected def updateCosts(cop : ICOPModel){
+	 // public def updateCosts(cop : ModelAS){
+		//   /**
+		//    *  optimization
+		//    */
+		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
+		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
+		// 		this.bestCost = this.currentCost;
+		// 		
+		// 		if (this.reportPart){
+		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
+		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+		// 		}
+		// 		
+		// 		// Compare cost and break if target is accomplished
+		// 		if ((this.strictLow && this.bestCost < this.target)
+		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
+		// 			 this.targetSucc = true;
+		// 			 this.kill = true;
+		// 		}
+		//   }
+	 // }
+	 
+	 protected def updateCosts(cop : ModelAS){
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables() as Valuation(sz), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;
+				
 				bestSent = false; // new best found, I must send it!
+				
+// 				if (this.reportPart){
+// 					 val eT = (System.nanoTime() - initialTime)/1e9;
+// 					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+// 
+// 					 // Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+// 					 // print on alternative tty
+// 					 val p = altTty.printer();
+// 					 p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+// 				}
+				
+				// Console.OUT.println(here+" best cost= "+bestCost);
+				// Compare cost and break if target is accomplished
 				if ((this.strictLow && this.bestCost < this.target)
 						  ||(!this.strictLow && this.bestCost <= this.target)){
 					 this.targetSucc = true;
@@ -347,8 +385,8 @@ public class RandomSearch(sz:Long) implements ISolver {
 	 
 	 protected def updateTotStats(){
 		  this.nIterTot += this.nIter;
-		  this.nSwapTot += this.nMoves;  
+		  this.nSwapTot += this.nSwap;  
 	 }
 	 
 }
-public type RandomSearch(s:Long)=RandomSearch{self.sz==s};
+public type RandomSearchP(s:Long)=RandomSearchP{self.sz==s};
