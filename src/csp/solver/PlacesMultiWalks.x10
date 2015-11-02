@@ -109,7 +109,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  this.outTeamTime = opts("-I", 0);
 		  this.minDistance = opts("-D", 0.3);
 		  this.iniDelay = opts("-W", 0);
-		  this.affectedPer = opts("-A", 0.0);
+		  this.affectedPer = opts("-A", 1.0);
 		  
 		  // Compute the average final cost on each place (tune parameters in seq)
 		  this.compAVG = opts("-ca", 0n);

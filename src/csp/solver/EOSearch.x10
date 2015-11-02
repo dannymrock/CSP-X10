@@ -322,6 +322,10 @@ public class EOSearch extends RandomSearch {
 					 cop_.setVariables(c);
 					 this.currentCost = cop_.costOfSolution(true);
 					 this.bestSent = true;
+				}else{
+					 cop_.initialize();
+					 this.currentCost = cop_.costOfSolution(true);
+					 this.bestSent = true;
 				}
 		  }
 		  

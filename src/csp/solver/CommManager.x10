@@ -384,6 +384,37 @@ public class CommManager(sz:Long) {
 				return false;
 	 }
 	 
+	 /**
+	  * get a diversified vector using Div technique by Glover 
+	  * "A template fir scatter search and path relinking" 1998
+	  * 
+	  */
+	 public def getPR2( vector : Rail[Int]{self.size==sz}):Boolean { 
+		  Logger.debug(()=> "CommManager: getPR2: entering.");
+		  
+		  val seedConf = new Rail[Int](sz, 0n);
+		  val finalConf = new Rail[Int](sz, 0n);
+		  
+		  val getSeedC = this.getLM(seedConf);
+		  var position:Long = 0;
+		  
+		  if(getSeedC){
+				val step = 3;// random.nextLong(sz) + 1;
+				//Utils.show("seed conf=",seedConf);
+				//Console.OUT.println("step = " + step);
+				for(var start:Long = step; start > 0; start--) {
+					 for(var j:Long = start; j <= sz; j += step) {
+						  //Console.OUT.println("j = " + j);		  
+						  finalConf(position++) = seedConf(j-1);
+					 }
+				}
+				Rail.copy(finalConf,vector);
+				//Utils.show("final conf=",finalConf);
+				
+				return true;
+		  }else
+				return false;
+	 }
 	 
 	 public def restartPool(){
 		  Logger.debug(()=>"CommManager: clear Pool.");
