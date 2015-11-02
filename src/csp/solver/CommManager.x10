@@ -56,7 +56,7 @@ public class CommManager(sz:Long) {
 	 val isHeadNode:Boolean;
 	 
 	 // Max number of steps in PR 
-	 private var ns:Int = 2n;
+	 private var ns:Int;
 	 private var deltaFact : Double = 1.0;
 	 private var pSendLM:Double = 0.0;
 	 
@@ -109,6 +109,8 @@ public class CommManager(sz:Long) {
 		  val nsStr = System.getenv("NS");
 		  if (nsStr != null) 
 				ns = StringUtil.parseInt(nsStr);
+		  else
+				ns = this.sz as Int / 4n;
 		  
 		  val lmstr = System.getenv("LM");
 		  if (lmstr != null)
