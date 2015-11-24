@@ -4,6 +4,7 @@ import x10.util.Random;
 import csp.util.Logger;
 import csp.model.ParamManager;
 import x10.io.File;
+import csp.util.Utils;
 
 /**
  * Basic Implementation of a Random Search Solver
@@ -347,15 +348,16 @@ public class RandomSearch(sz:Long){
 				
 				bestSent = false; // new best found, I must send it!
 				
-// 				if (this.reportPart){
-// 					 val eT = (System.nanoTime() - initialTime)/1e9;
-// 					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-// 
-// 					 // Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-// 					 // print on alternative tty
-// 					 val p = altTty.printer();
-// 					 p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-// 				}
+				if (this.reportPart){
+					 val eT = (System.nanoTime() - initialTime)/1e9;
+					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+
+					 Utils.show("Solution",this.bestConf);
+					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+					 // print on alternative tty
+					 //val p = altTty.printer();
+					 //p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+				}
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);
 				// Compare cost and break if target is accomplished

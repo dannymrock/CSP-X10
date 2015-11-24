@@ -67,6 +67,9 @@ public class CommManager(sz:Long) {
 	 val p:Printer;
 	 private val debug:Boolean;
 	 
+	 
+	// val divFn:( vector : Rail[Int]{self.size==sz})=>Boolean; 
+	 
 	 def this(sz:Long, opts:ParamManager, ss: PlaceLocalHandle[IParallelSolver(sz)], nTeams:Int ){
 		  property(sz);
 		  this.solvers = ss;
@@ -79,11 +82,18 @@ public class CommManager(sz:Long) {
 		  val lmD = opts("P_lmD", 0.5);
 		  
 		  this.divOption = opts("O", 0n);
+		  var divs:String;
+		  if (divOption == 0n)
+				divs = "from scratch";
+		  else if (divOption == 1n)
+				divs = "path relinking based";
+		  else
+				divs = "divS based";
 		  
 		  if(here.id == 0){
 				Console.OUT.println("Elite Pool Parameters - Size "+epSize+" mode "+epM+(epM==1?"":(" Dist "+epD)));
 				Console.OUT.println("LM Pool Parameters - Size "+lmpSize+" mode "+lmM+(lmM==1?"":" Dist "+lmD));
-				Console.OUT.println("Diversification Technique: "+((divOption == 0n)?"from scratch":"path relinking based"));
+				Console.OUT.println("Diversification Technique: "+divs);
 		  }
 		  
 		  this.ep = new SmartPool(sz, epSize, epM, epD); 
@@ -334,11 +344,17 @@ public class CommManager(sz:Long) {
 		  
 		  if (divOption == 0n) //Restart from Scratch
 				return false;
-		  else                 // Restart PR-based
+		  else  if (divOption == 1n)   // Restart PR-based
 				return getPR1(vector);
+		  else 
+				return getPR2(vector);
 
 	 }
 	  
+	 public def getPR0( vector : Rail[Int]{self.size==sz}):Boolean { 
+		  return false;
+	 }
+	 
 	 /**
 	  * get a mutated vector using Path-Relinking based approach
 	  * 
@@ -401,7 +417,7 @@ public class CommManager(sz:Long) {
 		  var position:Long = 0;
 		  
 		  if(getSeedC){
-				val step = 3;// random.nextLong(sz) + 1;
+				val step = random.nextLong(sz/4) + 1;
 				//Utils.show("seed conf=",seedConf);
 				//Console.OUT.println("step = " + step);
 				for(var start:Long = step; start > 0; start--) {

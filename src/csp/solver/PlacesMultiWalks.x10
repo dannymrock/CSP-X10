@@ -544,50 +544,67 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  }
 		  
 		  var nEqTeams:Int = 0n;
-		  var eqTeam:Long = -1;
+		  //var eqTeam:Long = -1;
+		  
+		  val eqTeams : Rail[Long] =  new Rail[Long](nTeams, -1);
 		  
 		  RailUtils.sort(confArray, cmp);
 		  var c:Int; 
 		  // Console.OUT.println(0 +" cost "+confArray(0).cost+" team "+confArray(0).place);
 		  for (c = 0n; c < nTeams - 1 ; c++) {
 				// Console.OUT.println((c+1) +" cost "+confArray(c+1).cost+" team "+confArray(c+1).place);
+		  
+				
+		  
 				if (confArray(c).cost != -1 && confArray(c).cost == confArray(c + 1).cost 
 						  && csp_.distance( confArray(c).vector as Valuation(sz),
 									 confArray(c+1).vector as Valuation(sz)) == 0.0){
-					 if (r.nextInt(++nEqTeams) == 0n)
-						  eqTeam = confArray(c + 1).place;
-				}
+					 // Team c is equal to c+1
+					 eqTeams( nEqTeams++ ) = confArray(c+1).place;
+				} else if ( nEqTeams > 0n && confArray(c).cost != confArray(c + 1).cost )
+					 break;
 		  }
 		  
 		  var worstTeam:Long = confArray(nTeams - 1).place; 
 		  
-		  // Console.OUT.println("eqTeam "+eqTeam+" worstTeam "+worstTeam);
+		  if (nEqTeams == 0n && worstTeam == -1){
+				if (debug) {
+					 p.print("\033[H\033["+(nTeams+2)+"B");
+					 p.printf("\033[2K\rRestart Team   N/A");
+					 p.flush();
+				}
+				return;	
+		  }
 		  
-		  if (eqTeam != -1 )
-				teamToRest = eqTeam;
-		  else if (worstTeam != -1)
-				teamToRest = worstTeam;
-		  else 
-				return;
+		  if (nEqTeams == 0n && worstTeam != -1)
+				eqTeams( nEqTeams++ ) = worstTeam;
 		  
-		  val ttr = teamToRest; 
 		  if (debug) {
 				p.print("\033[H\033["+(nTeams+2)+"B");
-				p.printf("\033[2K\rRestart Team %10d               ",ttr);
+				p.printf("\033[2K\rRestart Team ");
+				for (var rp:Long = 0; rp < nEqTeams; rp++) {
+					 p.printf(" %3d",eqTeams(rp));				
+				}
 				p.flush();
 		  }
 		  
-		  // Count total group partial restart
-		  at(Place(teamToRest)) ss().incGroupReset(); 
-		  Logger.info(()=>{"reset team "+ttr});
 		  
-		  for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){
-				val vali = i;
-				Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
-				if (r.nextDouble() <= affectedPer)
-					 at(Place(i)) ss().diversify();
+		  for (var rp:Long = 0; rp < nEqTeams; rp++) {
+				teamToRest = eqTeams(rp);
+				val ttr = teamToRest; 
+
+				// Count total group partial restart
+				at( Place(teamToRest) ) ss().incGroupReset(); 
+				Logger.info(()=>{"reset team "+ttr});
+				
+				for (var i:Long = teamToRest; i < Place.MAX_PLACES; i += nTeams){
+					 val vali = i;
+					 Logger.info(()=>{"MW - interTeamComm : send signal force Restart on place "+vali});
+					 if (r.nextDouble() <= affectedPer)
+						  at(Place(i)) ss().diversify();
+				}
+				at(Place(teamToRest)) ss().clearIntPool();
 		  }
-		  at(Place(teamToRest)) ss().clearIntPool();
 	 }
 	 
 	 public def getGroupReset():Int{
