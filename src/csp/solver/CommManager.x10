@@ -418,6 +418,7 @@ public class CommManager(sz:Long) {
 		  
 		  if(getSeedC){
 				val step = random.nextLong(sz/4) + 1;
+				//val step = 2;
 				//Utils.show("seed conf=",seedConf);
 				//Console.OUT.println("step = " + step);
 				for(var start:Long = step; start > 0; start--) {

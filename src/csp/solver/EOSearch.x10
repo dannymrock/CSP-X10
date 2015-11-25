@@ -6,6 +6,7 @@ import csp.util.Logger;
 import csp.model.ParamManager;
 import x10.util.Pair;
 import x10.compiler.NonEscaping;
+import csp.util.Utils;
 
 /**
  * Class EOSearch
@@ -61,8 +62,8 @@ public class EOSearch extends RandomSearch {
 	 //private var bestSent:Boolean = false;
 	 //private solver:IParallelSolver(sz);
 	 
-	 private val tau:Double;
-	 private val pdfS:Int;
+	 private var tau:Double;
+	 private var pdfS:Int;
 	 private val selSecond:Int;
 	 
 	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
@@ -79,13 +80,25 @@ public class EOSearch extends RandomSearch {
 		  this.pdfS = opts("--EO_pdf", 1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
 		  
+		  
+		  // if ( this.pdfS == -1n ) // Select a random PDF
+		  // {
+				// Console.OUT.println("EO: Random PDF ");
+		  // }
+		  // 
+		  // if ( this.tau < 0.0 ) // Select a random tau from 0 to tau 
+		  // {
+				// Console.OUT.println("EO: Random tau ");
+		  // }
+		  
 		  var PDFname:String = "";
 		  if ( this.pdfS == 1n )
 				PDFname = "pow";
 		  else if(this.pdfS == 2n)
 				PDFname = "exp";
-		  else
+		  else if (this.pdfS == 3n)
 				PDFname = "gamma";
+		  
 		  
 		  if (here.id == 0)
 				Console.OUT.println("Parameters EO: TAU= "+tau+", pdf= "
@@ -119,9 +132,24 @@ public class EOSearch extends RandomSearch {
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
+		  if ( this.pdfS == -1n ) // Select a random PDF
+		  {
+				this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
+		  }
+		  
+		  if ( this.tau < 0.0 ) // Select a random tau from 0 to tau 
+		  {
+				if ( this.pdfS == 1n)
+					 this.tau = 0.5+random.nextDouble(); // from 0.5 to 1.5
+				else if ( this.pdfS == 2n)
+					 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001
+				else if ( this.pdfS == 3n)
+					 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
+		  }
+		  
 		  // val tStr = System.getenv("T");
 		  // val tau = (tStr==null)? (1.0 + 1.0 / Math.log(sz)) : StringUtil.parseLong(tStr)/100.0;
-		  //Console.OUT.println("tau "+tau);
+		  // Console.OUT.println(here+"PDF "+this.pdfS+" tau "+this.tau);
 		  
 		  // val pStr = System.getenv("F");
 		  // val pdfS = (pStr==null)? 1n : StringUtil.parseInt(pStr);
@@ -327,6 +355,23 @@ public class EOSearch extends RandomSearch {
 					 this.currentCost = cop_.costOfSolution(true);
 					 this.bestSent = true;
 				}
+				
+				
+				//Change tau
+				// if ( this.pdfS == 1n){
+				// 	 this.tau = 0.5+random.nextDouble(); // from 0.5 to 1.5
+				// 	 initPDF( this.powFnc );
+				// }
+				// else if ( this.pdfS == 2n){
+				// 	 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001					 
+				// 	 initPDF( this.expFnc );
+				// }
+				// else if ( this.pdfS == 3n){
+				// 	 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
+				// 	 initPDF( this.gammaFnc );
+				// }
+				// 
+				
 		  }
 		  
 		  // if (this.forceReset){
@@ -340,6 +385,37 @@ public class EOSearch extends RandomSearch {
 		  
 		  
 	 }	
+	 
+	 
+	 protected def updateCosts(cop : ModelAS){
+		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
+				Rail.copy(cop.getVariables() as Valuation(sz), this.bestConf as Valuation(sz));
+				this.bestCost = this.currentCost;
+				
+				bestSent = false; // new best found, I must send it!
+				
+				if (this.reportPart){
+					 val eT = (System.nanoTime() - initialTime)/1e9;
+					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+
+					 Utils.show("Solution",this.bestConf);
+					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+					 // print on alternative tty
+					 //val p = altTty.printer();
+					 //p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+				}
+				
+				// Console.OUT.println(here+" best cost= "+bestCost);
+				// Compare cost and break if target is accomplished
+				if ((this.strictLow && this.bestCost < this.target)
+						  ||(!this.strictLow && this.bestCost <= this.target)){
+					 Console.OUT.println("Success in "+here+"! tau = "+this.tau+" PDF = "+this.pdfS);
+					 this.targetSucc = true;
+					 this.kill = true;
+				}
+		  }
+	 }
+	 
 	 
 	 // /**
 	 //  *  Update the cost for the optimization variables

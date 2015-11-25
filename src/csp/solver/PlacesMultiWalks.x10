@@ -313,7 +313,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 /**
-	  * Called by verifyWinmner to print the verification info for the best place
+	  * Called by verifyWinner to print the verification info for the best place
 	  */
 	 public def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)])
 	 {
@@ -537,7 +537,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				val h = head;
 				val conf = at( Place(h) ) ss().getBestConf();
 				if (conf == null) {
-					 confArray(h) = CSPSharedUnit(sz, -1n, null, h as Int);
+					 confArray(h) = CSPSharedUnit(sz, -1, null, h as Int);
 			   } else {
 			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int);
 			   }
@@ -550,10 +550,14 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 		  RailUtils.sort(confArray, cmp);
 		  var c:Int; 
-		  // Console.OUT.println(0 +" cost "+confArray(0).cost+" team "+confArray(0).place);
+		  // Console.OUT.println("0 cost "+confArray(0).cost+" team "+confArray(0).place+" fvalue "+
+				// 	 ((confArray(0).cost == -1)?"null":confArray(0).vector(0)));
 		  for (c = 0n; c < nTeams - 1 ; c++) {
-				// Console.OUT.println((c+1) +" cost "+confArray(c+1).cost+" team "+confArray(c+1).place);
-		  
+				// Console.OUT.print((c+1) +" cost "+confArray(c+1).cost+" team "+confArray(c+1).place+" fvalue "+
+				// 		  ((confArray(c+1).cost == -1)?"null":confArray(c+1).vector(0)));
+				// if (confArray(c).cost != -1)
+				// 	 Console.OUT.println(" distance "+csp_.distance( confArray(c).vector as Valuation(sz),
+				// 				confArray(c+1).vector as Valuation(sz)));
 				
 		  
 				if (confArray(c).cost != -1 && confArray(c).cost == confArray(c + 1).cost 
@@ -566,6 +570,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  }
 		  
 		  var worstTeam:Long = confArray(nTeams - 1).place; 
+		  
 		  
 		  if (nEqTeams == 0n && worstTeam == -1){
 				if (debug) {
@@ -588,10 +593,13 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				p.flush();
 		  }
 		  
-		  
+		  // Console.OUT.print("Restart Teams:");
 		  for (var rp:Long = 0; rp < nEqTeams; rp++) {
 				teamToRest = eqTeams(rp);
 				val ttr = teamToRest; 
+				
+				//Console.OUT.print(" "+teamToRest);
+				
 
 				// Count total group partial restart
 				at( Place(teamToRest) ) ss().incGroupReset(); 
@@ -605,6 +613,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				}
 				at(Place(teamToRest)) ss().clearIntPool();
 		  }
+		  //Console.OUT.println(" ");
+		  
 	 }
 	 
 	 public def getGroupReset():Int{
