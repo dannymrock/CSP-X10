@@ -125,7 +125,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * @return Unit structure (necessary to the proper operation of the monitor)
 	  */
 	 protected def smartInsert( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
-		  Logger.info(()=>{"Smart Pool: Smart Insert"});
+		  Logger.debug(()=>{"Smart Pool: Smart Insert"});
 		  // try to insert conf in high quality pool - min distance allowed 0.3
 		  val victimShort = insert(this.HIGH, 0.3, cost, variables, place);
 		  //if place == -1 then it is a dummy value (there's no victim)
@@ -149,7 +149,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * @return Unit structure (necessary to the proper operation of the monitor)
 	  */
 	 protected def normalInsert( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
-		  Logger.info(()=>{"Smart Pool: normal Insert"});
+		  Logger.debug(()=>{"Smart Pool: normal Insert"});
 		  insert(HIGH, distance, cost, variables, place);
 		  return Unit();
 	 }

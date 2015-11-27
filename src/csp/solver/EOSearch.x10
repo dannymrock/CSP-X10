@@ -65,6 +65,9 @@ public class EOSearch extends RandomSearch {
 	 private var tau:Double;
 	 private var pdfS:Int;
 	 private val selSecond:Int;
+	 private var updateI:Int = 2n;
+	 private var reportI:Int = (sz* Math.log(sz)) as Int ;//10n; 
+	 
 	 
 	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
 	 :EOSearch(sizeP){
@@ -131,6 +134,8 @@ public class EOSearch extends RandomSearch {
 	 
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
+		  
+		  updateI = reportI*2n;
 		  
 		  if ( this.pdfS == -1n ) // Select a random PDF
 		  {
@@ -299,7 +304,6 @@ public class EOSearch extends RandomSearch {
 		  solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 	 }
 	 
-	 
 	 /**
 	  *  Interact with other entities
 	  */
@@ -308,17 +312,25 @@ public class EOSearch extends RandomSearch {
 		  /**
 		   *  Interaction with other places
 		   */
-		  if( solver.inTeamReportI() != 0n && nIter % solver.inTeamReportI() == 0n){  //here.id as Int ){
+		  //if( solver.inTeamReportI() != 0n && nIter % solver.inTeamReportI() == 0n){  //here.id as Int ){
+		  if( solver.inTeamReportI() != 0n && nIter % reportI == 0n){  //here.id as Int ){
 				//Console.OUT.println("report");
 				if(!bestSent){ 
 					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
 					 bestSent = true;
-				}else{
-					 solver.communicate( this.currentCost, cop_.getVariables());
+				}
+				else{
+					 if (random.nextInt(reportI) == 0n)
+						  solver.communicate( this.currentCost, cop_.getVariables());
 				}
 		  }
 		  
-		  if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
+		  //if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
+		  if(this.nIter % this.updateI == 0n){
+				if (updateI < 100000n)  {
+					 updateI *= 2;
+//					 Console.OUT.println(here+" updateI " + updateI);
+				}
 				//Console.OUT.println("update");
 				val result = solver.getIPVector(cop_, this.currentCost );
 				if (result){
@@ -341,6 +353,9 @@ public class EOSearch extends RandomSearch {
 				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
 				this.forceRestart = false;
 				this.nForceRestart++;
+				
+				this.updateI = sz as Int * 2n;
+				
 				// PATH RELINKING-based approach
 				val c = new Rail[Int](sz, 0n);
 				

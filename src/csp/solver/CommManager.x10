@@ -342,11 +342,16 @@ public class CommManager(sz:Long) {
 	  */
 	 public def getPR( vector : Rail[Int]{self.size==sz}):Boolean { 
 		  
-		  if (divOption == 0n) //Restart from Scratch
+		  var opt:Int = divOption;
+		  if (divOption == 3n)
+				opt = random.nextInt(3n);
+		  
+		  
+		  if (opt == 0n) //Restart from Scratch
 				return false;
-		  else  if (divOption == 1n)   // Restart PR-based
+		  else  if (opt == 1n)   // Restart PR-based
 				return getPR1(vector);
-		  else 
+		  else // opt == 2   // Restart using divTS
 				return getPR2(vector);
 
 	 }

@@ -516,7 +516,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				//while(commM.ep.countInsert % 10n != 0n);
 				
 				// woken up
-				//Logger.info(()=>{" interTeamActivity - run : woken up (every "+outTeamTime+" ms)"});
+				Logger.info(()=>{" interTeamActivity - run : woken up (every "+outTeamTime+" ms)"});
 				//val random = new Random(seed);
 				//if (random.nextInt(100n) < 16) 
 				interTeamComm(st, r);
