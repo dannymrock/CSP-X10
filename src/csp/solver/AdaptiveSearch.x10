@@ -387,95 +387,35 @@ public class AdaptiveSearch extends RandomSearch {
 	 /**
 	  *  Interact with other entities
 	  */
-	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
-		  //Console.OUT.println("AS interact");
-		  
-		  /**
-		   *  Interaction with other places
-		   */
-		  if( solver.inTeamReportI() != 0n && nIter % solver.inTeamReportI() == 0n){  //here.id as Int ){
-				//Console.OUT.println("report");
-				if(!bestSent){ 
-					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
-					 bestSent = true;
-				}else{
-					 solver.communicate( this.currentCost, cop_.getVariables());
-				}
-		  }
-		  
-		  if(solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
-				//Console.OUT.println("update");
-				val result = solver.getIPVector(cop_, this.currentCost );
-				if (result){
-					 this.nChangeV++;
-					 this.mark.clear();
-					 this.currentCost = cop_.costOfSolution(true);
-					 bestSent = true;
-					 //Console.OUT.println("Changing vector in "+ here);
-				}
-		  }
-		  
-		  /**
-		   *  Force Restart: Inter Team Communication
-		   */
-		  if (this.forceRestart){
-				//restart
-				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
-				this.forceRestart = false;
-				this.nForceRestart++;
-				// PATH RELINKING-based approach
-				val c = new Rail[Int](sz, 0n);
-				
-				val result = this.solver.getPR(c);
-				
-				if (result){
-					 cop_.setVariables(c);
-					 this.mark.clear();
-					 this.currentCost = cop_.costOfSolution(true);
-					 this.bestSent = true;
-				}else{
-					 cop_.initialize();
-					 this.mark.clear();
-					 this.currentCost = cop_.costOfSolution(true);
-					 this.bestSent = true;
-				}
-		  }
-		  
-		  if (this.forceReset){
-				//reset
-				Logger.info(()=>{"   ASSolverPermut : force Reset"});
-				this.forceReset = false;
-				this.nForceRestart++;
-				//doReset(size as Int / 8n , csp_);
-				this.doReset(this.nVarToReset , cop_); // This reset should be bigger than the normal reset
-		  }
-	 }	
+	 //  protected def interact( cop_:ModelAS{self.sz==this.sz}){
+	 // 
+	 //  }	
 	 
 	 /**
 	  *  Update the cost for the optimization variables
 	  *  Reimplemente here to include communication flag "best send"
 	  */
 	 // protected def updateCosts(cop : ModelAS){
-		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
-		// 		this.bestCost = this.currentCost;
-		// 		
-		// 		bestSent = false; // new best found, I must send it!
-		// 		
-		// 		if (this.reportPart){
-		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
-		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-		// 		}
-		// 		
-		// 		// Console.OUT.println(here+" best cost= "+bestCost);
-		// 		// Compare cost and break if target is accomplished
-		// 		if ((this.strictLow && this.bestCost < this.target)
-		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
-		// 			 this.targetSucc = true;
-		// 			 this.kill = true;
-		// 		}
-		//   }
+	 //   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
+	 // 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
+	 // 		this.bestCost = this.currentCost;
+	 // 		
+	 // 		bestSent = false; // new best found, I must send it!
+	 // 		
+	 // 		if (this.reportPart){
+	 // 			 val eT = (System.nanoTime() - initialTime)/1e9;
+	 // 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
+	 // 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
+	 // 		}
+	 // 		
+	 // 		// Console.OUT.println(here+" best cost= "+bestCost);
+	 // 		// Compare cost and break if target is accomplished
+	 // 		if ((this.strictLow && this.bestCost < this.target)
+	 // 				  ||(!this.strictLow && this.bestCost <= this.target)){
+	 // 			 this.targetSucc = true;
+	 // 			 this.kill = true;
+	 // 		}
+	 //   }
 	 // }
 	 
 	 /**

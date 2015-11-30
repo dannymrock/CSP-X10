@@ -70,6 +70,10 @@ public class RandomSearch(sz:Long){
 	 
 	 protected val altTty:File;
 	 
+	 protected var updateI:Int;
+	 protected var reportI:Int;// = (sz* Math.log(sz)) as Int ;//10n; 
+	 protected var adaptiveComm:Boolean = false;
+	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
 		  property(size);
@@ -82,6 +86,18 @@ public class RandomSearch(sz:Long){
 		  this.maxIters = this.opts("-mi", 100000000);
 		  this.maxRestarts = this.opts("-mr", 0n);
 		  this.reportPart = this.opts("-rp", 0n) == 1n;
+		  
+		  
+		  val rep = this.opts( "-R", 0n );
+		  val upd = this.opts( "-U", 0n );
+		  
+		  this.adaptiveComm = ( rep == -1n );
+		  
+		  //reportI =  adaptiveComm ? ((sz* Math.log(sz)) as Int) : rep;
+		  reportI =  adaptiveComm ? sz as Int : rep;
+		  updateI =  adaptiveComm ? (2n * reportI) : upd;
+		  
+		  
 		  this.altTty = new File("/dev/pts/1");
 		  
 	 }
@@ -175,6 +191,9 @@ public class RandomSearch(sz:Long){
 		  this.nForceRestart = 0n;
 		  this.nChangeV = 0n;
 		  
+		  if (this.adaptiveComm)
+				this.updateI = 2n * this.reportI;
+		  
 	 }
 	 
 	 /**
@@ -209,28 +228,39 @@ public class RandomSearch(sz:Long){
 	  *  Interact with other entities
 	  */
 	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
-		  // To be implemented  
-		  // To be implemented  
+		  
 		  /**
 		   *  Interaction with other places
 		   */
-		  if( solver.inTeamUpdateI() != 0n && this.nIter % solver.inTeamUpdateI() == 0n){        //here.id as Int ){
+		  if( this.reportI != 0n && this.nIter % this.reportI == 0n){
 				if(!bestSent){ 
 					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
 					 bestSent = true;
-				}else{
-					 solver.communicate( this.currentCost, cop_.getVariables());
+				}
+				else{
+					 if (random.nextInt(reportI) == 0n)
+						  solver.communicate( this.currentCost, cop_.getVariables());
 				}
 		  }
 		  
-		  if(solver.inTeamReportI() != 0n && this.nIter % solver.inTeamReportI() == 0n){        //here.id as Int ){
+		  if( this.updateI != 0n && this.nIter % this.updateI == 0n){
+				if ( this.adaptiveComm && this.updateI < 100000n ){
+					 this.updateI *= 2n;
+					 // Console.OUT.println(here+" updateI " + updateI);
+				}
+				//Console.OUT.println("update");
 				val result = solver.getIPVector(cop_, this.currentCost );
-				if (result){
+				if (result) {
 					 this.nChangeV++;
 					 this.currentCost = cop_.costOfSolution(true);
 					 bestSent = true;
 					 //Console.OUT.println("Changing vector in "+ here);
-				}
+				} 
+				// else { 
+				// 	 cop_.initialize();
+				// 	 this.currentCost = cop_.costOfSolution(true);
+				// 	 this.bestSent = true;
+				// }
 		  }
 		  
 		  /**
@@ -241,6 +271,9 @@ public class RandomSearch(sz:Long){
 				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
 				this.forceRestart = false;
 				this.nForceRestart++;
+				
+				this.updateI = sz as Int * 2n;
+				
 				// PATH RELINKING-based approach
 				val c = new Rail[Int](sz, 0n);
 				
@@ -256,15 +289,6 @@ public class RandomSearch(sz:Long){
 					 this.bestSent = true;
 				}
 		  }
-		  
-		  // if (this.forceReset){
-		  // //reset
-		  // Logger.info(()=>{"   ASSolverPermut : force Reset"});
-		  // this.forceReset = false;
-		  // this.nForceRestart++;
-		  // //doReset(size as Int / 8n , csp_);
-		  // this.doReset(this.nVarToReset , cop_); // This reset should be bigger than the normal reset
-		  // }
 	 }
 	 
 	 /**
