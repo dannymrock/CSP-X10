@@ -272,13 +272,9 @@ public class RandomSearch(sz:Long){
 				this.forceRestart = false;
 				this.nForceRestart++;
 				
-				this.updateI = sz as Int * 2n;
-				
-				// PATH RELINKING-based approach
+				// get a new conf according the diversification approach
 				val c = new Rail[Int](sz, 0n);
-				
 				val result = this.solver.getPR(c);
-				
 				if (result){
 					 cop_.setVariables(c);
 					 this.currentCost = cop_.costOfSolution(true);
@@ -288,6 +284,10 @@ public class RandomSearch(sz:Long){
 					 this.currentCost = cop_.costOfSolution(true);
 					 this.bestSent = true;
 				}
+				
+				// restart self-adaptive UR params
+				if ( this.adaptiveComm )
+					 this.updateI = sz as Int * 2n;
 		  }
 	 }
 	 

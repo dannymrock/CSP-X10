@@ -87,8 +87,10 @@ public class CommManager(sz:Long) {
 				divs = "from scratch";
 		  else if (divOption == 1n)
 				divs = "path relinking based";
-		  else
-				divs = "divS based";
+		  else if (divOption == 2n)
+				divs = "divTS based";
+		  else //if (divOption == 3n)
+				divs = "Random";
 		  
 		  if(here.id == 0){
 				Console.OUT.println("Elite Pool Parameters - Size "+epSize+" mode "+epM+(epM==1?"":(" Dist "+epD)));
