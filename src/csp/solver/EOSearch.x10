@@ -66,6 +66,10 @@ public class EOSearch extends RandomSearch {
 	 private var pdfS:Int;
 	 private val selSecond:Int;
 	 
+	 private var tau1:Double = 1;
+	 private var tau2:Double = 0.5;
+	 private var tau3:Double = 1;
+	 
 	 
 	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
 	 :EOSearch(sizeP){
@@ -80,6 +84,19 @@ public class EOSearch extends RandomSearch {
 		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
 		  this.pdfS = opts("--EO_pdf", 1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
+		  
+		  
+		  val t1s = System.getenv("TAU1");
+		  if (t1s != null)
+				this.tau1 = StringUtil.parseInt(t1s)/ 100.0;
+		  
+		  val t2s = System.getenv("TAU2");
+		  if (t2s != null)
+				this.tau2 = StringUtil.parseInt(t2s)/ 100.0;
+		  
+		  val t3s = System.getenv("TAU3");
+		  if (t3s != null)
+				this.tau3 = StringUtil.parseInt(t3s)/ 100.0;
 		  
 		  
 		  // if ( this.pdfS == -1n ) // Select a random PDF
@@ -138,7 +155,7 @@ public class EOSearch extends RandomSearch {
 				this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
 		  }
 		  
-		  if ( this.tau < 0.0 ) // Select a random tau from 0 to tau 
+		  if ( this.tau == -1.0 ) // Select a random tau from 0 to tau 
 		  {
 				if ( this.pdfS == 1n)
 					 this.tau = 0.5+random.nextDouble(); // from 0.5 to 1.5
@@ -146,6 +163,14 @@ public class EOSearch extends RandomSearch {
 					 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001
 				else if ( this.pdfS == 3n)
 					 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
+		  }else if ( this.tau == -2.0 ) // different values for each pdf 
+		  {
+				if ( this.pdfS == 1n)
+					 this.tau = this.tau1; // 
+				else if ( this.pdfS == 2n)
+					 this.tau = this.tau2; // 
+				else if ( this.pdfS == 3n)
+					 this.tau = this.tau3; // 
 		  }
 		  
 		  // val tStr = System.getenv("T");

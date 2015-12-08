@@ -25,7 +25,7 @@ public class ParamManager extends OptionsParser {
 					  Option("f", "problem_file", "(f)ile path for SMTI or QAP"),
 					  Option("s", "size", "(S)ize of the problem"),
 					  Option("S", "seed", "seed. Default 0"),
-					  Option("sm", "solver_mode", "Solver (m)ode distribution 0 for Places \"n\" for Activities (n number of activities). Default 0."),
+					  Option("sm", "solver_mode", "Solver (m)ode distribution 0 for seq 1 for paralle. Default 1."),
 					  Option("sl", "solver", "Solver to use"),
 					  Option("of", "out_format", "output format: csv 0, info 1"),
 					  Option("tf", "target_from", "Flag to receive target cost form file. default 0 from command line, 1 take optimal from file, 2 take BKS from file "),

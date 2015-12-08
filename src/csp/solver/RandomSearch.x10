@@ -93,8 +93,8 @@ public class RandomSearch(sz:Long){
 		  
 		  this.adaptiveComm = ( rep == -1n );
 		  
-		  //reportI =  adaptiveComm ? ((sz* Math.log(sz)) as Int) : rep;
-		  reportI =  adaptiveComm ? sz as Int : rep;
+		  reportI =  adaptiveComm ? ((sz* Math.log(sz)) as Int) : rep;
+		  //reportI =  adaptiveComm ? sz as Int : rep;
 		  updateI =  adaptiveComm ? (2n * reportI) : upd;
 		  
 		  
@@ -243,7 +243,7 @@ public class RandomSearch(sz:Long){
 				}
 		  }
 		  
-		  if( this.updateI != 0n && this.nIter % this.updateI == 0n){
+		  if( this.updateI != 0n && this.nIter % this.updateI == 0n ){
 				if ( this.adaptiveComm && this.updateI < 100000n ){
 					 this.updateI *= 2n;
 					 // Console.OUT.println(here+" updateI " + updateI);
