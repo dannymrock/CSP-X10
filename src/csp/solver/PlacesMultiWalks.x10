@@ -12,19 +12,20 @@
  */
 
 package csp.solver;
-import csp.util.Logger;
-import csp.util.Utils;
-import csp.model.ModelAS;
 import x10.util.Random;
 import x10.array.*;
 import x10.compiler.Inline;
 import x10.util.concurrent.AtomicBoolean; 
 import x10.util.Team;
 import x10.util.StringUtil;
-import csp.model.ParamManager;
 import x10.io.File;
 import x10.io.Printer;
 import x10.util.RailUtils;
+import csp.solver.CSPSharedUnit;
+import csp.model.ParamManager;
+import csp.util.Logger;
+import csp.util.Utils;
+import csp.model.ModelAS;
 
 /**
  * Each place has solvers, a PlaceLocalHandle[PlaceMultiWalk(sz)].
@@ -118,7 +119,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  this.nTeams = Place.MAX_PLACES as Int / expPerTeam ;
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	 
 		  
-		  this.confArray = new Rail[CSPSharedUnit](nTeams, CSPSharedUnit(sz,-1n,null,-1n)); 
+		  this.confArray = new Rail[CSPSharedUnit](nTeams, CSPSharedUnit(sz,-1n,null,-1n,-1.0,-1n)); 
 		  
 		  val ttyName = opts("-dbg", "none");
 		  if (ttyName.equals("none")){
@@ -255,28 +256,31 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  
 	 }
 	 
-	 @Inline public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
+	 //@Inline 
+	 public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
 	 = commM.getIPVector(csp_, myCost);
 	 
-	 @Inline public def getLM(vector : Rail[Int]{self.size==sz}):Boolean 
-	 = commM.getLM(vector);
+	 //@Inline 
+	 public def getLM(): Maybe[CSPSharedUnit(sz)] 
+	 = commM.getLM();
 	 
-	 @Inline public def getPR(vector : Rail[Int]{self.size==sz}):Boolean 
-	 = commM.getPR(vector);
+	 //@Inline 
+	 public def getPR(): Maybe[CSPSharedUnit(sz)]
+	 = commM.getPR();
 	
-	 public def communicate(totalCost:Long, variables:Rail[Int]{self.size==sz})
+	 public def communicate( info : CSPSharedUnit(sz) )
 	 {
-		  commM.communicate(totalCost, variables);
+		  commM.communicate( info );
 	 }
 	 
 	 @Inline public def inTeamReportI():Int = commM.inTeamReportI;
 	 @Inline public def inTeamUpdateI():Int = commM.inTeamUpdateI;
 	 
-	 public def communicateLM(totalCost:Long, variables:Rail[Int]{self.size==sz})
+	 public def communicateLM( info:CSPSharedUnit(sz) )
 	 {
 		  // If diversification mechanism is activated, then send info 
 		  if (outTeamTime > 0 && nTeams > 1n ){
-				commM.communicateLM(totalCost, variables);
+				commM.communicateLM( info );
 		  }
 	 }
 	 	 
@@ -394,14 +398,14 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  genAccStats.printAVG(count,oF, problem);
 	 }
 	 
-	 public def tryInsertConf(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) 
+	 public def tryInsertConf( info : CSPSharedUnit(sz) ) 
 	 {
-		  commM.ep.tryInsertConf(cost, variables, place);
+		  commM.ep.tryInsertConf(  info );
 	 }
 	 
-	 public def tryInsertLM(cost:Long, locMin:Rail[Int]{self.size==sz}, place:Int) 
+	 public def tryInsertLM( info : CSPSharedUnit(sz) ) 
 	 {
-		  commM.lmp.tryInsertConf(cost, locMin, place); 
+		  commM.lmp.tryInsertConf( info ); 
 	 }
 	 
 	 public def getConf():Maybe[CSPSharedUnit(sz)] = commM.ep.getPConf();
@@ -537,9 +541,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				val h = head;
 				val conf = at( Place(h) ) ss().getBestConf();
 				if (conf == null) {
-					 confArray(h) = CSPSharedUnit(sz, -1, null, h as Int);
+					 confArray(h) = CSPSharedUnit(sz, -1, null, h as Int,-1.0,-1n);
 			   } else {
-			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int);
+			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int, conf().tau, conf().pdf);
 			   }
 		  }
 		  

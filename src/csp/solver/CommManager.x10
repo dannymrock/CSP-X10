@@ -168,8 +168,8 @@ public class CommManager(sz:Long) {
 	  * 	communicate the vector if Searching thread totalCost is better than worstCost in the pool
 	  * 
 	  */
-	 public def communicate(totalCost : Long, variables : Rail[Int]{self.size==sz} ) {
-		  
+	 //public def communicate(totalCost : Long, variables : Rail[Int]{self.size==sz} ) {
+	 public def communicate( info:CSPSharedUnit(sz) ) {  
 		  Logger.debug(()=>" communicate: entering.");
 		  
 		  val placeid = here.id as Int;
@@ -177,10 +177,10 @@ public class CommManager(sz:Long) {
 		  
 		  if ( Place(myTeamId) == here ){
 				Logger.debug(()=>"CommManager: try to insert in local place: "+here);
-				ep.tryInsertConf( totalCost , variables, placeid);
+				ep.tryInsertConf( info );
 		  }else{
 				Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
-				at(Place(myTeamId)) async ss().tryInsertConf( totalCost , variables, placeid);
+				at(Place(myTeamId)) async ss().tryInsertConf( info );
 		  }
 		  
 		  
@@ -189,7 +189,7 @@ public class CommManager(sz:Long) {
 				val bc = ep.getBestConf();
 				if (bc != null){
 					 p.print("\033[H\033["+ ( myTeamId + 1 ) + "B");
-					 p.printf("\033[2K\rTeam %3d          best cost %10d",myTeamId,bc().cost);
+					 p.printf("\033[2K\rTeam %3d          best cost %10d    tau %3.2f  pdf %d",myTeamId,bc().cost,bc().tau,bc().pdf);
 					 p.flush();
 				}
 		  }
@@ -207,7 +207,7 @@ public class CommManager(sz:Long) {
 	 /**
 	  *  Receive Local Minimum Confs. from Team member
 	  */
-	 public def communicateLM(totalCost : Long, variables : Rail[Int]{self.size==sz} ) {
+	 public def communicateLM( info:CSPSharedUnit(sz) ) {
 		  Logger.debug(()=>" communicate: entering.");
 		  
 		  // decrease the number of vectors send it to the pool
@@ -221,10 +221,10 @@ public class CommManager(sz:Long) {
 		  
 		  if (Place(myTeamId) == Place(this.LOCAL_MIN_NODE)){
 				Logger.debug(()=>"CommManager: try to insert in local place: "+here);
-				lmp.tryInsertConf( totalCost , variables, placeid);
+				lmp.tryInsertConf( info );
 		  }else{
 				Logger.debug(()=>"CommManager: try to insert in remote place: "+Place(myTeamId));
-				at(Place(this.LOCAL_MIN_NODE)) ss().tryInsertLM( totalCost , variables, placeid);
+				at(Place(this.LOCAL_MIN_NODE)) ss().tryInsertLM( info );
 		  }
 		  //Debug
 		  // if(here.id == LOCAL_MIN_NODE ){ //group head
@@ -269,21 +269,39 @@ public class CommManager(sz:Long) {
 		  }
 		  return false;
 	 }
+
 	 
-	 
-	 // public def getEPConf():Maybe[CSPSharedUnit(ep.sz)]{
-	 // 	return ep.getPConf();
-	 // }
-	 // 
-	 // public def getLMPConf():Maybe[CSPSharedUnit(lmp.sz)]{
-	 // 	 return lmp.getPConf();
+	 // /** 
+	 //  *  get a vector from the Local Min. Pool
+	 //  * 
+	 //  */ 
+	 // public def getLM( vector : Rail[Int]{self.size==sz}):Boolean { 
+		//   Logger.debug(()=> "CommManager: getLM: entering.");
+		//   var a : Maybe[CSPSharedUnit(sz)];
+		//   
+		//   val place = Place(myTeamId);
+		//   val ss = solvers;
+		//   
+		//   if (place == Place(this.LOCAL_MIN_NODE) )
+		// 		a = lmp.getPConf();
+		//   else{
+		// 		a = at(Place(this.LOCAL_MIN_NODE)) ss().getLMConf();
+		//   }
+		//   //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
+		//   
+		//   if (a != null){
+		// 		Rail.copy(a().vector,vector);
+		// 		//csp_.setVariables(a().vector);
+		// 		return true; 
+		//   }
+		//   return false;
 	 // }
 	 
 	 /** 
 	  *  get a vector from the Local Min. Pool
 	  * 
 	  */ 
-	 public def getLM( vector : Rail[Int]{self.size==sz}):Boolean { 
+	 public def getLM() : Maybe[CSPSharedUnit(sz)] { 
 		  Logger.debug(()=> "CommManager: getLM: entering.");
 		  var a : Maybe[CSPSharedUnit(sz)];
 		  
@@ -298,19 +316,24 @@ public class CommManager(sz:Long) {
 		  //if (place.id==0)Console.OUT.println(here+" comm to "+place+" and get "+a().cost);
 		  
 		  if (a != null){
-				Rail.copy(a().vector,vector);
+				//Rail.copy(a().vector,vector);
 				//csp_.setVariables(a().vector);
-				return true; 
+				//return true; 
+				return a;
 		  }
-		  return false;
+		  //val dummyRet = CSPSharedUnit( sz, -1n, null, -1n, -1.0, -1n);
+		  return null;//false;
 	 }
+	 
+	 
+	 
 	 
 	 
 	 /**
 	  * get a mutated vector using Path-Relinking based approach
 	  * 
 	  */
-	 public def getPR( vector : Rail[Int]{self.size==sz}):Boolean { 
+	 public def getPR() : Maybe[CSPSharedUnit(sz)] { 
 		  
 		  var opt:Int = divOption;
 		  if (divOption == 3n)
@@ -318,44 +341,72 @@ public class CommManager(sz:Long) {
 		  
 		  
 		  if (opt == 0n) //Restart from Scratch
-				return false;
+				return getPR0();//return null;//return false;
 		  else  if (opt == 1n)   // Restart PR-based
-				return getPR1(vector);
+				return getPR1();
 		  else // opt == 2   // Restart using divTS
-				return getPR2(vector);
+				return getPR2();
 
 	 }
 	  
-	 public def getPR0( vector : Rail[Int]{self.size==sz}):Boolean { 
-		  return false;
+	 // only get a new pdf and tau and force random restart
+	 public def getPR0() : Maybe[CSPSharedUnit(sz)]{ 
+		  //return null;//false;
+		  val geta = this.getLM();
+		  if ( geta != null ){
+				val c = new Rail[Int](sz, 0n);
+				Rail.copy(geta().vector, c);
+				
+				
+				for( var i:Long = this.sz - 1 ; i > 0 ; i-- )
+				{
+					 val j = random.nextLong( i + 1 );
+					 val tmp = c(i);
+					 c(i) = c(j); 
+					 c(j) = tmp;
+				}
+				
+				
+				val newConf =  new CSPSharedUnit( sz, -1n, c, geta().place, geta().tau, geta().pdf);
+				return new Maybe(newConf as CSPSharedUnit(sz));
+		  }else
+				return null;
+		  
 	 }
 	 
 	 /**
 	  * get a mutated vector using Path-Relinking based approach
 	  * 
 	  */
-	 public def getPR1( vector : Rail[Int]{self.size==sz}):Boolean { 
+	 public def getPR1() : Maybe[CSPSharedUnit(sz)] { 
 		  Logger.debug(()=> "CommManager: getPR: entering.");
 		  
 		  // PATH RELINKING-based approach
-		  val a = new Rail[Int](sz, 0n);
-		  val b = new Rail[Int](sz, 0n);
+		  //val a = new Rail[Int](sz, 0n);
+		  //val b = new Rail[Int](sz, 0n);
 		  val c = new Rail[Int](sz, 0n);
 		  
-		  val geta = this.getLM(a);
-		  val getb = this.getLM(b);
+		  val geta = this.getLM();
+		  val getb = this.getLM();
+		  
+		 
 
-		  if(geta && getb){
+		  if(geta != null && getb != null) { // are they valid conf?
 				// Utils.show("a=",a);
 				// Utils.show("b=",b);
-				Rail.copy(a, c);
+				
+				// Copy remote conf. "a" and "b" to vectors 
+				//Rail.copy(geta.vector, a);
+				//Rail.copy(getb.vector, b);
+				
+				Rail.copy(geta().vector, c);
 				val nSteps = random.nextLong(ns);
 				for(i in 0..nSteps) {
 					 val bi = random.nextLong(sz);
-					 val bval = b(bi);
+					 val bval = getb().vector(bi);
 					 var ci:Long = -1;
 					 // search bval in vector a
-					 for (cit in a.range()){
+					 for (cit in c.range()){
 						  if (c(cit) == bval){
 								ci = cit;
 								break;
@@ -371,27 +422,32 @@ public class CommManager(sz:Long) {
 					 }
 				}
 				
-				Rail.copy(c,vector);
-				return true;
+				//Rail.copy(c,vector);
+				//return true;
+				
+				// return parameters of one of the LM pool (I selected send "a" params, todo: try "b" or random)
+				//Maybe[CSPSharedUnit(sz)]
+				val mutConf =  new CSPSharedUnit( sz, geta().cost, c, geta().place, geta().tau, geta().pdf);
+				return new Maybe(mutConf as CSPSharedUnit(sz));//true;
 		  }else
-				return false;
+				return null;//false;
 	 }
 	 
 	 /**
 	  * get a diversified vector using Div technique by Glover 
-	  * "A template fir scatter search and path relinking" 1998
+	  * "A template for scatter search and path relinking" 1998
 	  * 
 	  */
-	 public def getPR2( vector : Rail[Int]{self.size==sz}):Boolean { 
+	 public def getPR2() : Maybe[CSPSharedUnit(sz)] { 
 		  Logger.debug(()=> "CommManager: getPR2: entering.");
 		  
-		  val seedConf = new Rail[Int](sz, 0n);
+		  //val seedConf = new Rail[Int](sz, 0n);
 		  val finalConf = new Rail[Int](sz, 0n);
 		  
-		  val getSeedC = this.getLM(seedConf);
+		  val getSeedC = this.getLM();
 		  var position:Long = 0;
 		  
-		  if(getSeedC){
+		  if(getSeedC != null){
 				val step = random.nextLong(sz/4) + 1;
 				//val step = 2;
 				//Utils.show("seed conf=",seedConf);
@@ -399,15 +455,16 @@ public class CommManager(sz:Long) {
 				for(var start:Long = step; start > 0; start--) {
 					 for(var j:Long = start; j <= sz; j += step) {
 						  //Console.OUT.println("j = " + j);		  
-						  finalConf( position++ ) = seedConf( j - 1 );
+						  finalConf( position++ ) = getSeedC().vector( j - 1 );
 					 }
 				}
-				Rail.copy( finalConf, vector );
+				//Rail.copy( finalConf, vector );
 				//Utils.show("final conf=",finalConf);
-				
-				return true;
+				//return true;
+				val newConf = new CSPSharedUnit( sz, getSeedC().cost, finalConf, getSeedC().place, getSeedC().tau, getSeedC().pdf);
+				return new Maybe(newConf as CSPSharedUnit(sz)); //true;
 		  }else
-				return false;
+				return null; //Snew CSPSharedUnit( sz, -1n, null, -1n, -1.0, -1n); //return false;
 	 }
 	 
 	 public def restartPool(){

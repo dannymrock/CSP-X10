@@ -4,9 +4,6 @@
  */
 
 package csp.model;
-import csp.solver.IParallelSolver;
-import csp.solver.PlacesMultiWalks;
-import csp.util.Logger;
 import x10.util.Team;
 import x10.util.OptionsParser;
 import x10.util.Option;
@@ -19,6 +16,10 @@ import x10.util.StringBuilder;
 import csp.solver.RandomSearch;
 import csp.solver.EOSearch;
 import csp.solver.AdaptiveSearch;
+import csp.solver.IParallelSolver;
+import csp.solver.PlacesMultiWalks;
+import csp.util.Logger;
+import csp.solver.CSPSharedUnit;
 
 public class Main {
 	 

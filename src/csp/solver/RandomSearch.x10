@@ -16,7 +16,7 @@ import csp.util.Utils;
 public class RandomSearch(sz:Long){
 	 property sz() = sz; //size of the problem
 	 
-	 //Parameters object
+	 //Parameters object 
 	 protected val opts: ParamManager;
 	 
 	 // Move information
@@ -73,6 +73,7 @@ public class RandomSearch(sz:Long){
 	 protected var updateI:Int;
 	 protected var reportI:Int;// = (sz* Math.log(sz)) as Int ;//10n; 
 	 protected var adaptiveComm:Boolean = false;
+	 protected var modParams:Int;
 	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
@@ -87,6 +88,7 @@ public class RandomSearch(sz:Long){
 		  this.maxRestarts = this.opts("-mr", 0n);
 		  this.reportPart = this.opts("-rp", 0n) == 1n;
 		  
+		  this.modParams = this.opts("-M", 0n);
 		  
 		  val rep = this.opts( "-R", 0n );
 		  val upd = this.opts( "-U", 0n );
@@ -234,12 +236,14 @@ public class RandomSearch(sz:Long){
 		   */
 		  if( this.reportI != 0n && this.nIter % this.reportI == 0n){
 				if(!bestSent){ 
-					 solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
+					 //solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
+					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), here.id as Int, -1.0, -1n));
 					 bestSent = true;
 				}
 				else{
 					 if (random.nextInt(reportI) == 0n)
-						  solver.communicate( this.currentCost, cop_.getVariables());
+						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), here.id as Int, -1.0, -1n));
+						  //solver.communicate( this.currentCost, cop_.getVariables());
 				}
 		  }
 		  
@@ -273,17 +277,16 @@ public class RandomSearch(sz:Long){
 				this.nForceRestart++;
 				
 				// get a new conf according the diversification approach
-				val c = new Rail[Int](sz, 0n);
-				val result = this.solver.getPR(c);
-				if (result){
-					 cop_.setVariables(c);
-					 this.currentCost = cop_.costOfSolution(true);
-					 this.bestSent = true;
-				}else{
+				//val c = new Rail[Int](sz, 0n);
+				val result = this.solver.getPR();
+				if (result != null)
+					 cop_.setVariables(result().vector); 
+				else 
 					 cop_.initialize();
-					 this.currentCost = cop_.costOfSolution(true);
-					 this.bestSent = true;
-				}
+				
+				
+				this.currentCost = cop_.costOfSolution(true);
+				this.bestSent = true;
 				
 				// restart self-adaptive UR params
 				if ( this.adaptiveComm )

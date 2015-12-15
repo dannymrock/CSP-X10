@@ -1,5 +1,6 @@
 package csp.solver;
 import csp.model.ModelAS;
+import csp.solver.CSPSharedUnit;
 /**
  * A PARALLEL solver runs a local solver in every place, within the frame of a
  * IParallelSolver instance. All communication by a solver with other solvers
@@ -29,28 +30,30 @@ public interface IParallelSolver {
      * else return false.
      */
     def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean;
-    def getLM(vector : Rail[Int]{self.size==sz}):Boolean;
-    def getPR(vector : Rail[Int]{self.size==sz}):Boolean;
+    
+    def getLM(): Maybe[CSPSharedUnit(sz)];
+    
+    def getPR(): Maybe[CSPSharedUnit(sz)];
     
     /**
      * Send this configuration (cost, current assignment of values to variables) to
      * communication partner(s).
      */
-    def communicate(totalCost:Long, variables:Valuation(sz)):void;
+    def communicate( info : CSPSharedUnit(sz) ):void;
     
     /**
      * Send Local Minimum configuration (cost, assignment of values to variables) to
      * communication partner(s).
      */
-    def communicateLM(totalCost:Long, variables:Valuation(sz)):void;
+    def communicateLM( info : CSPSharedUnit(sz) ):void;
     
-    def tryInsertLM(cost:Long, locMin:Rail[Int]{self.size==sz}, place:Int):void;
+    def tryInsertLM( info : CSPSharedUnit(sz) ):void;
   
     /**
      * Insert this configuration (sent from place) into the pool P at the current place,
      * if the cost is lower than the best cost in P.
      */
-    def tryInsertConf(cost:Long, variables:Valuation(sz), place:Int):void;
+    def tryInsertConf( info : CSPSharedUnit(sz) ):void;
 
     /** Return the value of the parameter used to control communication within the team
      * (intraTeamInterval).

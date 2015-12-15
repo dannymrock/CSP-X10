@@ -440,7 +440,8 @@ public class AdaptiveSearch extends RandomSearch {
 	  */
 	 private def onLocMin(cop : ModelAS){
 		  // communicate Local Minimum
-		  solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
+		  //solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
+		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, -1.0, -1n) );
 	 }
 	 
 }

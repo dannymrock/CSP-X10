@@ -44,6 +44,7 @@ public class ParamManager extends OptionsParser {
 					  Option("W", "Inter_Team_Wait", "initial (W)ait  before start Inter-team Communication (miliseconds). Default 0"),
 					  Option("A", "Inter_Team_Affected_Explorers", "Inter Team Communicaction Diversification - Percentage of Places (A)ffected . Default 0."),
 					  Option("O", "Inter_Team_Option", "Diversification Option. 0 from Scratch 1 Path-Relinking."),
+					  Option("M", "Inter_Team_Params", "Diversification. modify parameters when corrective action is taken. 0 disable 1 enable."),
 					  // Pool Options
 					  Option("P_e", "poolsize_elite", "Max. number of configurations for the Elite Pool"),
 					  Option("P_lm", "poolsize_locmin", "Max. number of configuration for the local min. Pool"),
