@@ -189,7 +189,8 @@ public class CommManager(sz:Long) {
 				val bc = ep.getBestConf();
 				if (bc != null){
 					 p.print("\033[H\033["+ ( myTeamId + 1 ) + "B");
-					 p.printf("\033[2K\rTeam %3d          best cost %10d    tau %3.2f  pdf %d",myTeamId,bc().cost,bc().tau,bc().pdf);
+					 p.printf("\033[2K\rTeam %3d          best cost %10d    tau %3.2f  pdf %d",
+								myTeamId,bc().cost,bc().tau,bc().pdf);
 					 p.flush();
 				}
 		  }

@@ -197,8 +197,6 @@ public class EOSearch extends RandomSearch {
 		  
 		  for (var x:Int = 1n; x <= this.sz; x++){
 				y = fnc(tau, x);
-				if (y < 0)
-					 y = 0;
 				pdf(x) = y;
 				sum += y; 
 		  }
@@ -327,6 +325,8 @@ public class EOSearch extends RandomSearch {
 	 }
 	 
 	 
+	
+	 
 	 /**
 	  *  Interact with other entities
 	  */
@@ -339,12 +339,14 @@ public class EOSearch extends RandomSearch {
 				
 				if(!bestSent){ 
 					 //solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
-					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), here.id as Int, this.tau, this.pdfS));
+					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), 
+								here.id as Int, this.tau, this.pdfS));
 					 bestSent = true;
 				}
 				else{
 					 if (random.nextInt(reportI) == 0n)
-						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), here.id as Int, -1.0, -1n));
+						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), 
+									 here.id as Int, this.tau, this.pdfS));
 					 //solver.communicate( this.currentCost, cop_.getVariables());
 				}
 		  }
@@ -362,11 +364,7 @@ public class EOSearch extends RandomSearch {
 					 bestSent = true;
 					 //Console.OUT.println("Changing vector in "+ here);
 				} 
-				// else { 
-				// 	 cop_.initialize();
-				// 	 this.currentCost = cop_.costOfSolution(true);
-				// 	 this.bestSent = true;
-				// }
+
 		  }
 		  /**
 		   *  Force Restart: Inter Team Communication
@@ -377,11 +375,23 @@ public class EOSearch extends RandomSearch {
 				this.forceRestart = false;
 				this.nForceRestart++;
 				
+				// if (this.costLR < 0)
+				// 	 this.costLR = this.currentCost;
+				// else 
+				
 				// get a new conf according the diversification approach
 				//val c = new Rail[Int](sz, 0n);
 				val result = this.solver.getPR();
+				
 				if (result != null){
-					 cop_.setVariables(result().vector);
+					 
+					 // Change vector if we are improving since last Restart
+					 if (this.currentCost < this.costLR ){	 
+						  cop_.setVariables(result().vector);
+					 }
+					 // else
+						//   Console.OUT.println(here+"Avoid force Restart "+this.currentCost+", "+this.costLR);
+					 
 					 if(this.modParams == 1n && result().pdf != -1n)
 						  if (this.pdfS == result().pdf) {
 								//Console.OUT.println(here+" Changing Tau");
@@ -399,16 +409,24 @@ public class EOSearch extends RandomSearch {
 								initPDF( this.powFnc );
 						  }
 				}else{
-					 cop_.initialize();
+					 
+					 if (this.currentCost < this.costLR ){	 
+						  cop_.initialize();
+					 } 
+					 // else
+						//   Console.OUT.println(here+" Avoid force Restart "+this.currentCost+", "+this.costLR);
 				}
 				
-				
+				this.costLR = this.currentCost;
 				this.currentCost = cop_.costOfSolution(true);
 				this.bestSent = true;
 				
 				// restart self-adaptive UR params
-				if ( this.adaptiveComm )
-					 this.updateI = sz as Int * 2n;
+				if ( this.adaptiveComm ){
+					 this.reportI = (sz* Math.log(sz)) as Int;
+					 this.updateI = 2n * reportI;//sz as Int * 2n;
+				}
+				
 		  }
 	 }
 	

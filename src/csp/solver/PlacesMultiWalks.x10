@@ -139,7 +139,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  commM = new CommManager(sz, opts, st, nTeams); 
 	 }
 	 
-	 var option : Long = 0;
+	 //var option : Long = 0;
 	 /** 
 	  * 	Solve the csp problem with MAX_PLACES instance of AS solver
 	  * 	The first one that reach a valid solution sends a kill to the others
@@ -169,8 +169,8 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  commM.setSeed(random.nextLong());
 		  solver.setSeed(random.nextLong()); 
 		  
-		  val optStr = System.getenv("O");
-		  option = (optStr==null)? 0 : StringUtil.parseLong( optStr );
+		 // val optStr = System.getenv("O");
+		 // option = (optStr==null)? 0 : StringUtil.parseLong( optStr );
 		  
 		  //Logger.info(()=>{"   Seed in solver:"+seed});
 		  //Console.OUT.println("   Seed in solver:"+seed);
@@ -641,14 +641,14 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  //if (here.id < nTeams) commM.restartPool(); // clear pool on head node
 		  
 		  //val option = 1;
-		  if (option == 0){
+		  //if (option == 0){
 				//Console.OUT.println("Force Restart");
 				solver.forceRestart();
-		  }
-		  if (option == 1){
+		  //}
+		  //if (option == 1){
 				//Console.OUT.println("Force Reset");
-				solver.forceReset();
-		  }
+			//	solver.forceReset();
+		 // }
 	 }	
 }
 public type PlacesMultiWalks(s:Long)=PlacesMultiWalks{self.sz==s};

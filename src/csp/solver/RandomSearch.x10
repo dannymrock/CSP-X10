@@ -75,6 +75,8 @@ public class RandomSearch(sz:Long){
 	 protected var adaptiveComm:Boolean = false;
 	 protected var modParams:Int;
 	 
+	 protected var costLR:Long = Long.MAX_VALUE;
+	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
 		  property(size);
@@ -193,6 +195,8 @@ public class RandomSearch(sz:Long){
 		  this.nForceRestart = 0n;
 		  this.nChangeV = 0n;
 		  
+		  this.costLR = Long.MAX_VALUE;;
+		  
 		  if (this.adaptiveComm)
 				this.updateI = 2n * this.reportI;
 		  
@@ -260,11 +264,6 @@ public class RandomSearch(sz:Long){
 					 bestSent = true;
 					 //Console.OUT.println("Changing vector in "+ here);
 				} 
-				// else { 
-				// 	 cop_.initialize();
-				// 	 this.currentCost = cop_.costOfSolution(true);
-				// 	 this.bestSent = true;
-				// }
 		  }
 		  
 		  /**
@@ -279,18 +278,30 @@ public class RandomSearch(sz:Long){
 				// get a new conf according the diversification approach
 				//val c = new Rail[Int](sz, 0n);
 				val result = this.solver.getPR();
-				if (result != null)
-					 cop_.setVariables(result().vector); 
-				else 
-					 cop_.initialize();
+				if (result != null){	
+					 
+					 // Change vector if we are improving since last Restart
+					 if (this.currentCost < this.costLR ){	 
+						  cop_.setVariables(result().vector);
+					 }
+					 //cop_.setVariables(result().vector); 
+				} else {
+					 
+					 if (this.currentCost < this.costLR ){	 
+						  cop_.initialize();
+					 } 
+					 //cop_.initialize();
+				}
 				
-				
+				this.costLR = this.currentCost;
 				this.currentCost = cop_.costOfSolution(true);
 				this.bestSent = true;
 				
 				// restart self-adaptive UR params
-				if ( this.adaptiveComm )
-					 this.updateI = sz as Int * 2n;
+				if ( this.adaptiveComm ){
+					 this.reportI = (sz* Math.log(sz)) as Int;
+					 this.updateI = 2n * reportI;//sz as Int * 2n;
+				}
 		  }
 	 }
 	 
