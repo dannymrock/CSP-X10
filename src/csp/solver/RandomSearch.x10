@@ -116,13 +116,13 @@ public class RandomSearch(sz:Long){
 		  this.currentCost = cop.costOfSolution(true);
 		  // Copy the first match to bestConf vector
 		  Rail.copy(cop.getVariables(), bestConf as Valuation(sz));
-		  if (currentCost == 0)
+		  if (this.currentCost == 0)
 				bestCost = currentCost;
 		  else
 				bestCost = x10.lang.Int.MAX_VALUE;
 		  
 		  // Main Loop 
-		  while( currentCost != 0 ){
+		  while( this.currentCost != 0 ){
 				if (this.nIter >= this.maxIters){
 					 //restart or finish
 					 if(nRestart >= maxRestarts){
@@ -134,7 +134,7 @@ public class RandomSearch(sz:Long){
 					 }
 				}
 				nIter++;
-				currentCost = search( cop );
+				this.currentCost = search( cop );
 				
 				/**
 				 *  Update the best configuration found so far
@@ -298,10 +298,10 @@ public class RandomSearch(sz:Long){
 				this.bestSent = true;
 				
 				// restart self-adaptive UR params
-				if ( this.adaptiveComm ){
-					 this.reportI = (sz* Math.log(sz)) as Int;
-					 this.updateI = 2n * reportI;//sz as Int * 2n;
-				}
+				// if ( this.adaptiveComm ){
+				// 	 this.reportI = (sz* Math.log(sz)) as Int;
+				// 	 this.updateI = 2n * reportI;//sz as Int * 2n;
+				// }
 		  }
 	 }
 	 

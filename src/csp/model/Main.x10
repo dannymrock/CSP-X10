@@ -20,6 +20,7 @@ import csp.solver.IParallelSolver;
 import csp.solver.PlacesMultiWalks;
 import csp.util.Logger;
 import csp.solver.CSPSharedUnit;
+import csp.solver.RoTSearch;
 
 public class Main {
 	 
@@ -57,6 +58,8 @@ public class Main {
 					 return new AdaptiveSearch( size, ss , opts) ;
 				if (kind == EO_SOL) 
 					 return new EOSearch( size, ss, opts);
+				if (kind == RoTS_SOL) 
+					 return new RoTSearch( size, ss, opts);
 				return new RandomSearch( size, ss, opts);
 		  }
 	 } 
@@ -75,6 +78,7 @@ public class Main {
 	 public static val UNKNOWN_SOL = 0n;
 	 public static val AS_SOL = 1n;
 	 public static val EO_SOL = 2n;
+	 public static val RoTS_SOL = 3n;
 	
 	 var fp  : File;
 	 
@@ -156,6 +160,8 @@ public class Main {
 				solParam = AS_SOL;
 		  else if(solverIn.equals("EO"))
 				solParam = EO_SOL;
+		  else if(solverIn.equals("RoTS"))
+				solParam = RoTS_SOL;
 		  
 		  /**
 		   *  Creating objects for solver execution
@@ -178,9 +184,14 @@ public class Main {
 		  // accumulated times
 		  var totalWallT :Long = 0;
 		  
+		  // val sparam = solParam;
+		  // val solGen = ():RandomSearch(valSize)=>Solver(sparam).make( valSize, 
+		  // 		 solvers() as IParallelSolver(valSize), opts );
+		  
+		  
 		  val sparam = solParam;
 		  val solGen = ():RandomSearch(valSize)=>Solver(sparam).make( valSize, 
-					 solvers() as IParallelSolver(valSize), opts );
+		  solvers() as IParallelSolver(valSize), opts );
 		  
 		  /**
 		   *  Install solver data structures on every available place

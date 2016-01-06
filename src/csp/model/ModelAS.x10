@@ -21,7 +21,8 @@ import csp.solver.MovePermutation;
  */
 public class ModelAS(sz:Long) {
 	protected val size = sz;
-	protected val variables = new Rail[Int]( sz, (i:Long) => i as Int);
+	//protected val variables = new Rail[Int]( sz, (i:Long) => i as Int);
+	public val variables = new Rail[Int]( sz, (i:Long) => i as Int);
 	protected var baseValue:Int;
 	protected val r:Random;
 	

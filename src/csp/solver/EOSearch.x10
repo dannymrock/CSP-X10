@@ -150,19 +150,18 @@ public class EOSearch extends RandomSearch {
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
-		  if ( this.pdfS == -1n ) // Select a random PDF
-		  {
+		  if ( this.pdfS == -1n ) { // Select a random PDF
 				this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
 		  }
 		  
-		  if ( this.tau == -1.0 ) // Select a random tau from 0 to tau 
-		  {
+		  if ( this.tau == -1.0 ) { // Select a random tau from 0 to tau 
 				if ( this.pdfS == 1n)
-					 this.tau = 0.5+random.nextDouble(); // from 0.5 to 1.5
+					 this.tau = 0.0001+(2*random.nextDouble()); // from 0.0001 to 2.0001
 				else if ( this.pdfS == 2n)
 					 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001
 				else if ( this.pdfS == 3n)
 					 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
+				
 		  }else if ( this.tau == -2.0 ) // different values for each pdf 
 		  {
 				if ( this.pdfS == 1n)
@@ -196,7 +195,7 @@ public class EOSearch extends RandomSearch {
 		  var y:Double = 0.0;
 		  
 		  for (var x:Int = 1n; x <= this.sz; x++){
-				y = fnc(tau, x);
+				y = fnc(this.tau, x);
 				pdf(x) = y;
 				sum += y; 
 		  }
@@ -352,7 +351,7 @@ public class EOSearch extends RandomSearch {
 		  }
 		  
 		  if( this.updateI != 0n && this.nIter % this.updateI == 0n ){
-				if ( this.adaptiveComm && this.updateI < 100000n ){
+				if ( this.adaptiveComm && this.updateI < 500000n ){
 					 this.updateI *= 2n;
 					 // Console.OUT.println(here+" updateI " + updateI);
 				}
@@ -375,10 +374,6 @@ public class EOSearch extends RandomSearch {
 				this.forceRestart = false;
 				this.nForceRestart++;
 				
-				// if (this.costLR < 0)
-				// 	 this.costLR = this.currentCost;
-				// else 
-				
 				// get a new conf according the diversification approach
 				//val c = new Rail[Int](sz, 0n);
 				val result = this.solver.getPR();
@@ -386,33 +381,40 @@ public class EOSearch extends RandomSearch {
 				if (result != null){
 					 
 					 // Change vector if we are improving since last Restart
-					 if (this.currentCost < this.costLR ){	 
-						  cop_.setVariables(result().vector);
-					 }
+					  // if (this.currentCost < this.costLR ){	 
+						    cop_.setVariables(result().vector);
+					  // }
 					 // else
 						//   Console.OUT.println(here+"Avoid force Restart "+this.currentCost+", "+this.costLR);
 					 
-					 if(this.modParams == 1n && result().pdf != -1n)
+					 if(this.modParams == 1n && result().pdf != -1n){
 						  if (this.pdfS == result().pdf) {
 								//Console.OUT.println(here+" Changing Tau");
-								this.tau = (result().tau + this.tau) / 2.0;
-								initPDF( this.powFnc );
+								//this.tau = (result().tau + this.tau) / 2.0;
+								this.tau = result().tau;
 						  } else {
 								//Console.OUT.println(here+" Changing PDF and Tau");
 								this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
 								if ( this.pdfS == 1n)
-									 this.tau = 0.5+random.nextDouble(); // from 0.5 to 1.5
+									 this.tau = 0.0001+(2*random.nextDouble()); // from 0.0001 to 2.0001
 								else if ( this.pdfS == 2n)
-									 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001
+									 this.tau = 0.0001+random.nextDouble();     // from 0.0001 to 1.0001
 								else if ( this.pdfS == 3n)
-									 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
-								initPDF( this.powFnc );
+									 this.tau = 1.5+random.nextDouble();        // from 1.5 to 2.5
 						  }
+						
+						  if ( this.pdfS == 1n )
+								initPDF( this.powFnc );
+						  else if(this.pdfS == 2n)
+								initPDF( this.expFnc );
+						  else
+								initPDF( this.gammaFnc );
+					 }
 				}else{
 					 
-					 if (this.currentCost < this.costLR ){	 
-						  cop_.initialize();
-					 } 
+					 // if (this.currentCost < this.costLR ){	 
+						   cop_.initialize();
+					 // } 
 					 // else
 						//   Console.OUT.println(here+" Avoid force Restart "+this.currentCost+", "+this.costLR);
 				}
@@ -422,10 +424,10 @@ public class EOSearch extends RandomSearch {
 				this.bestSent = true;
 				
 				// restart self-adaptive UR params
-				if ( this.adaptiveComm ){
-					 this.reportI = (sz* Math.log(sz)) as Int;
-					 this.updateI = 2n * reportI;//sz as Int * 2n;
-				}
+				// if ( this.adaptiveComm ){
+				// 	 this.reportI = (sz* Math.log(sz)) as Int;
+				// 	 this.updateI = 2n * reportI;//sz as Int * 2n;
+				// }
 				
 		  }
 	 }
