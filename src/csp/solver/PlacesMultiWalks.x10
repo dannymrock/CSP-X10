@@ -26,6 +26,7 @@ import csp.model.ParamManager;
 import csp.util.Logger;
 import csp.util.Utils;
 import csp.model.ModelAS;
+import csp.model.Main;
 
 /**
  * Each place has solvers, a PlaceLocalHandle[PlaceMultiWalk(sz)].
@@ -119,7 +120,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  this.nTeams = Place.MAX_PLACES as Int / expPerTeam ;
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	 
 		  
-		  this.confArray = new Rail[CSPSharedUnit](nTeams, CSPSharedUnit(sz,-1n,null,-1n,-1.0,-1n)); 
+		  this.confArray = new Rail[CSPSharedUnit](nTeams, CSPSharedUnit(sz,-1n,null,-1n,null)); 
 		  
 		  val ttyName = opts("-dbg", "none");
 		  if (ttyName.equals("none")){
@@ -133,9 +134,18 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  }
 	 }
 	 
-	 
-	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>RandomSearch(sz) ):void{
-		  solver = solGen();
+	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:(Int)=>RandomSearch(sz), solverType:Int ) : void {
+		  
+		 if ( solverType == Main.Hybrid_SOL){
+			  if (here.id < (Place.MAX_PLACES / 2))
+					solver = solGen(Main.EO_SOL);
+			  else
+					solver = solGen(Main.RoTS_SOL);
+			  	
+		 }else 
+			  solver = solGen(solverType);
+		  
+		  
 		  commM = new CommManager(sz, opts, st, nTeams); 
 	 }
 	 
@@ -370,9 +380,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 public def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int, 
-				fr : Int, gr:Int, tar:Boolean, fftar:Int)
+				fr : Int, gr:Int, tar:Boolean, fftar:Int,ss:Rail[Int]{self.size==3})
 	 {
-		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, gr, tar, fftar, this.sz);
+		  stats.setStats(co, p, e, t, it, loc, sw, re, sa, rs, ch, fr, gr, tar, fftar, this.sz,ss);
 		  accStats(stats);
 	 }
 	 
@@ -541,9 +551,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				val h = head;
 				val conf = at( Place(h) ) ss().getBestConf();
 				if (conf == null) {
-					 confArray(h) = CSPSharedUnit(sz, -1, null, h as Int,-1.0,-1n);
+					 confArray(h) = CSPSharedUnit(sz, -1, null, h as Int,null);
 			   } else {
-			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int, conf().tau, conf().pdf);
+			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int, conf().solverState);
 			   }
 		  }
 		  
@@ -638,17 +648,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 public def diversify():void{
-		  //if (here.id < nTeams) commM.restartPool(); // clear pool on head node
-		  
-		  //val option = 1;
-		  //if (option == 0){
-				//Console.OUT.println("Force Restart");
-				solver.forceRestart();
-		  //}
-		  //if (option == 1){
-				//Console.OUT.println("Force Reset");
-			//	solver.forceReset();
-		 // }
+		  	solver.forceRestart();
 	 }	
 }
 public type PlacesMultiWalks(s:Long)=PlacesMultiWalks{self.sz==s};

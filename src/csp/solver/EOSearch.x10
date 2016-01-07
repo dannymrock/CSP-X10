@@ -7,6 +7,7 @@ import csp.model.ParamManager;
 import x10.util.Pair;
 import x10.compiler.NonEscaping;
 import csp.util.Utils;
+import csp.model.Main;
 
 /**
  * Class EOSearch
@@ -74,6 +75,10 @@ public class EOSearch extends RandomSearch {
 	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
 	 :EOSearch(sizeP){
 		  super(sizeP, solver, opts);
+		  
+		  this.mySolverType = Main.EO_SOL;
+		  
+		  //Console.OUT.println(here+" EO");
 		  this.pdf = new Rail[Double] (sizeP+1, 0.0);// +1 since x in 1..size
 		  
 		  //fit = new Rail[Pair[Long,Long]](this.sz); 
@@ -85,30 +90,6 @@ public class EOSearch extends RandomSearch {
 		  this.pdfS = opts("--EO_pdf", 1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
 		  
-		  
-		  val t1s = System.getenv("TAU1");
-		  if (t1s != null)
-				this.tau1 = StringUtil.parseInt(t1s)/ 100.0;
-		  
-		  val t2s = System.getenv("TAU2");
-		  if (t2s != null)
-				this.tau2 = StringUtil.parseInt(t2s)/ 100.0;
-		  
-		  val t3s = System.getenv("TAU3");
-		  if (t3s != null)
-				this.tau3 = StringUtil.parseInt(t3s)/ 100.0;
-		  
-		  
-		  // if ( this.pdfS == -1n ) // Select a random PDF
-		  // {
-				// Console.OUT.println("EO: Random PDF ");
-		  // }
-		  // 
-		  // if ( this.tau < 0.0 ) // Select a random tau from 0 to tau 
-		  // {
-				// Console.OUT.println("EO: Random tau ");
-		  // }
-		  
 		  var PDFname:String = "";
 		  if ( this.pdfS == 1n )
 				PDFname = "pow";
@@ -117,14 +98,12 @@ public class EOSearch extends RandomSearch {
 		  else if (this.pdfS == 3n)
 				PDFname = "gamma";
 		  
-		  
 		  if (here.id == 0)
 				Console.OUT.println("Parameters EO: TAU= "+tau+", pdf= "
 						  +PDFname+ ", Second_variable_selection="+
 						  (selSecond==0n?"Random":"MinConflict"));
 
 	 }
-	 
 	 
 	  
 	 /**
@@ -162,22 +141,7 @@ public class EOSearch extends RandomSearch {
 				else if ( this.pdfS == 3n)
 					 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
 				
-		  }else if ( this.tau == -2.0 ) // different values for each pdf 
-		  {
-				if ( this.pdfS == 1n)
-					 this.tau = this.tau1; // 
-				else if ( this.pdfS == 2n)
-					 this.tau = this.tau2; // 
-				else if ( this.pdfS == 3n)
-					 this.tau = this.tau3; // 
 		  }
-		  
-		  // val tStr = System.getenv("T");
-		  // val tau = (tStr==null)? (1.0 + 1.0 / Math.log(sz)) : StringUtil.parseLong(tStr)/100.0;
-		  // Console.OUT.println(here+"PDF "+this.pdfS+" tau "+this.tau);
-		  
-		  // val pStr = System.getenv("F");
-		  // val pdfS = (pStr==null)? 1n : StringUtil.parseInt(pStr);
 		  
 		  if ( this.pdfS == 1n )
 				initPDF( this.powFnc );
@@ -320,206 +284,59 @@ public class EOSearch extends RandomSearch {
 	 private def onLocMin(cop : ModelAS){
 		  // communicate Local Minimum
 		  // solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
-		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, this.tau, this.pdfS) );
+		  val solverState = createSolverState();
+		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
 	 }
-	 
-	 
 	
 	 
 	 /**
-	  *  Interact with other entities
+	  *  Create EO Solver State array to be send to Pool
+	  *  oeState(0) = solverType  
+	  *  oeState(1) = EO pdf type
+	  *  oeState(2) = EO "tau" value
 	  */
-	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
-		  
-		  /**
-		   *  Interaction with other places
-		   */
-		  if( this.reportI != 0n && this.nIter % this.reportI == 0n){
-				
-				if(!bestSent){ 
-					 //solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
-					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), 
-								here.id as Int, this.tau, this.pdfS));
-					 bestSent = true;
-				}
-				else{
-					 if (random.nextInt(reportI) == 0n)
-						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), 
-									 here.id as Int, this.tau, this.pdfS));
-					 //solver.communicate( this.currentCost, cop_.getVariables());
-				}
-		  }
-		  
-		  if( this.updateI != 0n && this.nIter % this.updateI == 0n ){
-				if ( this.adaptiveComm && this.updateI < 500000n ){
-					 this.updateI *= 2n;
-					 // Console.OUT.println(here+" updateI " + updateI);
-				}
-				//Console.OUT.println("update");
-				val result = solver.getIPVector(cop_, this.currentCost );
-				if (result) {
-					 this.nChangeV++;
-					 this.currentCost = cop_.costOfSolution(true);
-					 bestSent = true;
-					 //Console.OUT.println("Changing vector in "+ here);
-				} 
-
-		  }
-		  /**
-		   *  Force Restart: Inter Team Communication
-		   */
-		  if (this.forceRestart){
-				//restart
-				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
-				this.forceRestart = false;
-				this.nForceRestart++;
-				
-				// get a new conf according the diversification approach
-				//val c = new Rail[Int](sz, 0n);
-				val result = this.solver.getPR();
-				
-				if (result != null){
-					 
-					 // Change vector if we are improving since last Restart
-					  // if (this.currentCost < this.costLR ){	 
-						    cop_.setVariables(result().vector);
-					  // }
-					 // else
-						//   Console.OUT.println(here+"Avoid force Restart "+this.currentCost+", "+this.costLR);
-					 
-					 if(this.modParams == 1n && result().pdf != -1n){
-						  if (this.pdfS == result().pdf) {
-								//Console.OUT.println(here+" Changing Tau");
-								//this.tau = (result().tau + this.tau) / 2.0;
-								this.tau = result().tau;
-						  } else {
-								//Console.OUT.println(here+" Changing PDF and Tau");
-								this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
-								if ( this.pdfS == 1n)
-									 this.tau = 0.0001+(2*random.nextDouble()); // from 0.0001 to 2.0001
-								else if ( this.pdfS == 2n)
-									 this.tau = 0.0001+random.nextDouble();     // from 0.0001 to 1.0001
-								else if ( this.pdfS == 3n)
-									 this.tau = 1.5+random.nextDouble();        // from 1.5 to 2.5
-						  }
-						
-						  if ( this.pdfS == 1n )
-								initPDF( this.powFnc );
-						  else if(this.pdfS == 2n)
-								initPDF( this.expFnc );
-						  else
-								initPDF( this.gammaFnc );
-					 }
-				}else{
-					 
-					 // if (this.currentCost < this.costLR ){	 
-						   cop_.initialize();
-					 // } 
-					 // else
-						//   Console.OUT.println(here+" Avoid force Restart "+this.currentCost+", "+this.costLR);
-				}
-				
-				this.costLR = this.currentCost;
-				this.currentCost = cop_.costOfSolution(true);
-				this.bestSent = true;
-				
-				// restart self-adaptive UR params
-				// if ( this.adaptiveComm ){
-				// 	 this.reportI = (sz* Math.log(sz)) as Int;
-				// 	 this.updateI = 2n * reportI;//sz as Int * 2n;
-				// }
-				
-		  }
-	 }
-	
-		  
-	 
-	 // /**
-	 //  *  Interact with other entities
-	 //  */
-	 // protected def interact( cop_:ModelAS{self.sz==this.sz}){
-		//   super.interact(cop_);
-		//   //Change tau
-		//   // if ( this.pdfS == 1n){
-		//   // 	 this.tau = 0.5+random.nextDouble(); // from 0.5 to 1.5
-		//   // 	 initPDF( this.powFnc );
-		//   // }
-		//   // else if ( this.pdfS == 2n){
-		//   // 	 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001					 
-		//   // 	 initPDF( this.expFnc );
-		//   // }
-		//   // else if ( this.pdfS == 3n){
-		//   // 	 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
-		//   // 	 initPDF( this.gammaFnc );
-		//   // }
-		//   // 
-	 // }	
-	 
-	 
-	 protected def updateCosts(cop : ModelAS){
-		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-				Rail.copy(cop.getVariables() as Valuation(sz), this.bestConf as Valuation(sz));
-				this.bestCost = this.currentCost;
-				
-				bestSent = false; // new best found, I must send it!
-				
-				if (this.reportPart){
-					 val eT = (System.nanoTime() - initialTime)/1e9;
-					 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-
-					 Utils.show("Solution",this.bestConf);
-					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-					 // print on alternative tty
-					 //val p = altTty.printer();
-					 //p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-				}
-				
-				// Console.OUT.println(here+" best cost= "+bestCost);
-				// Compare cost and break if target is accomplished
-				if ((this.strictLow && this.bestCost < this.target)
-						  ||(!this.strictLow && this.bestCost <= this.target)){
-					 Console.OUT.println("Success in "+here+"! tau = "+this.tau+" PDF = "+this.pdfS);
-					 this.targetSucc = true;
-					 this.kill = true;
-				}
-		  }
+	 protected def createSolverState( ) : Rail[Int]{self.size==3}{
+		  val eoState = new Rail[Int](3,-1n);
+		  eoState(0) = this.mySolverType;
+		  eoState(1) = this.pdfS;
+		  eoState(2) = (this.tau * 100.0) as Int; // TODO: convert double to Int??? levels ranges ???
+		  return eoState;  
 	 }
 	 
-	 
-	 // /**
-	 //  *  Update the cost for the optimization variables
-	 //  *  Reimplemente here to include communication flag "best send"
-	 //  */
-	 // protected def updateCosts(cop : ModelAS){
-		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
-		// 		this.bestCost = this.currentCost;
-		// 		
-		// 		bestSent = false; // new best found, I must send it!
-		// 		
-		// 		if (this.reportPart){
-		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
-		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-		// 		}
-		// 		
-		// 		// Console.OUT.println(here+" best cost= "+bestCost);
-		// 		// Compare cost and break if target is accomplished
-		// 		if ((this.strictLow && this.bestCost < this.target)
-		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
-		// 			 this.targetSucc = true;
-		// 			 this.kill = true;
-		// 		}
-		//   }
-	 // }
-	 
-	 // /**
-	 //  * 	Report statistics from the solving process
-	 //  */
-	 // public def reportStats( c : CSPStats){
-	 // super.reportStats(c);
-	 // //c.change = this.nChangeV;
-	 // }
-	 
+	 /**
+	  *  Process Solver State Array received from Pool
+	  * 
+	  */
+	 protected def processSolverState( state : Rail[Int]{self.size==3}){
+		  // Random Search has no parameters to process
+		  
+		  val inSolverType = state(0);
+		   
+		  if (inSolverType == this.mySolverType){
+				val inpdf = state(1);
+				val intau = state(2) / 100.0;
+				if (this.pdfS == inpdf) {
+					 //Console.OUT.println(here+" Changing Tau");
+					 //this.tau = (intau + this.tau) / 2.0;
+					 this.tau = intau; 
+				} else {
+					 //Console.OUT.println(here+" Changing PDF and Tau");
+					 this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
+					 if ( this.pdfS == 1n)
+						  this.tau = 0.0001+(2*random.nextDouble()); // from 0.0001 to 2.0001
+					 else if ( this.pdfS == 2n)
+						  this.tau = 0.0001+random.nextDouble();     // from 0.0001 to 1.0001
+					 else if ( this.pdfS == 3n)
+						  this.tau = 1.5+random.nextDouble();        // from 1.5 to 2.5
+				}
+				
+				if ( this.pdfS == 1n )
+					 initPDF( this.powFnc );
+				else if(this.pdfS == 2n)
+					 initPDF( this.expFnc );
+				else
+					 initPDF( this.gammaFnc );
+		  }
+	 } 	 
 }
 public type EOSearch(s:Long)=EOSearch{self.sz==s};

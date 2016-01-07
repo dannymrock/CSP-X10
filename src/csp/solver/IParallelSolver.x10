@@ -82,7 +82,7 @@ public interface IParallelSolver {
     def announceWinner(ss:PlaceLocalHandle[IParallelSolver(sz)], p:Long):Boolean;
 
     def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int,
-            fr : Int, gr:Int, target:Boolean, fft:Int):void;
+            fr : Int, gr:Int, target:Boolean, fft:Int,ss:Rail[Int]{self.size==3}):void;
     def setStats(c:CSPStats):void;
 
     def getConf():Maybe[CSPSharedUnit(sz)];
@@ -103,7 +103,7 @@ public interface IParallelSolver {
     def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     	
  	//def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>ISolver(sz) ):void;
-    def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:()=>RandomSearch(sz) ):void;
+    def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:(int)=>RandomSearch(sz), solverType:Int ):void;
 
  	
  	def printStats(count:Int, oF:Int, problem:Int):void;

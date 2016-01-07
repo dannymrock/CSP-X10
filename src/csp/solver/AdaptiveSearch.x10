@@ -4,6 +4,7 @@ import csp.model.ModelAS;
 import csp.util.Logger;
 import csp.model.ParamManager;
 import csp.util.Utils;
+import csp.model.Main;
 
 /**
  * Class AdaptiveSearch
@@ -48,6 +49,10 @@ public class AdaptiveSearch extends RandomSearch {
 	 public def this(sizeS:Long, solver:IParallelSolver(sizeS), opts:ParamManager)
 	 :AdaptiveSearch(sizeS){
 		  super(sizeS, solver, opts);
+		  
+		  this.mySolverType = Main.AS_SOL;
+		  
+		  
 		  this.mark = new Rail[Int] (sizeS, 0n);
 		  this.listIJ = new Rail[MovePermutation](sizeS);
 		  this.listI = new Rail[Long](sizeS, 0);
@@ -441,7 +446,8 @@ public class AdaptiveSearch extends RandomSearch {
 	 private def onLocMin(cop : ModelAS){
 		  // communicate Local Minimum
 		  //solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
-		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, -1.0, -1n) );
+		  val solverState = createSolverState();
+		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
 	 }
 	 
 }

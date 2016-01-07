@@ -60,6 +60,10 @@ public class CSPStats{
 	 /** number of singles */
 	 var singles:Int = 0n;
 	 
+	 /** Solver State **/
+	 var sstate:Rail[Int]{self.size==3} = new Rail[Int](3, -1n);
+	 
+	 
 	//transient val monitor:Monitor  = new Monitor("CSPStats");
 	
 	/**
@@ -75,7 +79,7 @@ public class CSPStats{
 	 */
 	public def setStats(co : Long, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, 
 			  re:Int, sa:Int, rs:Int, ch:Int, fr : Int, gr:Int, target:Boolean, fft:Int, 
-			  vs:Long){
+			  vs:Long, ss:Rail[Int]{self.size==3}){
 	        this.cost = co;
 	        this.team = p;
 	        this.explorer = e;
@@ -94,6 +98,7 @@ public class CSPStats{
 	        this.target = target;
 	        this.fftarget = fft;
 	        this.vectorSize = vs;
+	        this.sstate = ss;
 	}
 	
 	public def setStats( c:CSPStats ){
@@ -115,6 +120,7 @@ public class CSPStats{
 		 this.target = c.target;
 		 this.fftarget = c.fftarget;
 		 this.vectorSize = c.vectorSize;
+		 this.sstate = c.sstate;
 	}
 	
 	/**
@@ -164,7 +170,8 @@ public class CSPStats{
 						/*","+explorer+*/","+this.locmin+","+this.swaps+","+this.reset+
 						","+sameIter+","+this.restart+","+bpl+","+sgl+","+this.change+","+
 						this.forceRestart+","+this.groupR+","+(this.cost == 0)+","+
-						(this.target ? "S":"-" )+","+this.cost+","+this.fftarget+","+gap);
+						(this.target ? "S":"-" )+","+this.cost+","+this.fftarget+","+gap+","
+						+sstate(0)+","+sstate(1)+","+sstate(2));
 		}else{
 			Console.OUT.printf("|  %3d  | %8.4f | %8d | %3d-%2d | %8d |",count, this.time,
 					  this.iters, this.team, this.explorer, this.locmin);
@@ -175,6 +182,7 @@ public class CSPStats{
 			Console.OUT.printf(" %4d | %3d-%3d | %3d |", this.change, this.forceRestart,
 					  this.groupR,(this.cost == 0 ? 1 : 0 ));
 			Console.OUT.printf("  %s | %8d |%6.3f |", (this.target ? "S":"-" ),this.cost,gap);
+			Console.OUT.printf("  %1d %2d %3d |", this.sstate(0),this.sstate(1),this.sstate(2));
 		} 
 	}
 
@@ -200,7 +208,7 @@ public class CSPStats{
 			if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
 				 Console.OUT.printf(" %3.1f | %3.1f |",bp/(no as float), singles/(no as Double));
 			Console.OUT.printf(" %4.1f | %2.1f-%2.1f |", changeF, forceRestart/(no as float),groupR/(no as float));
-			Console.OUT.printf(" %3d | %2d |%10.1f|%6.3f |",accPS, ntarget, avgCost,gap);
+			Console.OUT.printf(" %3d | %2d |%10.1f|%6.3f |           |",accPS, ntarget, avgCost,gap);
 		}
 	}
 	
@@ -224,6 +232,8 @@ public class CSPStats{
 		 this.accPS = 0n;
 		 this.ntarget = 0n;
 		 this.vectorSize = 1;
+		 this.sstate = new Rail[Int](3, -1n);
+		 
 	}
 	
 	public def setTarget(target:Long) : void

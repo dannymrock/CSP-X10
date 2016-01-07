@@ -76,9 +76,12 @@ public class Main {
 	 public static val QA_PROBLEM = 8n;
 	 // Solvers
 	 public static val UNKNOWN_SOL = 0n;
-	 public static val AS_SOL = 1n;
-	 public static val EO_SOL = 2n;
-	 public static val RoTS_SOL = 3n;
+	 public static val RS_SOL = 1n;
+	 public static val AS_SOL = 2n;
+	 public static val EO_SOL = 3n;
+	 public static val RoTS_SOL = 4n;
+	 public static val Hybrid_SOL = 5n;
+	 
 	
 	 var fp  : File;
 	 
@@ -162,6 +165,8 @@ public class Main {
 				solParam = EO_SOL;
 		  else if(solverIn.equals("RoTS"))
 				solParam = RoTS_SOL;
+		  else if(solverIn.equals("HY"))
+				solParam = Hybrid_SOL;
 		  
 		  /**
 		   *  Creating objects for solver execution
@@ -190,14 +195,14 @@ public class Main {
 		  
 		  
 		  val sparam = solParam;
-		  val solGen = ():RandomSearch(valSize)=>Solver(sparam).make( valSize, 
+		  val solGen = (param:Int):RandomSearch(valSize)=>Solver(param).make( valSize, 
 		  solvers() as IParallelSolver(valSize), opts );
 		  
 		  /**
 		   *  Install solver data structures on every available place
 		   */
 		  finish for (p in Place.places()) at (p) async{    
-				solvers().installSolver(solvers, solGen);
+				solvers().installSolver(solvers, solGen, sparam);
 		  }
 		  
 		  val nPath = new StringBuilder();
@@ -213,7 +218,7 @@ public class Main {
 		  if(outFormat == 0n){
 				Console.OUT.println("1_Instance,2_Count,3_Time(s),4_Iters,*5_Place,6_Local_Min,7_Swaps,8_Resets,"
 						  +"9_Same/iter,10_Restarts,11_Blocking_Pairs,12_Singles,13_Changes,14_Force_Restart_Place,15_Force_Restart_Team,"
-						  +"16_Perfect_Sol,17_Target_Ac,18_Cost,*19_Distance_to_Target,20_Gap,21_Wall_Time");
+						  +"16_Perfect_Sol,17_Target_Ac,18_Cost,*19_Distance_to_Target,20_Gap,21_state_0,22_state_1,23_state_2,24_Wall_Time");
 		  }
 		  
 		  /**
@@ -446,15 +451,14 @@ public class Main {
 		  {
 				if (problem == Main.STABLE_MARRIAGE_PROBLEM || problem == Main.HOSPITAL_RESIDENT_PROBLEM)
 				{	
-					 Console.OUT.println("|-----------------------------------------------------------------------------------------------------------------------------------------------------------|");
-					 Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS | TS |final cost|  gap  |   wtime  |");
-					 Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|----|----------|-------|----------|");
+					 Console.OUT.println("|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|");
+					 Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| BP  | Sng | Cng  | frP-frT |  PS | TS |final cost|  gap  |   state   |   wtime  |");
+					 Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|-----|-----|------|---------|-----|----|----------|-------|-----------|----------|");
 				} else
 				{
-					 Console.OUT.println("|-----------------------------------------------------------------------------------------------------------------------------------------------|");
-					 Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Cng  | frP-frT |  PS | TS |final cost|  gap  |   wtime  |");
-					 Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|------|---------|-----|----|----------|-------|----------|");
-					 
+					 Console.OUT.println("|-----------------------------------------------------------------------------------------------------------------------------------------------------------|");
+					 Console.OUT.println("| Count | Time (s) |  Iters   | Place  |  LocMin  |  Swaps   |  Resets  | Sa/It |ReSta| Cng  | frP-frT |  PS | TS |final cost|  gap  |   state   |   wtime  |");
+					 Console.OUT.println("|-------|----------|----------|--------|----------|----------|----------|-------|-----|------|---------|-----|----|----------|-------|-----------|----------|");		 
 				}
 		  }
 	 }

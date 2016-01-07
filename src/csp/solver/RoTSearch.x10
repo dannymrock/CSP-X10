@@ -3,6 +3,7 @@ import csp.model.ParamManager;
 import x10.array.Array_2;
 import csp.model.ModelAS;
 import csp.util.Utils;
+import csp.model.Main;
 
 public class RoTSearch extends RandomSearch {
 	 
@@ -22,6 +23,11 @@ public class RoTSearch extends RandomSearch {
 	 public def this(sizeS:Long, solver:IParallelSolver(sizeS), opts:ParamManager)
 	 : RoTSearch(sizeS){
 		  super(sizeS, solver, opts);
+		  
+		  this.mySolverType = Main.RoTS_SOL;
+		  
+		  
+		  //Console.OUT.println(here+" RoTS");
 		  
 		  this.tabuDuration = (tabuDurationFactor * this.sz) as Int;
 		  this.aspiration = (aspirationFactor * this.sz * this.sz) as Int;

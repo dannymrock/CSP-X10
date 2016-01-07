@@ -35,7 +35,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  poolMode = pMode;
 		  distance = minDist;		  
 		  for (i in 0..2)
-				pool(i) = new Rail[CSPSharedUnit(sz)](poolSize, CSPSharedUnit(sz,0n,null,0n,-1.0,-1n));
+				pool(i) = new Rail[CSPSharedUnit(sz)](poolSize, CSPSharedUnit(sz,0n,null,0n,null));
 	 }
 	 
 	 public def setSeed(seed:Long){
@@ -83,13 +83,13 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				pool(poolType)(nbEntries(poolType)++) = inInfo;
 					 //new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 				// Return dummy value, there isn't victim
-				return new CSPSharedUnit( sz, 0n, null, -1n, -1.0, -1n);
+				return new CSPSharedUnit( sz, 0n, null, -1n, null);
 		  }else{
 			   for ( var i:Int = 0n; i < this.nbEntries(poolType); i++){
 			   	 // Select worst conf
 					 val thisCost = pool(poolType)(i).cost;
 					 if (thisCost == inInfo.cost && distance(inInfo.vector, pool(poolType)(i).vector) < dist)
-						  return new CSPSharedUnit( sz, 0n, null, -1n, -1.0, -1n);
+						  return new CSPSharedUnit( sz, 0n, null, -1n, null);
 					 if (thisCost > worstCost){
 						  worstCost = thisCost;
 						  worstConf = i;
@@ -106,7 +106,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				if (this.nbEntries(poolType) < this.poolSize && inInfo.cost < worstCost ){
 					 pool(poolType)(this.nbEntries(poolType)++) = inInfo;
 						 // new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
-					 return new CSPSharedUnit( sz, 0n, null, -1n, -1.0, -1n);
+					 return new CSPSharedUnit( sz, 0n, null, -1n, null);
 				}else	if (worstConf >= 0n && inInfo.cost < worstCost){
 					 val victim = pool(poolType)(worstConf);
 					 //pool(poolType)(worstConf) = inInfo;
@@ -115,7 +115,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 					 return victim;
 				}
 		  }
-		  return new CSPSharedUnit( sz, 0n, null, -1n, -1.0, -1n);
+		  return new CSPSharedUnit( sz, 0n, null, -1n, null);
 	 }
 	 
 	 /**

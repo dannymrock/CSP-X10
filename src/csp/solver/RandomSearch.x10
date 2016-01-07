@@ -5,6 +5,7 @@ import csp.util.Logger;
 import csp.model.ParamManager;
 import x10.io.File;
 import csp.util.Utils;
+import csp.model.Main;
 
 /**
  * Basic Implementation of a Random Search Solver
@@ -76,6 +77,7 @@ public class RandomSearch(sz:Long){
 	 protected var modParams:Int;
 	 
 	 protected var costLR:Long = Long.MAX_VALUE;
+	 protected var mySolverType:Int = Main.RS_SOL;
 	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
@@ -235,19 +237,18 @@ public class RandomSearch(sz:Long){
 	  */
 	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
 		  
-		  /**
-		   *  Interaction with other places
-		   */
+		  // Interaction with other places
 		  if( this.reportI != 0n && this.nIter % this.reportI == 0n){
 				if(!bestSent){ 
-					 //solver.communicate( this.bestCost, this.bestConf as Valuation(sz));
-					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), here.id as Int, -1.0, -1n));
+					 val solverState = createSolverState();
+					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), here.id as Int, solverState ));
 					 bestSent = true;
 				}
 				else{
-					 if (random.nextInt(reportI) == 0n)
-						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), here.id as Int, -1.0, -1n));
-						  //solver.communicate( this.currentCost, cop_.getVariables());
+					 if (random.nextInt(reportI) == 0n){
+						  val solverState = createSolverState();
+						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), here.id as Int, solverState));
+					 }		  
 				}
 		  }
 		  
@@ -266,9 +267,7 @@ public class RandomSearch(sz:Long){
 				} 
 		  }
 		  
-		  /**
-		   *  Force Restart: Inter Team Communication
-		   */
+		  // Force Restart: Inter Team Communication
 		  if (this.forceRestart){
 				//restart
 				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
@@ -280,20 +279,13 @@ public class RandomSearch(sz:Long){
 				val result = this.solver.getPR();
 				if (result != null){	
 					 
-					 // Change vector if we are improving since last Restart
-					 if (this.currentCost < this.costLR ){	 
-						  cop_.setVariables(result().vector);
-					 }
-					 //cop_.setVariables(result().vector); 
+					 cop_.setVariables(result().vector);
+					 if(this.modParams == 1n)
+						  processSolverState(result().solverState);
 				} else {
-					 
-					 if (this.currentCost < this.costLR ){	 
-						  cop_.initialize();
-					 } 
-					 //cop_.initialize();
+					 cop_.initialize();
 				}
 				
-				this.costLR = this.currentCost;
 				this.currentCost = cop_.costOfSolution(true);
 				this.bestSent = true;
 				
@@ -304,6 +296,26 @@ public class RandomSearch(sz:Long){
 				// }
 		  }
 	 }
+	
+	 /**
+	  *  Create Solver State array to be send to Pool
+	  */
+	 protected def createSolverState( ) : Rail[Int]{self.size==3}{
+		  val rsState = new Rail[Int](3,-1n);
+		  rsState(0) = this.mySolverType;
+		  return rsState;  
+	 }
+	 
+	 /**
+	  *  Process Solver State Array received from Pool
+	  * 
+	  */
+	 protected def processSolverState( state : Rail[Int]{self.size==3}){
+		  // Random Search has no parameters to process
+	 }
+
+	
+	 
 	 
 	 /**
 	  * 	Clean solver variables to prepare a new solver execution.
@@ -345,6 +357,8 @@ public class RandomSearch(sz:Long){
 		  c.restart = this.nRestart;
 		  c.change = this.nChangeV;
 		  c.forceRestart = this.nForceRestart;
+		  val state = createSolverState();
+		  c.sstate = state;
 	 }
 	 
 	 protected def restartVar(cop : ModelAS){
@@ -355,29 +369,6 @@ public class RandomSearch(sz:Long){
 		  nSwap = 0n;
 		  nIter = 0n;
 	 }
-	 
-	 // protected def updateCosts(cop : ModelAS){
-		//   /**
-		//    *  optimization
-		//    */
-		//   if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
-		// 		Rail.copy(cop.getVariables(), this.bestConf as Valuation(sz));
-		// 		this.bestCost = this.currentCost;
-		// 		
-		// 		if (this.reportPart){
-		// 			 val eT = (System.nanoTime() - initialTime)/1e9;
-		// 			 val gap = (this.bestCost-this.target)/(this.bestCost as Double)*100.0;
-		// 			 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-		// 		}
-		// 		
-		// 		// Compare cost and break if target is accomplished
-		// 		if ((this.strictLow && this.bestCost < this.target)
-		// 				  ||(!this.strictLow && this.bestCost <= this.target)){
-		// 			 this.targetSucc = true;
-		// 			 this.kill = true;
-		// 		}
-		//   }
-	 // }
 	 
 	 protected def updateCosts(cop : ModelAS){
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
@@ -392,9 +383,6 @@ public class RandomSearch(sz:Long){
 
 					 Utils.show("Solution",this.bestConf);
 					 Console.OUT.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
-					 // print on alternative tty
-					 //val p = altTty.printer();
-					 //p.printf("%s\ttime: %5.1f s\tbest cost: %10d\tgap: %5.2f%% \n",here,eT,this.bestCost,gap);
 				}
 				
 				// Console.OUT.println(here+" best cost= "+bestCost);

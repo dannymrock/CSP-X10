@@ -189,8 +189,8 @@ public class CommManager(sz:Long) {
 				val bc = ep.getBestConf();
 				if (bc != null){
 					 p.print("\033[H\033["+ ( myTeamId + 1 ) + "B");
-					 p.printf("\033[2K\rTeam %3d          best cost %10d    tau %3.2f  pdf %d",
-								myTeamId,bc().cost,bc().tau,bc().pdf);
+					 p.printf("\033[2K\rTeam %3d          best cost %10d    solver %1d  param1 %3d  param2 %3d",
+								myTeamId,bc().cost,bc().solverState(0),bc().solverState(1),bc().solverState(2));
 					 p.flush();
 				}
 		  }
@@ -368,7 +368,7 @@ public class CommManager(sz:Long) {
 				}
 				
 				
-				val newConf =  new CSPSharedUnit( sz, -1n, c, geta().place, geta().tau, geta().pdf);
+				val newConf =  new CSPSharedUnit( sz, -1n, c, geta().place, geta().solverState);
 				return new Maybe(newConf as CSPSharedUnit(sz));
 		  }else
 				return null;
@@ -428,7 +428,7 @@ public class CommManager(sz:Long) {
 				
 				// return parameters of one of the LM pool (I selected send "a" params, todo: try "b" or random)
 				//Maybe[CSPSharedUnit(sz)]
-				val mutConf =  new CSPSharedUnit( sz, geta().cost, c, geta().place, geta().tau, geta().pdf);
+				val mutConf =  new CSPSharedUnit( sz, geta().cost, c, geta().place, geta().solverState);
 				return new Maybe(mutConf as CSPSharedUnit(sz));//true;
 		  }else
 				return null;//false;
@@ -462,7 +462,7 @@ public class CommManager(sz:Long) {
 				//Rail.copy( finalConf, vector );
 				//Utils.show("final conf=",finalConf);
 				//return true;
-				val newConf = new CSPSharedUnit( sz, getSeedC().cost, finalConf, getSeedC().place, getSeedC().tau, getSeedC().pdf);
+				val newConf = new CSPSharedUnit( sz, getSeedC().cost, finalConf, getSeedC().place, getSeedC().solverState);
 				return new Maybe(newConf as CSPSharedUnit(sz)); //true;
 		  }else
 				return null; //Snew CSPSharedUnit( sz, -1n, null, -1n, -1.0, -1n); //return false;
