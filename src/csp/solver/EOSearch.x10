@@ -67,9 +67,11 @@ public class EOSearch extends RandomSearch {
 	 private var pdfS:Int;
 	 private val selSecond:Int;
 	 
-	 private var tau1:Double = 1;
-	 private var tau2:Double = 0.5;
-	 private var tau3:Double = 1;
+	 private val expDown : Double;
+	 private val expUp : Double;
+	 private val powDown : Double;
+	 private val powUp : Double;
+	 
 	 
 	 
 	 public def this(sizeP:Long, solver:IParallelSolver(sizeP), opts:ParamManager)
@@ -102,7 +104,15 @@ public class EOSearch extends RandomSearch {
 				Console.OUT.println("Parameters EO: TAU= "+tau+", pdf= "
 						  +PDFname+ ", Second_variable_selection="+
 						  (selSecond==0n?"Random":"MinConflict"));
+		  
+		  
+		  // Compute interval limit for random tau
+		  this.expDown = 6.385378048 * Math.pow(this.sz,-1.033400799);
+		  this.expUp = 8.867754442 * Math.pow(this.sz,-0.895936426);
+		  this.powDown = 1.575467001 * Math.pow(this.sz,-0.1448643794);
+		  this.powUp = 2.426369897 * Math.pow(this.sz,-0.1435045369);
 
+		  
 	 }
 	 
 	  
@@ -130,17 +140,17 @@ public class EOSearch extends RandomSearch {
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  if ( this.pdfS == -1n ) { // Select a random PDF
-				this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
+				this.pdfS = random.nextInt(2n)+1n; // from 1 to 3
 		  }
 		  
 		  if ( this.tau == -1.0 ) { // Select a random tau from 0 to tau 
-				if ( this.pdfS == 1n)
-					 this.tau = 0.0001+(2*random.nextDouble()); // from 0.0001 to 2.0001
-				else if ( this.pdfS == 2n)
-					 this.tau = 0.0001+random.nextDouble(); // from 0.0001 to 1.0001
-				else if ( this.pdfS == 3n)
-					 this.tau = 1.5+random.nextDouble(); // from 1.5 to 2.5
-				
+				if ( this.pdfS == 1n) {
+					 this.tau = this.powDown + (powUp - powDown) * random.nextDouble();
+				}
+				else if ( this.pdfS == 2n) {
+					 this.tau = this.expDown + (expUp - expDown) * random.nextDouble();
+				}
+				//Console.OUT.println(here+"pdf "+pdfS+" tau "+this.tau );
 		  }
 		  
 		  if ( this.pdfS == 1n )
@@ -299,7 +309,7 @@ public class EOSearch extends RandomSearch {
 		  val eoState = new Rail[Int](3,-1n);
 		  eoState(0) = this.mySolverType;
 		  eoState(1) = this.pdfS;
-		  eoState(2) = (this.tau * 100.0) as Int; // TODO: convert double to Int??? levels ranges ???
+		  eoState(2) = (this.tau * 1000.0) as Int; // TODO: convert double to Int??? levels ranges ???
 		  return eoState;  
 	 }
 	 
@@ -314,20 +324,18 @@ public class EOSearch extends RandomSearch {
 		   
 		  if (inSolverType == this.mySolverType){
 				val inpdf = state(1);
-				val intau = state(2) / 100.0;
+				val intau = state(2) / 1000.0;
 				if (this.pdfS == inpdf) {
 					 //Console.OUT.println(here+" Changing Tau");
 					 //this.tau = (intau + this.tau) / 2.0;
 					 this.tau = intau; 
 				} else {
-					 //Console.OUT.println(here+" Changing PDF and Tau");
-					 this.pdfS = random.nextInt(3n)+1n; // from 1 to 3
-					 if ( this.pdfS == 1n)
-						  this.tau = 0.0001+(2*random.nextDouble()); // from 0.0001 to 2.0001
-					 else if ( this.pdfS == 2n)
-						  this.tau = 0.0001+random.nextDouble();     // from 0.0001 to 1.0001
-					 else if ( this.pdfS == 3n)
-						  this.tau = 1.5+random.nextDouble();        // from 1.5 to 2.5
+					 if ( this.pdfS == 1n) {
+						  this.tau = this.powDown + (powUp - powDown) * random.nextDouble();
+					 }
+					 else if ( this.pdfS == 2n) {
+						  this.tau = this.expDown + (expUp - expDown) * random.nextDouble();
+					 }
 				}
 				
 				if ( this.pdfS == 1n )

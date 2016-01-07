@@ -6,6 +6,7 @@ import csp.model.ParamManager;
 import x10.io.File;
 import csp.util.Utils;
 import csp.model.Main;
+import x10.util.StringUtil;
 
 /**
  * Basic Implementation of a Random Search Solver
@@ -69,8 +70,6 @@ public class RandomSearch(sz:Long){
 	 protected var nChangeV : Int = 0n;
 	 protected var bestSent:Boolean=false;
 	 
-	 protected val altTty:File;
-	 
 	 protected var updateI:Int;
 	 protected var reportI:Int;// = (sz* Math.log(sz)) as Int ;//10n; 
 	 protected var adaptiveComm:Boolean = false;
@@ -78,6 +77,7 @@ public class RandomSearch(sz:Long){
 	 
 	 protected var costLR:Long = Long.MAX_VALUE;
 	 protected var mySolverType:Int = Main.RS_SOL;
+	 protected var maxUpdateI : Int = 100000n;
 	 
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
@@ -103,8 +103,11 @@ public class RandomSearch(sz:Long){
 		  //reportI =  adaptiveComm ? sz as Int : rep;
 		  updateI =  adaptiveComm ? (2n * reportI) : upd;
 		  
+		  val mustr = System.getenv("MU");
+		  if (mustr != null)
+				maxUpdateI = StringUtil.parseInt(mustr);
 		  
-		  this.altTty = new File("/dev/pts/1");
+		  
 		  
 	 }
 
@@ -224,7 +227,7 @@ public class RandomSearch(sz:Long){
 	 
 	 
 	 /**
-	  *  Set the seed used fotr the random number generator.
+	  *  Set the seed used for the random number generator.
 	  */
 	 public def setSeed(seed:Long){
 		  this.seed = seed;
@@ -253,7 +256,7 @@ public class RandomSearch(sz:Long){
 		  }
 		  
 		  if( this.updateI != 0n && this.nIter % this.updateI == 0n ){
-				if ( this.adaptiveComm && this.updateI < 100000n ){
+				if ( this.adaptiveComm && this.updateI < maxUpdateI ){ 
 					 this.updateI *= 2n;
 					 // Console.OUT.println(here+" updateI " + updateI);
 				}

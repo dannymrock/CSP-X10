@@ -141,7 +141,14 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 					solver = solGen(Main.EO_SOL);
 			  else
 					solver = solGen(Main.RoTS_SOL);
-			  	
+			  
+			  // if (here.id < (Place.MAX_PLACES / 3))
+					// solver = solGen(Main.EO_SOL);
+			  // else if (here.id < (Place.MAX_PLACES / 3 * 2))
+					// solver = solGen(Main.RoTS_SOL);
+			  // else
+					// solver = solGen(Main.AS_SOL);
+			  
 		 }else 
 			  solver = solGen(solverType);
 		  

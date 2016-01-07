@@ -52,6 +52,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  
 		  this.mySolverType = Main.AS_SOL;
 		  
+		  //Console.OUT.println(here+" AS");
 		  
 		  this.mark = new Rail[Int] (sizeS, 0n);
 		  this.listIJ = new Rail[MovePermutation](sizeS);
