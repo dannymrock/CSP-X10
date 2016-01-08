@@ -108,7 +108,7 @@ public class ParamManager extends OptionsParser {
 				val key = line.substring(0n, sepIndex);
 				val value = line.substring(sepIndex+1n);
 
-				Console.OUT.println("key "+ key+" value "+value);
+				//Console.OUT.println("key "+ key+" value "+value);
 				//Console.OUT.println("value "+ value);
 				
 				// TODO: process flags  and empty "values" in the param file
@@ -175,8 +175,8 @@ public class ParamManager extends OptionsParser {
 		  val solverMode	    = this("-sm", 1n);
 		  val restartLimit   = this("-mi", 1000000000n);
 		  val maxTime        = this("-mt", 0);
-		  val tCostFromCL    = this("-tf", 0n);
-		  val costFromF      = this("-tc", 0);
+		  val tCostFromCL    = this("-tc", 0n);
+		  val costFromF      = this("-tf", 0);
 		  val testNb         = this("-b", 10n);
 		  val solverIn       = this("-sl", "AS");
 		  val nodesPTeam     = this("-N", 1n);		

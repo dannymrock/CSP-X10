@@ -159,20 +159,9 @@ public class AdaptiveSearch extends RandomSearch {
 		  return currentCost;
 	 }
 	 
-	 protected def restartVar(cop : ModelAS){
-		  super.restartVar(cop);
-		  //Rail.copy(csp.getVariables() as Valuation(sz),bestConf as Valuation(sz));
-		  //bestCost = totalCost;
+	 protected def restartVar(){
+		  super.restartVar();
 		  mark.clear();
-		  //nbRestart++;			
-		  //Update Total statistics
-		  nResetTot += nReset;        
-		  nSameVarTot += nSameVar;
-		  nLocalMinTot += nLocalMin; 
-		  //Restart local var
-		  nSameVar = 0n;
-		  nLocalMin = 0n;
-		  nReset = 0n;
 	 }
 	 
 	 private def doReset(n:Long, cop_ : ModelAS ) {
@@ -439,6 +428,9 @@ public class AdaptiveSearch extends RandomSearch {
 		  nResetTot += nReset;
 		  nSameVarTot += nSameVar;
 		  nLocalMinTot += nLocalMin;
+		  nSameVar = 0n;
+		  nLocalMin = 0n;
+		  nReset = 0n;
 	 }
 	 
 	 /**

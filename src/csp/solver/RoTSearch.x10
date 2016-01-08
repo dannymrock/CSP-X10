@@ -22,11 +22,11 @@ public class RoTSearch extends RandomSearch {
 	 private val tabuList : Array_2[Long];
 	 
 	 /** Range for random factors 	  */
-	 val tdd = 1.0;
-	 val tdu = 16.0;
+	 val tdd = 6.0;
+	 val tdu = 10.0;
 	 
-	 val ad = 1.0;
-	 val au = 10.0;
+	 val ad = 2.0;
+	 val au = 7.0;
 	 
 	 public def this(sizeS:Long, solver:IParallelSolver(sizeS), opts:ParamManager)
 	 : RoTSearch(sizeS){
@@ -156,6 +156,11 @@ public class RoTSearch extends RandomSearch {
 				tabuList( move.getSecond(), cop_.variables(move.getFirst())) = this.nIter + ((ran2*ran2*ran2) * this.tabuDuration) as Int;
 					 //current_iteration + (int) (cube(Random_Double()) * tabu_duration);
 				//Utils.show("after swap",cop_.getVariables());
+				
+				// detect loc min
+				if (minDelta >= 0)
+					 onLocMin(cop_);
+				
 				return this.currentCost + minDelta;
 		  }
 		  
@@ -199,6 +204,21 @@ public class RoTSearch extends RandomSearch {
 				this.aspiration = (this.aspirationFactor * this.sz * this.sz) as Int;
 		  }
 	 } 	 
+	 
+	 protected def restartVar(){
+		  super.restartVar();
+		  tabuList.clear();
+	 }
+	 
+	 /**
+	  *  Interact when Loc min is reached
+	  */
+	 private def onLocMin(cop : ModelAS){
+		  // communicate Local Minimum
+		  // solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
+		  val solverState = this.createSolverState();
+		  this.solver.communicateLM( new CSPSharedUnit(sz, this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
+	 }
 	 
 }
 public type RoTSearch(s:Long)=RoTSearch{self.sz==s};

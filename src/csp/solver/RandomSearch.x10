@@ -134,7 +134,10 @@ public class RandomSearch(sz:Long){
 						  break;
 					 }else{
 						  nRestart++;
-						  restartVar( cop );
+						  cop.initialize(); 
+						  currentCost = cop.costOfSolution(true);
+						  updateTotStats();
+						  restartVar();
 						  continue;
 					 }
 				}
@@ -266,7 +269,7 @@ public class RandomSearch(sz:Long){
 				if (result) {
 					 this.nChangeV++;
 					 this.currentCost = cop_.costOfSolution(true);
-					 bestSent = true;
+					 restartVar();
 					 //Console.OUT.println("Changing vector in "+ here);
 				} 
 		  }
@@ -277,21 +280,17 @@ public class RandomSearch(sz:Long){
 				Logger.info(()=>{"   AdaptiveSearch : force Restart"});
 				this.forceRestart = false;
 				this.nForceRestart++;
-				
 				// get a new conf according the diversification approach
-				//val c = new Rail[Int](sz, 0n);
 				val result = this.solver.getPR();
 				if (result != null){	
-					 
 					 cop_.setVariables(result().vector);
 					 if(this.modParams == 1n)
 						  processSolverState(result().solverState);
 				} else {
 					 cop_.initialize();
 				}
-				
 				this.currentCost = cop_.costOfSolution(true);
-				this.bestSent = true;
+				restartVar();
 				
 				// restart self-adaptive UR params
 				// if ( this.adaptiveComm ){
@@ -365,13 +364,11 @@ public class RandomSearch(sz:Long){
 		  c.sstate = state;
 	 }
 	 
-	 protected def restartVar(cop : ModelAS){
-		  cop.initialize(); 
-		  currentCost = cop.costOfSolution(true);
-		  updateTotStats();
+	 /**
+	  *  Restart solver state variables
+	  */
+	 protected def restartVar(){
 		  bestSent = false;
-		  nSwap = 0n;
-		  nIter = 0n;
 	 }
 	 
 	 protected def updateCosts(cop : ModelAS){
@@ -403,7 +400,9 @@ public class RandomSearch(sz:Long){
 	 
 	 protected def updateTotStats(){
 		  this.nIterTot += this.nIter;
-		  this.nSwapTot += this.nSwap;  
+		  this.nSwapTot += this.nSwap; 
+		  nSwap = 0n;
+		  nIter = 0n;
 	 }
 	 
 	 

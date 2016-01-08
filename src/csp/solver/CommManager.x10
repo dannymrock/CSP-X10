@@ -188,7 +188,7 @@ public class CommManager(sz:Long) {
 		  if (this.debug && this.isHeadNode){
 				val bc = ep.getBestConf();
 				if (bc != null){
-					 p.print("\033[H\033["+ ( myTeamId + 1 ) + "B");
+					 p.print ("\033[H\033["+ ( myTeamId + 1 ) + "B");
 					 p.printf("\033[2K\rTeam %3d          best cost %10d    solver %1d  param1 %3d  param2 %3d",
 								myTeamId,bc().cost,bc().solverState(0),bc().solverState(1),bc().solverState(2));
 					 p.flush();

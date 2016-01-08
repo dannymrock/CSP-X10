@@ -84,10 +84,7 @@ public class EOSearch extends RandomSearch {
 		  
 		  //Console.OUT.println(here+" EO");
 		  this.pdf = new Rail[Double] (sizeP+1, 0.0);// +1 since x in 1..size
-		  
-		  //fit = new Rail[Pair[Long,Long]](this.sz); 
 		  this.fit = new Rail[Long](sizeP, 0);
-		  //this.solver = solver;
 		  
 		  // Parameters
 		  this.tauUserSel = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
@@ -100,11 +97,8 @@ public class EOSearch extends RandomSearch {
 		  this.powDown = 1.575467001 * Math.pow(this.sz,-0.1448643794);
 		  this.powUp = 2.426369897 * Math.pow(this.sz,-0.1435045369);
 		  
-		  
-		  
-		  // Display Options
+		  // Show Parameters
 		  var PDFname:String = "";
-		  
 		  if (this.pdfUserSel == -1n)
 				PDFname = "Random (exp or pow)";
 		  else if(this.pdfUserSel == 2n)
@@ -113,12 +107,10 @@ public class EOSearch extends RandomSearch {
 				PDFname = "gamma";
 		  else // ( this.pdfUserSel == 1n ) // 1 and any other number
 				PDFname = "pow";
-		  
 		  if (here.id == 0)
 				Console.OUT.println("Parameters EO: TAU= "+(tauUserSel == -1.0 ? "Random":tauUserSel)+", pdf= "
 						  +PDFname+ ", Second_variable_selection="+
 						  (selSecond==0n?"Random":"MinConflict"));
-
 	 }
 
 	 
@@ -128,7 +120,7 @@ public class EOSearch extends RandomSearch {
 	  */
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
-		  
+		  Logger.debug(()=>{"EOSolver - iniVar"});
 		  if ( this.pdfUserSel == -1n ) { // Select a random PDF
 				this.pdfS = random.nextInt(2n)+1n; // from 1 to 3
 		  }else
@@ -152,15 +144,11 @@ public class EOSearch extends RandomSearch {
 				initPDF( this.expFnc );
 		  else //( this.pdfS == 1n )
 				initPDF( this.powFnc );
-		  
-		  Logger.debug(()=>{"EOSolver"});
-
 	 }
 	 
 	 private def initPDF( fnc:(tau : Double, x : Long)=>Double ){
 		  var sum:Double = 0.0;
 		  var y:Double = 0.0;
-		  
 		  for (var x:Int = 1n; x <= this.sz; x++){
 				y = fnc(this.tau, x);
 				pdf(x) = y;
@@ -173,25 +161,21 @@ public class EOSearch extends RandomSearch {
 		  //	Console.OUT.println(pdf(x)+" ");//Console.OUT.println( x+"-"+pdf(x)+" ");
 	 }
 
-	 
-	  
 	 /**
-	  *  Search process (in loop functionality)
-	  *  To be overwrited for each child class (solver) 
+	  *  Extremal Search process (in loop functionality)
 	  */
 	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  //Console.OUT.println("EO");
-		  
-		  selFirstVar( cop_, move );
-		  if (selSecond == 0n)
-				currentCost = selSecondRandom( cop_, move);
+		  this.selFirstVar( cop_, this.move );
+		  if (this.selSecond == 0n)
+				currentCost = this.selSecondRandom( cop_, this.move);
 		  else 
-				currentCost = selSecondMinConf( cop_, move);
+				currentCost = this.selSecondMinConf( cop_, this.move);
 		  	
 		  //newCost = selectSecondVar( cop_ , totalCost, eoi);
-		  cop_.swapVariables(move.getFirst(), move.getSecond()); //adSwap(maxI, minJ,csp);
+		  cop_.swapVariables(this.move.getFirst(), this.move.getSecond()); //adSwap(maxI, minJ,csp);
 		  nSwap++;
-		  cop_.executedSwap(move.getFirst(), move.getSecond());
+		  cop_.executedSwap(this.move.getFirst(), this.move.getSecond());
 		  return currentCost;
 	 }
 	 
@@ -201,7 +185,6 @@ public class EOSearch extends RandomSearch {
 		  var p:Double = random.nextDouble();
 		  var fx:Double;
 		  var x:Int = 0n;
-		  
 		  while( (fx = pdf(++x)) < p ){
 				p -= fx;
 		  }
@@ -213,13 +196,12 @@ public class EOSearch extends RandomSearch {
 		  var cost: Long;
 		  var selIndex:Long = 0; 
 		  var locMin:Boolean = true;
-		  
 		  while((i = cop_.nextI(i)) as ULong < this.sz as ULong) { //False if i < 0
 				cost = cop_.costOnVariable(i);
 				// each position on the fit array is divided to contain both i and cost
 				// variable index "i" is stored in the 10 LSB 
 				// the cost is stored in the remaining MSB 
-				fit(i) = cost << 10 | i;
+				this.fit(i) = cost << 10 | i;
 				//Console.OUT.printf("%d %X %X \n",cost,cost,fit(i));
 				
 				// Detect local min: 
@@ -228,21 +210,21 @@ public class EOSearch extends RandomSearch {
 					 locMin = false;
 				
 		  }
-		  RailUtils.sort(fit, cmp);	
+		  RailUtils.sort(this.fit, this.cmp);	
 		  
-		  if (locMin) onLocMin(cop_);
+		  if (locMin) this.onLocMin(cop_);
 		  
 		  // for (v in fit)
 		  //   Console.OUT.printf("%d %d \n",(v & 0xFFF),(v >>12));
 		  		
-		  val index = pdfPick();
-		  val sVar = fit(index) & 0x3FF;
-		  val sCost = fit(index) >> 10;
+		  val index = this.pdfPick();
+		  val sVar = this.fit(index) & 0x3FF;
+		  val sCost = this.fit(index) >> 10;
 		  //Console.OUT.printf("svar %d scost %d \n",sVar,sCost);
 		  var nSameFit:Int = 0n;
 		 
 		  for(var k:Int=0n; k < this.sz; k++){
-            val cCost = fit(k) >> 10; 
+            val cCost = this.fit(k) >> 10; 
 		      //Console.OUT.printf("cCost %d scost %d \n",cCost,sCost);
 				if ( cCost < sCost)   // descending order
 					 break;
@@ -251,7 +233,9 @@ public class EOSearch extends RandomSearch {
 					 selIndex = fit(k) & 0x3FF;
 		  }
 		  // Console.OUT.println("index "+index+ " selIndex "+selIndex+ " ");
-		  move.setFirst(selIndex);
+
+		  // Save first variable selected into the move object
+		  this.move.setFirst(selIndex);
 	 } 
 	 
 	 /**
@@ -267,7 +251,7 @@ public class EOSearch extends RandomSearch {
 		  var second : Long = 0;
 		  var nSameMin:Int = 0n;
 		  var minCost:Long = Long.MAX_VALUE;
-		  val first = move.getFirst();
+		  val first = this.move.getFirst();
 		  
 		  //Console.OUT.println("fv = "+ fv+" totalcost "+ totalCost);
 		  
@@ -291,16 +275,17 @@ public class EOSearch extends RandomSearch {
 		  // 	 this.onLocMin(csp);
 		  
 		  //Console.OUT.println("minJ = "+ minJ+" newCost "+ minCost+" totalcost "+ totalCost);
-		  move.setSecond(second);
+		  // Save second variable selected into the move object
+		  this.move.setSecond(second);
 		  return minCost;
 	 }
 	 
 	 
 	 
-	 private def selSecondRandom( csp : ModelAS, move:MovePermutation) : Long {
+	 private def selSecondRandom( cop : ModelAS, move:MovePermutation) : Long {
 		  val randomJ = random.nextLong(this.sz);
-		  val newCost = csp.costIfSwap(this.currentCost, randomJ, move.getFirst());	 
-		  move.setSecond(randomJ);
+		  val newCost = cop.costIfSwap(this.currentCost, randomJ, this.move.getFirst());	 
+		  this.move.setSecond(randomJ);
 		  return newCost; 
 	 }
 	 
@@ -310,8 +295,8 @@ public class EOSearch extends RandomSearch {
 	 private def onLocMin(cop : ModelAS){
 		  // communicate Local Minimum
 		  // solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
-		  val solverState = createSolverState();
-		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
+		  val solverState = this.createSolverState();
+		  this.solver.communicateLM( new CSPSharedUnit(sz, this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
 	 }
 	
 	 
