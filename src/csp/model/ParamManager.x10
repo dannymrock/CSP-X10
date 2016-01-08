@@ -45,6 +45,7 @@ public class ParamManager extends OptionsParser {
 					  Option("A", "Inter_Team_Affected_Explorers", "Inter Team Communicaction Diversification - Percentage of Places (A)ffected . Default 0."),
 					  Option("O", "Inter_Team_Option", "Diversification Option. 0 from Scratch 1 Path-Relinking."),
 					  Option("M", "Inter_Team_Params", "Diversification. modify parameters when corrective action is taken. 0 disable 1 enable."),
+					  Option("CD", "Inter_Team_CD", "Change vector on Corrective Action Diversification. 0 disable 1 enable."),
 					  // Pool Options
 					  Option("P_e", "poolsize_elite", "Max. number of configurations for the Elite Pool"),
 					  Option("P_lm", "poolsize_locmin", "Max. number of configuration for the local min. Pool"),
@@ -188,6 +189,9 @@ public class ParamManager extends OptionsParser {
 		  val minDistance    = this("-D", 0.3);
 		  val delayI         = this("-W", 0);
 		  val affectedP      = this("-A", 0.0);
+		  val changeParam    = this("-M", 1n);
+		  val changeVector   = this("-CD",1n);
+		  
 		  val inSeed         = this("-S", 0);
 		  val inputPath      = this("-if", ".");
 		  val outFormat	    = this("-of", 1n);
@@ -206,6 +210,7 @@ public class ParamManager extends OptionsParser {
 		  Console.OUT.println((nodesPTeam > 1n ? "Using ":"Without ")+"Cooperative Search: "+Place.MAX_PLACES+" places. "+nodesPTeam+" nodes per team "+(Place.MAX_PLACES as Int / nodesPTeam)+" Teams");
 		  Console.OUT.println("Intensification Parameters: Update Interval "+updateI+" iter. Report Interval "+reportI+" iter. Pool size "+poolSize+" conf. Probability to Change vector "+changeProb+"%");
 		  Console.OUT.println("Diversification Parameters: Interval "+interTI+" ms. Minimum distance: "+minDistance+" Initial delay "+delayI+" ms. Per. Affected Places "+(affectedP*100)+"%");
+		  Console.OUT.println("                            Corrective Action:"+(changeVector == 1n ? " Change Vector ":" - ")+(changeParam == 1n?"and Adapt Solver Parameters ":" - "));
 		  Console.OUT.println("");
 		  Console.OUT.println("Other Parameters:");
 		  Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );

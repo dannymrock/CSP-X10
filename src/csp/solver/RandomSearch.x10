@@ -73,12 +73,12 @@ public class RandomSearch(sz:Long){
 	 protected var updateI:Int;
 	 protected var reportI:Int;// = (sz* Math.log(sz)) as Int ;//10n; 
 	 protected var adaptiveComm:Boolean = false;
-	 protected var modParams:Int;
+	 protected val modParams:Int;
 	 
 	 protected var costLR:Long = Long.MAX_VALUE;
 	 protected var mySolverType:Int = Main.RS_SOL;
 	 protected var maxUpdateI : Int = 100000n;
-	 
+	 protected val changeOnDiver : Int;
 	 
 	 public def this(size:Long, solver:IParallelSolver(size), opt:ParamManager){
 		  property(size);
@@ -92,7 +92,8 @@ public class RandomSearch(sz:Long){
 		  this.maxRestarts = this.opts("-mr", 0n);
 		  this.reportPart = this.opts("-rp", 0n) == 1n;
 		  
-		  this.modParams = this.opts("-M", 0n);
+		  this.modParams = this.opts("-M", 1n);
+		  this.changeOnDiver = this.opts("-CD", 1n);
 		  
 		  val rep = this.opts( "-R", 0n );
 		  val upd = this.opts( "-U", 0n );
@@ -106,9 +107,6 @@ public class RandomSearch(sz:Long){
 		  val mustr = System.getenv("MU");
 		  if (mustr != null)
 				maxUpdateI = StringUtil.parseInt(mustr);
-		  
-		  
-		  
 	 }
 
 	 /**
@@ -283,14 +281,23 @@ public class RandomSearch(sz:Long){
 				// get a new conf according the diversification approach
 				val result = this.solver.getPR();
 				if (result != null){	
-					 cop_.setVariables(result().vector);
+					 
+					 if(this.changeOnDiver == 1n) {
+						  cop_.setVariables(result().vector);
+						  this.currentCost = cop_.costOfSolution(true);
+						  restartVar();
+					 }
+					 
 					 if(this.modParams == 1n)
 						  processSolverState(result().solverState);
 				} else {
-					 cop_.initialize();
+					 if(this.changeOnDiver == 1n) {
+						  cop_.initialize();
+						  this.currentCost = cop_.costOfSolution(true);
+						  restartVar();
+					 }
 				}
-				this.currentCost = cop_.costOfSolution(true);
-				restartVar();
+				
 				
 				// restart self-adaptive UR params
 				// if ( this.adaptiveComm ){

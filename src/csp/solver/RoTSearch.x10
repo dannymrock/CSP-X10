@@ -35,12 +35,12 @@ public class RoTSearch extends RandomSearch {
 		  this.mySolverType = Main.RoTS_SOL;
 		  //Console.OUT.println(here+" RoTS");
 		  
-		  this.tabuDurationFactorUS = opts("--RoTS_tabu_duration", 8.0);
-		  this.aspirationFactorUS = opts("--RoTS_aspiration", 5.0);
+		  this.tabuDurationFactorUS = opts("--RoTS_tabu_duration", -1.0);
+		  this.aspirationFactorUS = opts("--RoTS_aspiration", -1.0);
 		  
 		  this.tabuList = new Array_2 [Long](this.sz, this.sz , 0);
 		  
-		  if (here.id == 0){
+		  if (here.id == 0  || here.id == Place.MAX_PLACES - 1){
 				if ( this.tabuDurationFactorUS == -1.0 )
 					 Console.OUT.println("Parameters RoTS: tabu duration = random("+tdd+","+tdu+") * "+this.sz);
 				else

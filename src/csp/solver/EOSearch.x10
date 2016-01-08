@@ -86,8 +86,9 @@ public class EOSearch extends RandomSearch {
 		  this.pdf = new Rail[Double] (sizeP+1, 0.0);// +1 since x in 1..size
 		  this.fit = new Rail[Long](sizeP, 0);
 		  
-		  // Parameters
-		  this.tauUserSel = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
+		  // Parameters (Random by default)
+		  //this.tauUserSel = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
+		  this.tauUserSel = opts("--EO_tau", -1.0);
 		  this.pdfUserSel = opts("--EO_pdf", -1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
 		  
