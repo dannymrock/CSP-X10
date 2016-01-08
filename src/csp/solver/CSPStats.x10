@@ -182,7 +182,7 @@ public class CSPStats{
 			Console.OUT.printf(" %4d | %3d-%3d | %3d |", this.change, this.forceRestart,
 					  this.groupR,(this.cost == 0 ? 1 : 0 ));
 			Console.OUT.printf("  %s | %8d |%6.3f |", (this.target ? "S":"-" ),this.cost,gap);
-			Console.OUT.printf("  %1d %2d %3d |", this.sstate(0),this.sstate(1),this.sstate(2));
+			Console.OUT.printf("  %1d %3d %3d |", this.sstate(0),this.sstate(1),this.sstate(2));
 		} 
 	}
 

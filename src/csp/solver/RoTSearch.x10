@@ -7,44 +7,77 @@ import csp.model.Main;
 
 public class RoTSearch extends RandomSearch {
 	 
-	 private val tabuDurationFactor : Double = 8.0;
-	 private val aspirationFactor : Double = 5.0;
-	 private val tabuDuration : Int;
-	 private val aspiration : Int;
+	 private val tabuDurationFactorUS : Double;
+	 private val aspirationFactorUS : Double;
+	 private var tabuDurationFactor : Double;
+	 private var aspirationFactor : Double;
+	 private var tabuDuration : Int;
+	 private var aspiration : Int;
 	 
 	 private var autorized : Boolean; 
 	 private var aspired : Boolean;
 	 private var alreadyAspired : Boolean;
 	 
-	 
 	 /** Tabu List Matrix */
 	 private val tabuList : Array_2[Long];
+	 
+	 /** Range for random factors 	  */
+	 val tdd = 1.0;
+	 val tdu = 16.0;
+	 
+	 val ad = 1.0;
+	 val au = 10.0;
 	 
 	 public def this(sizeS:Long, solver:IParallelSolver(sizeS), opts:ParamManager)
 	 : RoTSearch(sizeS){
 		  super(sizeS, solver, opts);
 		  
 		  this.mySolverType = Main.RoTS_SOL;
-		  
-		  
 		  //Console.OUT.println(here+" RoTS");
 		  
-		  this.tabuDuration = (tabuDurationFactor * this.sz) as Int;
-		  this.aspiration = (aspirationFactor * this.sz * this.sz) as Int;
+		  this.tabuDurationFactorUS = opts("--RoTS_tabu_duration", 8.0);
+		  this.aspirationFactorUS = opts("--RoTS_aspiration", 5.0);
 		  
 		  this.tabuList = new Array_2 [Long](this.sz, this.sz , 0);
 		  
+		  if (here.id == 0){
+				if ( this.tabuDurationFactorUS == -1.0 )
+					 Console.OUT.println("Parameters RoTS: tabu duration = random("+tdd+","+tdu+") * "+this.sz);
+				else
+					 Console.OUT.println("Parameters RoTS: tabu duration = "+tabuDurationFactorUS+" * "+this.sz);			
+				
+				if ( this.aspirationFactorUS == -1.0 )
+					 Console.OUT.println("                 aspiration = random("+ad+","+au+") * "+this.sz+"^2 ");
+				else
+					 Console.OUT.println("                 aspiration = "+aspirationFactorUS+" * "+this.sz+"^2 ");
+		  }
 	 }
 	 
+	 /**
+	  *  Initialize variables of the solver
+	  *  Executed once before the main solving loop
+	  */
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
+		  
+		  if (this.tabuDurationFactorUS == -1.0) // Random initialitation of Tabu duration Factor 
+				this.tabuDurationFactor = tdd + (tdu-tdd) * random.nextDouble();
+		  else
+				this.tabuDurationFactor = this.tabuDurationFactorUS;
+		  
+		  if (this.aspirationFactorUS == -1.0) // Random initialitation of Tabu duration Factor 
+				this.aspirationFactor = ad + (au-ad) * random.nextDouble();
+		  else
+				this.aspirationFactor = this.aspirationFactorUS;
+			
+		  this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
+		  this.aspiration = (this.aspirationFactor * this.sz * this.sz) as Int;
 		  
 		  for (var i:Long = 0 ; i < this.sz; i++)
 				for (var j:Long = 0 ; j < this.sz; j++)
 					 this.tabuList(i,j) = -(this.sz * i + j);
 
 	 }
-	 
 	 
 	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
 		  var i : Long;
@@ -127,6 +160,45 @@ public class RoTSearch extends RandomSearch {
 		  }
 		  
 	 }
+	 
+	 
+	 /**
+	  *  Create RoTS Solver State array to be send to Pool
+	  *  oeState(0) = solverType  
+	  *  oeState(1) = RoTS tabu duration Factor * 100
+	  *  oeState(2) = RoTS aspiration Factor * 100
+	  */
+	 protected def createSolverState( ) : Rail[Int]{self.size==3}{
+		  val rotsState = new Rail[Int](3,-1n);
+		  rotsState(0) = this.mySolverType;
+		  rotsState(1) = (this.tabuDurationFactor * 10.0) as Int;
+		  rotsState(2) = (this.aspirationFactor * 10.0) as Int; 
+		  return rotsState;  
+	 }
+	 
+	 /**
+	  *  Process Solver State Array received from Pool
+	  * 
+	  */
+	 protected def processSolverState( state : Rail[Int]{self.size==3}){
+		  // Random Search has no parameters to process
+		  
+		  val inSolverType = state(0);
+		  
+		  if (inSolverType == this.mySolverType){
+				val intdf = state(1)/ 10.0;
+				val inaf = state(2) / 10.0;
+				
+				// this.tabuDurationFactor = intdf;
+				// this.aspirationFactor = inaf;
+				
+				this.tabuDurationFactor = (this.tabuDurationFactor + intdf) / 2.0;
+				this.aspirationFactor = (this.aspirationFactor + inaf) / 2.0;
+							
+				this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
+				this.aspiration = (this.aspirationFactor * this.sz * this.sz) as Int;
+		  }
+	 } 	 
 	 
 }
 public type RoTSearch(s:Long)=RoTSearch{self.sz==s};

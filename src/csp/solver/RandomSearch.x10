@@ -179,6 +179,7 @@ public class RandomSearch(sz:Long){
 	 
 	 /**
 	  *  Initialize variables of the solver
+	  *  Executed once before the main solving loop
 	  */
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  // Set Target

@@ -63,8 +63,10 @@ public class EOSearch extends RandomSearch {
 	 //private var bestSent:Boolean = false;
 	 //private solver:IParallelSolver(sz);
 	 
+	 private val tauUserSel:Double;
 	 private var tau:Double;
-	 private var pdfS:Int;
+	 private val pdfUserSel:Int; //pdf initial selection
+	 private var pdfS:Int = 1n;  //pdf state
 	 private val selSecond:Int;
 	 
 	 private val expDown : Double;
@@ -88,32 +90,89 @@ public class EOSearch extends RandomSearch {
 		  //this.solver = solver;
 		  
 		  // Parameters
-		  this.tau = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
-		  this.pdfS = opts("--EO_pdf", 1n);
+		  this.tauUserSel = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
+		  this.pdfUserSel = opts("--EO_pdf", -1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
-		  
-		  var PDFname:String = "";
-		  if ( this.pdfS == 1n )
-				PDFname = "pow";
-		  else if(this.pdfS == 2n)
-				PDFname = "exp";
-		  else if (this.pdfS == 3n)
-				PDFname = "gamma";
-		  
-		  if (here.id == 0)
-				Console.OUT.println("Parameters EO: TAU= "+tau+", pdf= "
-						  +PDFname+ ", Second_variable_selection="+
-						  (selSecond==0n?"Random":"MinConflict"));
-		  
 		  
 		  // Compute interval limit for random tau
 		  this.expDown = 6.385378048 * Math.pow(this.sz,-1.033400799);
 		  this.expUp = 8.867754442 * Math.pow(this.sz,-0.895936426);
 		  this.powDown = 1.575467001 * Math.pow(this.sz,-0.1448643794);
 		  this.powUp = 2.426369897 * Math.pow(this.sz,-0.1435045369);
-
 		  
+		  
+		  
+		  // Display Options
+		  var PDFname:String = "";
+		  
+		  if (this.pdfUserSel == -1n)
+				PDFname = "Random (exp or pow)";
+		  else if(this.pdfUserSel == 2n)
+				PDFname = "exp";
+		  else if (this.pdfUserSel == 3n)
+				PDFname = "gamma";
+		  else // ( this.pdfUserSel == 1n ) // 1 and any other number
+				PDFname = "pow";
+		  
+		  if (here.id == 0)
+				Console.OUT.println("Parameters EO: TAU= "+(tauUserSel == -1.0 ? "Random":tauUserSel)+", pdf= "
+						  +PDFname+ ", Second_variable_selection="+
+						  (selSecond==0n?"Random":"MinConflict"));
+
 	 }
+
+	 
+	 /**
+	  *  Initialize variables of the solver
+	  *  Executed once before the main solving loop
+	  */
+	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+		  super.initVar(cop_, tCost, sLow);
+		  
+		  if ( this.pdfUserSel == -1n ) { // Select a random PDF
+				this.pdfS = random.nextInt(2n)+1n; // from 1 to 3
+		  }else
+				this.pdfS = pdfUserSel;
+		  
+		  if ( this.tauUserSel == -1.0 ) { // Select a random tau from 0 to tau 
+				if ( this.pdfS == 1n) {
+					 this.tau = this.powDown + (powUp - powDown) * random.nextDouble();
+				}
+				else if ( this.pdfS == 2n) {
+					 this.tau = this.expDown + (expUp - expDown) * random.nextDouble();
+				}
+				//Console.OUT.println(here+"pdf "+pdfS+" tau "+this.tau );
+		  }
+		  else
+				this.tau = this.tauUserSel;
+		  
+		  if (this.pdfS == 3n)
+				initPDF( this.gammaFnc );
+		  else if (this.pdfS == 2n)
+				initPDF( this.expFnc );
+		  else //( this.pdfS == 1n )
+				initPDF( this.powFnc );
+		  
+		  Logger.debug(()=>{"EOSolver"});
+
+	 }
+	 
+	 private def initPDF( fnc:(tau : Double, x : Long)=>Double ){
+		  var sum:Double = 0.0;
+		  var y:Double = 0.0;
+		  
+		  for (var x:Int = 1n; x <= this.sz; x++){
+				y = fnc(this.tau, x);
+				pdf(x) = y;
+				sum += y; 
+		  }
+		  for (var x:Int = 1n; x <= this.sz; x++){
+				pdf(x) /= sum;
+		  }
+		  // for (x in pdf.range())
+		  //	Console.OUT.println(pdf(x)+" ");//Console.OUT.println( x+"-"+pdf(x)+" ");
+	 }
+
 	 
 	  
 	 /**
@@ -136,49 +195,6 @@ public class EOSearch extends RandomSearch {
 		  return currentCost;
 	 }
 	 
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
-		  super.initVar(cop_, tCost, sLow);
-		  
-		  if ( this.pdfS == -1n ) { // Select a random PDF
-				this.pdfS = random.nextInt(2n)+1n; // from 1 to 3
-		  }
-		  
-		  if ( this.tau == -1.0 ) { // Select a random tau from 0 to tau 
-				if ( this.pdfS == 1n) {
-					 this.tau = this.powDown + (powUp - powDown) * random.nextDouble();
-				}
-				else if ( this.pdfS == 2n) {
-					 this.tau = this.expDown + (expUp - expDown) * random.nextDouble();
-				}
-				//Console.OUT.println(here+"pdf "+pdfS+" tau "+this.tau );
-		  }
-		  
-		  if ( this.pdfS == 1n )
-				initPDF( this.powFnc );
-		  else if(this.pdfS == 2n)
-				initPDF( this.expFnc );
-		  else
-				initPDF( this.gammaFnc );
-		  
-		  Logger.debug(()=>{"EOSolver"});
-
-	 }
-	 
-	 private def initPDF( fnc:(tau : Double, x : Long)=>Double ){
-		  var sum:Double = 0.0;
-		  var y:Double = 0.0;
-		  
-		  for (var x:Int = 1n; x <= this.sz; x++){
-				y = fnc(this.tau, x);
-				pdf(x) = y;
-				sum += y; 
-		  }
-		  for (var x:Int = 1n; x <= this.sz; x++){
-					pdf(x) /= sum;
-		  }
-		  // for (x in pdf.range())
-			//	Console.OUT.println(pdf(x)+" ");//Console.OUT.println( x+"-"+pdf(x)+" ");
-	 }
 	 
 	 private def pdfPick():Int {
 		  //return pdf(random.nextInt(this.sz)) - 1n;
@@ -338,12 +354,12 @@ public class EOSearch extends RandomSearch {
 					 }
 				}
 				
-				if ( this.pdfS == 1n )
-					 initPDF( this.powFnc );
-				else if(this.pdfS == 2n)
-					 initPDF( this.expFnc );
-				else
+				if (this.pdfS == 3n)
 					 initPDF( this.gammaFnc );
+				else if (this.pdfS == 2n)
+					 initPDF( this.expFnc );
+				else //( this.pdfS == 1n )
+					 initPDF( this.powFnc );
 		  }
 	 } 	 
 }
