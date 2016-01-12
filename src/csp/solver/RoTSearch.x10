@@ -22,11 +22,15 @@ public class RoTSearch extends RandomSearch {
 	 private val tabuList : Array_2[Long];
 	 
 	 /** Range for random factors 	  */
-	 val tdd = 6.0;
-	 val tdu = 10.0;
+	 // val tdd = 6.0;
+	 // val tdu = 10.0;
 	 
-	 val ad = 2.0;
-	 val au = 7.0;
+	 //val tdl = 0.9;
+	 val tdl = 0.2;
+	 val tdu = 1.8;
+	 
+	 val al = 2.0;
+	 val au = 5.0;
 	 
 	 public def this(sizeS:Long, solver:IParallelSolver(sizeS), opts:ParamManager)
 	 : RoTSearch(sizeS){
@@ -42,16 +46,20 @@ public class RoTSearch extends RandomSearch {
 		  
 		  if (here.id == 0  || here.id == Place.MAX_PLACES - 1){
 				if ( this.tabuDurationFactorUS == -1.0 )
-					 Console.OUT.println("Parameters RoTS: tabu duration = random("+tdd+","+tdu+") * "+this.sz);
+					 Console.OUT.println("Parameters RoTS: tabu duration = random("+tdl+","+tdu+") * "+this.sz);
 				else
 					 Console.OUT.println("Parameters RoTS: tabu duration = "+tabuDurationFactorUS+" * "+this.sz);			
 				
 				if ( this.aspirationFactorUS == -1.0 )
-					 Console.OUT.println("                 aspiration = random("+ad+","+au+") * "+this.sz+"^2 ");
+					 Console.OUT.println("                 aspiration = random("+al+","+au+") * "+this.sz+"^2 ");
 				else
 					 Console.OUT.println("                 aspiration = "+aspirationFactorUS+" * "+this.sz+"^2 ");
 		  }
 	 }
+	 
+	 
+	 var tabuDurationLower:Int;
+	 var tabuDurationUpper:Int;
 	 
 	 /**
 	  *  Initialize variables of the solver
@@ -60,17 +68,24 @@ public class RoTSearch extends RandomSearch {
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
-		  if (this.tabuDurationFactorUS == -1.0) // Random initialitation of Tabu duration Factor 
-				this.tabuDurationFactor = tdd + (tdu-tdd) * random.nextDouble();
-		  else
+		  if (this.tabuDurationFactorUS == -1.0){
+				// Random initialitation of Tabu duration Factor 
+				this.tabuDurationLower = (tdl * this.sz)  as Int;
+				this.tabuDurationUpper = (tdu * this.sz)  as Int;
+				this.tabuDuration = -1n;
+
+		  }	
+		  else{
 				this.tabuDurationFactor = this.tabuDurationFactorUS;
+				this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
+		  }
 		  
 		  if (this.aspirationFactorUS == -1.0) // Random initialitation of Tabu duration Factor 
-				this.aspirationFactor = ad + (au-ad) * random.nextDouble();
+				this.aspirationFactor = al + (au-al) * random.nextDouble();
 		  else
 				this.aspirationFactor = this.aspirationFactorUS;
 			
-		  this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
+		  
 		  this.aspiration = (this.aspirationFactor * this.sz * this.sz) as Int;
 		  
 		  for (var i:Long = 0 ; i < this.sz; i++)
@@ -149,14 +164,21 @@ public class RoTSearch extends RandomSearch {
 				cop_.executedSwap(move.getFirst(), move.getSecond());
 				
 				/* forbid reverse move for a random number of iterations */
-				val ran1 = random.nextDouble();
 				
-				tabuList( move.getFirst(), cop_.variables(move.getSecond())) = this.nIter + ((ran1*ran1*ran1) * this.tabuDuration) as Int;
-				val ran2 = random.nextDouble();
-				tabuList( move.getSecond(), cop_.variables(move.getFirst())) = this.nIter + ((ran2*ran2*ran2) * this.tabuDuration) as Int;
-					 //current_iteration + (int) (cube(Random_Double()) * tabu_duration);
+				//tabuList( move.getFirst(), cop_.variables(move.getSecond())) = this.nIter + (cube() * this.tabuDuration) as Int;
+				var t1 :Int, t2:Int;
+				if (tabuDuration == -1n){
+					 t1 = randomInterval(tabuDurationLower,tabuDurationUpper);
+					 t2 = randomInterval(tabuDurationLower,tabuDurationUpper);
+					 
+				}	 else{
+					 t1 = (cube() * this.tabuDuration) as Int;
+					 t2 = (cube() * this.tabuDuration) as Int;
+				}
+				tabuList( move.getFirst(), cop_.variables(move.getSecond())) = this.nIter + t1;
+				tabuList( move.getSecond(), cop_.variables(move.getFirst())) = this.nIter + t2;
+				
 				//Utils.show("after swap",cop_.getVariables());
-				
 				// detect loc min
 				if (minDelta >= 0)
 					 onLocMin(cop_);
@@ -166,6 +188,19 @@ public class RoTSearch extends RandomSearch {
 		  
 	 }
 	 
+	 public def randomInterval(low:Int, up:Int):Int{
+		  return (random.nextDouble()*(up - low + 1n )) as Int + low;
+	 }
+	 
+	 private def cube():Double{
+		  
+		  val ran1 = random.nextDouble();
+		  val ran2 = random.nextDouble();
+		  val ran3 = random.nextDouble();
+		  
+		  return ran1*ran2*ran3;
+		  
+	 }
 	 
 	 /**
 	  *  Create RoTS Solver State array to be send to Pool

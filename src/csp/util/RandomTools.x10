@@ -55,6 +55,10 @@ public class RandomTools {
 		return vec;	
 	}
 	
+public def randomInterval(low:Int, up:Int):Int{
+	 return (r.nextDouble()*(up - low + 1n )) as Int + low;
+}
+	
 	
 	public def randomInt(limit : Long)=r.nextInt(limit as Int);		
 	public def randomLong()=r.nextLong();		
