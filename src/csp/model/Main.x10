@@ -112,11 +112,15 @@ public class Main {
 		  val filePath       = opts("-f", ".");
 		  val solverMode	   = opts("-sm", 1n);
 		  val solverIn       = opts("-sl", "AS");
-		  val inSeed         = opts("-S", 0);
+		  val inSeed         = opts("-S", Main.getRandomSeed());
 		  val outFormat	   = opts("-of", 1n);
 		  val costFromF      = opts("-tf", 0);
 		  val tCostFromCL    = opts("-tc", 0n);
 		  val testNb         = opts("-b", 10n);
+		  
+		  Console.OUT.println("Seed "+inSeed);
+		  
+		  
 		  
 		  /**
 		   *   Define basic values for each type of problem
@@ -462,4 +466,9 @@ public class Main {
 				}
 		  }
 	 }
+	 
+	 static def getRandomSeed():Long{
+		  return System.nanoTime();	  
+	 }
+	 
 }

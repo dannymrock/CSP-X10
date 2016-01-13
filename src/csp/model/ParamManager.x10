@@ -192,7 +192,6 @@ public class ParamManager extends OptionsParser {
 		  val changeParam    = this("-M", 1n);
 		  val changeVector   = this("-CD",1n);
 		  
-		  val inSeed         = this("-S", 0);
 		  val inputPath      = this("-if", ".");
 		  val outFormat	    = this("-of", 1n);
 		  
@@ -215,7 +214,7 @@ public class ParamManager extends OptionsParser {
 		  Console.OUT.println("Other Parameters:");
 		  Console.OUT.println("Max threads "+Runtime.MAX_THREADS+" NTHREADS "+ Runtime.NTHREADS );
 		  Console.OUT.println("Solving "+testNb+" times each instance");
-		  Console.OUT.println("Input seed "+inSeed+ " Input vector "+(inputPath.equals(".")?"not used":inputPath));
+		  Console.OUT.println(" Input vector "+(inputPath.equals(".")?"not used":inputPath));
 		  Console.OUT.println("");
 		  
 	 }
