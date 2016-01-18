@@ -234,8 +234,10 @@ public class RoTSearch extends RandomSearch {
 				
 				this.tabuDurationFactor = (this.tabuDurationFactor + intdf) / 2.0;
 				this.aspirationFactor = (this.aspirationFactor + inaf) / 2.0;
-							
-				this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
+				
+				if (this.tabuDuration != -1n)
+					 this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
+				
 				this.aspiration = (this.aspirationFactor * this.sz * this.sz) as Int;
 		  }
 	 } 	 
