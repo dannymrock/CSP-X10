@@ -254,12 +254,21 @@ public class RandomSearch(sz:Long) implements ISolver {
 		  //Console.OUT.println("HS");
 		  //move.setFirst(random.nextLong(sz));
 		  //move.setSecond(random.nextLong(sz));
-		  val i = random.nextLong(sz); // worst variable
-		  
+		  //val i = random.nextLong(sz); // worst variable
+		  var maxCost:Long = -1;
+		  var maxi:Long=-1;
+		  for (var i:Int=0n; i < sz ; i++ ){
+				val cost=cop_.costOnVariable(i);
+				if (cost > maxCost){
+					 maxCost = cost;
+					 maxi = i;
+				}
+		  }
+				
 		  //Change its value on its domain
 		  val value = random.nextInt(cop_.getMaxDomain()+1n)+cop_.getMinDomain();
 		  
-		  cop_.executeMove(i, value);
+		  cop_.executeMove(maxi, value);
 		  //cop_.swapVariables(move.getFirst(), move.getSecond());
 		  nMoves++;
 		  

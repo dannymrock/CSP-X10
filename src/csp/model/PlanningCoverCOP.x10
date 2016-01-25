@@ -4,6 +4,7 @@ import csp.solver.Valuation;
 import x10.io.FileReader;
 import x10.io.File;
 import csp.util.Utils;
+import x10.util.StringUtil;
 
 public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 	 property sz() = sz; //size of the problem
@@ -66,8 +67,9 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 		  this.inPath = opts("-if","."); 
 		  this.inVector = inPath.equals(".") ? false : true;
 		  
-		  
-		  this.nUsers = size;
+		  val userStr = System.getenv("nUser");
+		  this.nUsers = (userStr != null)? StringUtil.parseInt(userStr) as Long : size;
+
 		  val users = nUsers;
 		  this.userCon =  new Rail[Int](nUsers, 0n);
 		  
@@ -135,6 +137,67 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 		  return offlineUsers;
 	 }
 	 
+	 public def redundancy():Int{
+		  /*Cover es la suma de los elementos de cada columna, es decir, el numero de sitios que 
+		   * activos que cubren a un mismo usuario.
+		   * La redundancia es la suma de todos los valores mencionados anteriormente
+		   */
+		  
+		  var redundancy : Int = 0n;
+		  for(var i : Int = 0n; i < size; i++){
+				if(variables(i) == 1n){
+					 var cover : Int = 0n;
+					 for(var j:Int = 0n; j < nUsers; j++){
+						  cover += connectivity(i)(j);
+					 }
+					 redundancy += cover;
+				}
+		  }
+		  
+		 // System.out.println ("The Redundancy is: " +redundancy);
+		  return redundancy;
+	 }
+	 
+	 val costVariables = new Rail[Double](size,0.0); 
+	 
+	 public def buildCostofVaribleVector(){
+		  
+		  /*Aca se suman todas as filas de la matriz de conectividad y se alamcenan en un vector
+		   * Luego se calcula la penalizacion para cada sitio asi:
+		   * - Si el sitio esta activo PenalizacionRedundanciaSitioX =(#usuarios-cobertura)/#usuarios 
+		   * - Si el sitio esta inactivo PeanalizacionRedundanciaSitioX = 1 - ((#usuarios-cobertura)/#usuarios)
+		   */
+		  val coverSitesVector = new Rail[Int](size, 0n);
+		  var sum:Int = 0n;
+		  //coverSitesVector = new int[ConnectivityMatrix.length];
+		  for( var i:Int = 0n; i < size; i++){
+				sum = 0n;
+				for(var j:Int = 0n; j < nUsers; j++){
+					 sum += connectivity(i)(j);
+				}
+				coverSitesVector(i) = sum;
+		  }
+		  
+		  //aca se calcula el vector de los costos de cada variable  
+		  var a:Double = nUsers;
+		  var penaltyActiveSites:Double = 0.0, penaltyInactiveSites:Double = 0.0;
+		  for(var i:Int = 0n; i < size; i++){
+				if(variables(i) == 1n){		 
+					 val b = (nUsers - coverSitesVector(i)) as Double;
+					 penaltyActiveSites = Math.round( (b / a) * 100.0 ) / 100.0;
+					 costVariables(i) = penaltyActiveSites;
+				}
+				if(variables(i) == 0n){
+					 
+					 val d = (nUsers - coverSitesVector(i)) as Double;
+					 val e = d / a;
+					 penaltyInactiveSites = Math.round(( 1.0 - e )*100.0) / 100.0;
+					 costVariables(i) = penaltyInactiveSites;
+				}
+		  }
+	 }
+	 
+	 
 	 public def getMaxDomain():Int{
 		  return this.maxDomain;
 	 }
@@ -154,7 +217,16 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 	  * 	Cost on variable function (may be virtual)
 	  */
 	 public def costOnVariable(i:Long):Long{
-		  return 1;
+		  
+		  /*
+		   * Cost Of Varible recibe un indice del vector y devuelve el valor almacenado en ese vector,
+		   * el cual es el costo de uno de los sitios del vector de estados
+		   */
+		  
+		  this.buildCostofVaribleVector();
+		  return costVariables(i) as Long;
+		  
+		  
 	 }
 	 
 	 /**
@@ -181,30 +253,37 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 	 
 	 
 	 public def costOfSolution(shouldBeRecorded : Boolean):Long{
-		  // for ( var i:Int = 0n; i < size; i++ ){
-				// Console.OUT.print( (i+1) + " : ");
-				// for(var j:Int = 0n; j < users; j++){
-				// 	 connectivity(i)(j) = random.nextInt(2n);
-				// 	 Console.OUT.print( connectivity(i)(j) + " ");
-				// }
-				// Console.OUT.println("");
-		  // } 
-		  for(var i:Int = 0n; i < size; i++){
-				if (variables(i) == 1n){
-					 for(var j:Int = 0n; j < nUsers; j++){
-						  if (connectivity(i)(j) == 1n)
-								userCon(j)++;
-					 }
-				}	 
-		  }
-			
-		  for(var j:Int = 0n; j < nUsers; j++){
-				if ( userCon(j) == 0n)
-					 return 1;
-		  }
+		  /*
+		   * En este metodo se calcula el costo de la solucion y para ello se llaman los demas 
+		   * metodos, ya que la funcion CostOfSolution es la combinacion lineal de numero de usuarios
+		   * sin conexion y la redundancia
+		   */        
+		  val constantA = 1n;
+		  val constantB = 1n;
+		  var costofSolution:Int= 0n;
 		  
-		  return 0;
+		  val off = this.offlineUsers();
+		  val red = this.redundancy();
+		  costofSolution = (constantA*off) + (constantB*red);
+		  return costofSolution;
+		  //System.out.println ("The Cost of Solution is: " +CostofSolution);
+		  //  for(var i:Int = 0n; i < size; i++){
+			// 	if (variables(i) == 1n){
+			// 		 for(var j:Int = 0n; j < nUsers; j++){
+			// 			  if (connectivity(i)(j) == 1n)
+			// 					userCon(j)++;
+			// 		 }
+			// 	}	 
+		 //  }
+			// 
+		 //  for(var j:Int = 0n; j < nUsers; j++){
+			// 	if ( userCon(j) == 0n)
+			// 		 return 1;
+		 //  }
+		 //  
+		 // return 0;
 	 }
+	 
 	 
 	 // public def show(s:String, d: Rail[Int]):void{
 		//   
