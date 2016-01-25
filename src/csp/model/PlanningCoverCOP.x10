@@ -53,6 +53,7 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 	 val userCon : Rail[Int];
 	 
 	 
+	 
 	 /**
 	  * 	Constructor of the class
 	  */
@@ -69,6 +70,7 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 		  this.nUsers = size;
 		  val users = nUsers;
 		  this.userCon =  new Rail[Int](nUsers, 0n);
+		  
 					 
 		  this.connectivity = new Rail[Rail[Int]](size, (Long) => new Rail[Int]( users, 0n ));
 		  
@@ -80,6 +82,57 @@ public class PlanningCoverCOP(sz:Long) implements ICOPModel{
 				}
 				Console.OUT.println("");
 		  } 
+	 }
+	
+	 public def offlineUsers():Int{
+		  var nonCoveredU : Int = 0n;//users without cover
+		  var offlineUsers : Int = 0n;
+		  var totalOfflineUsers : Int = 0n;
+		  var vectsum:Int = 0n;
+		  
+		  for (var i:Int = 0n; i < size; i++){
+				vectsum += variables(i);  
+		  }
+		  
+		  if (vectsum > 0n){
+				//The columns of the main matrix are summed to find the number of null columns
+				for (var i : Int = 0n; i < nUsers; i++) { 
+					 var sumc : Int = 0n;  
+					 for (var j:Int = 0n; j < size; j++) {  
+						  sumc += connectivity (j)(i);  
+					 }
+					 if (sumc < 1){
+						  nonCoveredU++;
+					 }
+				} 
+
+				// System.out.println();
+				// System.out.println("The number of users without access is: "+NonCoveredU);
+				// System.out.println(""); 
+	 
+				//The local offline users is calculated 
+				for (var i : Int = 0n; i < nUsers; i++) { 
+					 var oper:Int = 0n; //operator  
+					 for (var j : Int = 0n; j < size; j++) { 
+						  if( variables(j) == 1n ){
+								oper += connectivity(j)(i);
+						  }
+					 }
+					 if (oper < 1n){
+						  totalOfflineUsers++;
+					 }
+				}  
+
+				offlineUsers = totalOfflineUsers - nonCoveredU;
+				// System.out.println(""); 
+				// System.out.println("The number of offline users is: "+OfflineUsers);
+		  }
+		  else{
+				offlineUsers = nUsers as Int;
+				// System.out.println(""); 
+				// System.out.println("The number of offline users is: "+OfflineUsers);
+		  }
+		  return offlineUsers;
 	 }
 	 
 	 public def getMaxDomain():Int{
