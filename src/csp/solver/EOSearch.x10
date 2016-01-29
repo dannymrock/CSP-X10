@@ -92,7 +92,7 @@ public class EOSearch extends RandomSearch {
 		  this.pdfUserSel = opts("--EO_pdf", -1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
 		  
-		  // Compute interval limit for random tau
+		  // Compute interval limit for random tau (based on "force" concept eo-qap implementation Daniel Diaz)
 		  this.expDown = 6.385378048 * Math.pow(this.sz,-1.033400799);
 		  this.expUp = 8.867754442 * Math.pow(this.sz,-0.895936426);
 		  this.powDown = 1.575467001 * Math.pow(this.sz,-0.1448643794);
@@ -109,8 +109,8 @@ public class EOSearch extends RandomSearch {
 		  else // ( this.pdfUserSel == 1n ) // 1 and any other number
 				PDFname = "pow";
 		  if (here.id == 0)
-				Console.OUT.println("Parameters EO: TAU= "+(tauUserSel == -1.0 ? "Random":tauUserSel)+", pdf= "
-						  +PDFname+ ", Second_variable_selection="+
+				Console.OUT.println("Parameters EO: TAU=> "+(tauUserSel == -1.0 ? "Random":tauUserSel)+" pdf=> "
+						  +PDFname+ " Second_variable_selection=>"+
 						  (selSecond==0n?"Random":"MinConflict"));
 	 }
 

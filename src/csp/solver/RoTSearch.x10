@@ -26,8 +26,8 @@ public class RoTSearch extends RandomSearch {
 	 // val tdu = 10.0;
 	 
 	 //val tdl = 0.9;
-	 val tdl = 0.2;
-	 val tdu = 1.8;
+	 val tdl = 0.8;
+	 val tdu = 1.2;
 	 
 	 val al = 2.0;
 	 val au = 5.0;
@@ -45,15 +45,15 @@ public class RoTSearch extends RandomSearch {
 		  this.tabuList = new Array_2 [Long](this.sz, this.sz , 0);
 		  
 		  if (here.id == 0  || here.id == Place.MAX_PLACES - 1){
-				if ( this.tabuDurationFactorUS == -1.0 )
-					 Console.OUT.println("Parameters RoTS: tabu duration = random("+tdl+","+tdu+") * "+this.sz);
+				if ( this.tabuDurationFactorUS < 0 )
+					 Console.OUT.print("Parameters RoTS: tabu duration=> uniform  "+(-tabuDurationFactorUS)+" * "+this.sz);
 				else
-					 Console.OUT.println("Parameters RoTS: tabu duration = "+tabuDurationFactorUS+" * "+this.sz);			
+					 Console.OUT.print("Parameters RoTS: tabu duration=> "+tabuDurationFactorUS+" * "+this.sz);			
 				
 				if ( this.aspirationFactorUS == -1.0 )
-					 Console.OUT.println("                 aspiration = random("+al+","+au+") * "+this.sz+"^2 ");
+					 Console.OUT.println("--- aspiration=> random("+al+","+au+") * "+this.sz+"^2 ");
 				else
-					 Console.OUT.println("                 aspiration = "+aspirationFactorUS+" * "+this.sz+"^2 ");
+					 Console.OUT.println("--- aspiration=> "+aspirationFactorUS+" * "+this.sz+"^2 ");
 		  }
 	 }
 	 
@@ -68,17 +68,12 @@ public class RoTSearch extends RandomSearch {
 	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
-		  if (this.tabuDurationFactorUS == -1.0){
-				// Random initialitation of Tabu duration Factor 
-				this.tabuDurationLower = (tdl * this.sz)  as Int;
-				this.tabuDurationUpper = (tdu * this.sz)  as Int;
-				this.tabuDuration = -1n;
-
-		  }	
-		  else{
+		  if (this.tabuDurationFactorUS < 0){
+				this.tabuDurationFactor = -this.tabuDurationFactorUS;
+		  } else {
 				this.tabuDurationFactor = this.tabuDurationFactorUS;
-				this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
 		  }
+		  this.tabuDuration = (this.tabuDurationFactor * this.sz) as Int;
 		  
 		  if (this.aspirationFactorUS == -1.0) // Random initialitation of Tabu duration Factor 
 				this.aspirationFactor = al + (au-al) * random.nextDouble();
@@ -167,14 +162,12 @@ public class RoTSearch extends RandomSearch {
 				
 				//tabuList( move.getFirst(), cop_.variables(move.getSecond())) = this.nIter + (cube() * this.tabuDuration) as Int;
 				var t1 :Int, t2:Int;
-				if (tabuDuration == -1n){
-					 t1 = randomInterval(tabuDurationLower,tabuDurationUpper);
-					 t2 = randomInterval(tabuDurationLower,tabuDurationUpper);
-					 
-				}	 else{
-					 t1 = (cube() * this.tabuDuration) as Int;
-					 t2 = (cube() * this.tabuDuration) as Int;
-				}
+				// t1 = (cube() * this.tabuDuration) as Int; 
+				// t2 = (cube() * this.tabuDuration) as Int; 
+				do t1 = (cube() * this.tabuDuration) as Int; while(t1 <= 2);
+				do t2 = (cube() * this.tabuDuration) as Int; while(t2 <= 2);
+				
+				
 				tabuList( move.getFirst(), cop_.variables(move.getSecond())) = this.nIter + t1;
 				tabuList( move.getSecond(), cop_.variables(move.getFirst())) = this.nIter + t2;
 				
@@ -195,10 +188,9 @@ public class RoTSearch extends RandomSearch {
 	 private def cube():Double{
 		  
 		  val ran1 = random.nextDouble();
-		  val ran2 = random.nextDouble();
-		  val ran3 = random.nextDouble();
-		  
-		  return ran1*ran2*ran3;
+		  if (this.tabuDurationFactorUS < 0)
+				return ran1;
+		  return ran1 * ran1 * ran1;
 		  
 	 }
 	 

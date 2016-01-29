@@ -160,7 +160,7 @@ public class CSPStats{
 	 */
 	public def print(count:Int, oF:Int, problem:Int){
 		val sameIter : Double = same /(iters as Double);
-		val gap = (cost-dTarget)/(cost as Double)*100.0;
+		val gap = (cost-dTarget)/(dTarget)*100.0;
 		val sgl = this.cost % this.vectorSize; 
 		val bpl = (this.cost - sgl)/this.vectorSize;
 		
@@ -195,7 +195,7 @@ public class CSPStats{
 		val sameIter : Double = this.same/(this.iters as Double);
 		val changeF : Double = (this.change as Double)/no;
 		val avgCost:Double = this.cost/(no as Double);
-		val gap = (avgCost-this.dTarget)/(avgCost as Double)*100.0;
+		val gap = (avgCost-this.dTarget)/( this.dTarget)*100.0;
 		
 		if (oF == 0n){
 			Console.OUT.print("AVG,"+time/no+","+iters/no+",,"+locmin/no+","+swaps/no+","+reset/no
