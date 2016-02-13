@@ -89,8 +89,9 @@ public class Main {
 		  
 		  var totalTime:Long = -System.nanoTime();
 		  
-		  
-		  Console.OUT.println(args);
+		  for (s in args)
+				Console.OUT.print(s+" ");
+		  Console.OUT.println("");
 		  
 		  /**
 		   *   Parsing input

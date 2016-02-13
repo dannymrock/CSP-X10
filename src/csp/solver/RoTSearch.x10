@@ -46,9 +46,9 @@ public class RoTSearch extends RandomSearch {
 		  
 		  if (here.id == 0  || here.id == Place.MAX_PLACES - 1){
 				if ( this.tabuDurationFactorUS < 0 )
-					 Console.OUT.print("Parameters RoTS: tabu duration=> uniform  "+(-tabuDurationFactorUS)+" * "+this.sz);
+					 Console.OUT.print("Parameters RoTS: tabu duration=> uniform-"+(-tabuDurationFactorUS)+" * "+this.sz);
 				else
-					 Console.OUT.print("Parameters RoTS: tabu duration=> "+tabuDurationFactorUS+" * "+this.sz);			
+					 Console.OUT.print("Parameters RoTS: tabu duration=> cube-"+tabuDurationFactorUS+" * "+this.sz);			
 				
 				if ( this.aspirationFactorUS == -1.0 )
 					 Console.OUT.println("--- aspiration=> random("+al+","+au+") * "+this.sz+"^2 ");

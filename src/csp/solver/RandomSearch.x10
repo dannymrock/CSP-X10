@@ -171,6 +171,13 @@ public class RandomSearch(sz:Long){
 				 */
 				interact(cop);
 				
+				/**
+				 *  Report 
+				 */
+				
+				if(nIter % 10n == 0n)
+					 Console.OUT.println("iter "+nIter+" Current_Cost "+ currentCost + 
+								" Best_Cost " + bestCost);
 		  }
 		  
 		  updateTotStats();
