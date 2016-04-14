@@ -23,7 +23,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	 
 	 // Three level Pool 
 	 protected val nbEntries = new Rail[Int](3, 0n);
-	 protected val pool = new Rail[Rail[CSPSharedUnit(sz)]](3);
+	 protected val pool = new Rail[Rail[State(sz)]](3);
 	 protected val poolMode:Long;
 	 
 	 protected var random:Random = new Random();
@@ -35,7 +35,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 		  poolMode = pMode;
 		  distance = minDist;		  
 		  for (i in 0..2)
-				pool(i) = new Rail[CSPSharedUnit(sz)](poolSize, CSPSharedUnit(sz,0n,null,0n,null));
+				pool(i) = new Rail[State(sz)](poolSize, State(sz,0n,null,0n,null));
 	 }
 	 
 	 public def setSeed(seed:Long){
@@ -49,12 +49,12 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * variables will already have happened.
 	  */
 	 //public def tryInsertConf(cost:Long, variables:Rail[Int]{self.size==sz}, place:Int) {
-	 public def tryInsertConf( inInfo : CSPSharedUnit(sz) ) {
+	 public def tryInsertConf( inInfo : State(sz) ) {
 		  monitor.atomicBlock(()=>tryInsertConf0(inInfo));
 	 }
 	 
 	 //protected def tryInsertConf0( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
-	 protected def tryInsertConf0( inInfo : CSPSharedUnit(sz) ):Unit {
+	 protected def tryInsertConf0( inInfo : State(sz) ):Unit {
 		  // TODO Closure	  
 		  if (poolMode == SMART)
 				return smartInsert( inInfo );
@@ -72,7 +72,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * @param place Origin place number of the incomming configuration
 	  * @return The victim configuration, if it exists (dummy value othercase place = -1)
 	  */
-	 protected def insert( poolType:Int, dist:Double, inInfo : CSPSharedUnit(sz) ) : CSPSharedUnit(sz) {
+	 protected def insert( poolType:Int, dist:Double, inInfo : State(sz) ) : State(sz) {
 		  var worstConf:Long = -1; // index of the worst conf in the pool (highest cost)
 		  var worstCost:Long = Long.MIN_VALUE;
 		  // var simConf:Int = -1n;
@@ -83,13 +83,13 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				pool(poolType)(nbEntries(poolType)++) = inInfo;
 					 //new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
 				// Return dummy value, there isn't victim
-				return new CSPSharedUnit( sz, 0n, null, -1n, null);
+				return new State( sz, 0n, null, -1n, null);
 		  }else{
 			   for ( var i:Int = 0n; i < this.nbEntries(poolType); i++){
 			   	 // Select worst conf
 					 val thisCost = pool(poolType)(i).cost;
 					 if (thisCost == inInfo.cost && distance(inInfo.vector, pool(poolType)(i).vector) < dist)
-						  return new CSPSharedUnit( sz, 0n, null, -1n, null);
+						  return new State( sz, 0n, null, -1n, null);
 					 if (thisCost > worstCost){
 						  worstCost = thisCost;
 						  worstConf = i;
@@ -106,7 +106,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 				if (this.nbEntries(poolType) < this.poolSize && inInfo.cost < worstCost ){
 					 pool(poolType)(this.nbEntries(poolType)++) = inInfo;
 						 // new CSPSharedUnit(variables.size, cost, Utils.copy(variables), place);
-					 return new CSPSharedUnit( sz, 0n, null, -1n, null);
+					 return new State( sz, 0n, null, -1n, null);
 				}else	if (worstConf >= 0n && inInfo.cost < worstCost){
 					 val victim = pool(poolType)(worstConf);
 					 //pool(poolType)(worstConf) = inInfo;
@@ -115,7 +115,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 					 return victim;
 				}
 		  }
-		  return new CSPSharedUnit( sz, 0n, null, -1n, null);
+		  return new State( sz, 0n, null, -1n, null);
 	 }
 	 
 	 /**
@@ -126,7 +126,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * @return Unit structure (necessary to the proper operation of the monitor)
 	  */
 	 //protected def smartInsert( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
-	 protected def smartInsert( inInfo : CSPSharedUnit(sz) ):Unit {
+	 protected def smartInsert( inInfo : State(sz) ):Unit {
 		    Logger.debug(()=>{"Smart Pool: Smart Insert"});
 		  // try to insert conf in high quality pool - min distance allowed 0.3
 		  val victimShort = insert(this.HIGH, 0.3, inInfo);
@@ -151,7 +151,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * @return Unit structure (necessary to the proper operation of the monitor)
 	  */
 	 //protected def normalInsert( cost : Long , variables : Rail[Int]{self.size==sz}, place : Int ):Unit {
-	 protected def normalInsert( inInfo : CSPSharedUnit(sz) ) : Unit {
+	 protected def normalInsert( inInfo : State(sz) ) : Unit {
 		  Logger.debug(()=>{"Smart Pool: normal Insert"});
 		  insert(HIGH, distance, inInfo );
 		  return Unit();
@@ -195,7 +195,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	 /**
 	  * Get a smart configuration from HIGH, MEDIUM or LOW quality pool.
 	  */
-	 public def getPConf() : Maybe[CSPSharedUnit(sz)]=
+	 public def getPConf() : Maybe[State(sz)]=
 		  monitor.atomicBlock(()=> {
 				//Console.OUT.println("s "+nbEntries(0)+"m "+nbEntries(1)+"l "+nbEntries(2));
 				val totalEn = this.nbEntries(HIGH) + this.nbEntries(MEDIUM) + 
@@ -248,7 +248,7 @@ public class SmartPool(sz:Long, poolSize:Int) {
 	  * Get THE BEST configuration from the pool.
 	  * The best configuration is always on the HIGH quality pool  
 	  */
-	 public def getBestConf():Maybe[CSPSharedUnit(sz)]=
+	 public def getBestConf():Maybe[State(sz)]=
 		  monitor.atomicBlock(()=> {
 				if (this.nbEntries(HIGH) < 1n) return null; // empty pool
 				var bcost:Long = Long.MAX_VALUE;

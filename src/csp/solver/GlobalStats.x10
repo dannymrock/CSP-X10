@@ -12,7 +12,7 @@ import csp.model.Main;
  *  @version 0.1 April 12, 2013 -> First Version
  */
 
-public class CSPStats{
+public class GlobalStats{
 	 
 	 /** Desired Target */
 	 var dTarget : Long = 0;	
@@ -101,7 +101,7 @@ public class CSPStats{
 	        this.sstate = ss;
 	}
 	
-	public def setStats( c:CSPStats ){
+	public def setStats( c : GlobalStats ){
 		 this.cost = c.cost;
 		 this.team = c.team;
 		 this.explorer = c.explorer;
@@ -127,7 +127,7 @@ public class CSPStats{
 	 *  Accumulate statistics in this object, Is used for average calculation
 	 * 	@param stats Object with solver data to accumulate 
 	 */
-	public def accStats(stats:CSPStats){
+	public def accStats(stats : GlobalStats){
 	    this.cost += stats.cost;
 	    this.time += stats.time;
 	    this.iters += stats.iters;

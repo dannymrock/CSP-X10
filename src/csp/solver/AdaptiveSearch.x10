@@ -416,7 +416,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 /**
 	  * 	Report statistics from the solving process
 	  */
-	 public def reportStats( c : CSPStats){
+	 public def reportStats( c : GlobalStats){
 		  super.reportStats(c);
 		  c.locmin = this.nLocalMinTot;
 		  c.reset = this.nResetTot;
@@ -440,7 +440,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  // communicate Local Minimum
 		  //solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 		  val solverState = createSolverState();
-		  solver.communicateLM( new CSPSharedUnit(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
+		  solver.communicateLM( new State(sz,this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
 	 }
 	 
 }

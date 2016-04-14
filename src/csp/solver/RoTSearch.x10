@@ -246,7 +246,7 @@ public class RoTSearch extends RandomSearch {
 		  // communicate Local Minimum
 		  // solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 		  val solverState = this.createSolverState();
-		  this.solver.communicateLM( new CSPSharedUnit(sz, this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
+		  this.solver.communicateLM( new State(sz, this.currentCost, cop.getVariables() as Valuation(sz), here.id as Int, solverState) );
 	 }
 	 
 }

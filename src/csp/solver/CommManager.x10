@@ -169,7 +169,7 @@ public class CommManager(sz:Long) {
 	  * 
 	  */
 	 //public def communicate(totalCost : Long, variables : Rail[Int]{self.size==sz} ) {
-	 public def communicate( info:CSPSharedUnit(sz) ) {  
+	 public def communicate( info:State(sz) ) {  
 		  Logger.debug(()=>" communicate: entering.");
 		  
 		  val placeid = here.id as Int;
@@ -208,7 +208,7 @@ public class CommManager(sz:Long) {
 	 /**
 	  *  Receive Local Minimum Confs. from Team member
 	  */
-	 public def communicateLM( info:CSPSharedUnit(sz) ) {
+	 public def communicateLM( info:State(sz) ) {
 		  Logger.debug(()=>" communicate: entering.");
 		  
 		  // decrease the number of vectors send it to the pool
@@ -253,7 +253,7 @@ public class CommManager(sz:Long) {
 		  // if (commOption == NO_COMM) return false;
 		  Logger.debug(()=> "CommManager: getIPVector: entering.");
 		  
-		  var a : Maybe[CSPSharedUnit(sz)];
+		  var a : Maybe[State(sz)];
 		  val place = Place(myTeamId); // get reference to HEAD node
 		  val ss=solvers;
 		  if (place == here )
@@ -302,9 +302,9 @@ public class CommManager(sz:Long) {
 	  *  get a vector from the Local Min. Pool
 	  * 
 	  */ 
-	 public def getLM() : Maybe[CSPSharedUnit(sz)] { 
+	 public def getLM() : Maybe[State(sz)] { 
 		  Logger.debug(()=> "CommManager: getLM: entering.");
-		  var a : Maybe[CSPSharedUnit(sz)];
+		  var a : Maybe[State(sz)];
 		  
 		  val place = Place(myTeamId);
 		  val ss = solvers;
@@ -334,7 +334,7 @@ public class CommManager(sz:Long) {
 	  * get a mutated vector using Path-Relinking based approach
 	  * 
 	  */
-	 public def getPR() : Maybe[CSPSharedUnit(sz)] { 
+	 public def getPR() : Maybe[State(sz)] { 
 		  
 		  var opt:Int = divOption;
 		  if (divOption == 3n)
@@ -351,7 +351,7 @@ public class CommManager(sz:Long) {
 	 }
 	  
 	 // only get a new pdf and tau and force random restart
-	 public def getPR0() : Maybe[CSPSharedUnit(sz)]{ 
+	 public def getPR0() : Maybe[State(sz)]{ 
 		  //return null;//false;
 		  val geta = this.getLM();
 		  if ( geta != null ){
@@ -368,8 +368,8 @@ public class CommManager(sz:Long) {
 				}
 				
 				
-				val newConf =  new CSPSharedUnit( sz, -1n, c, geta().place, geta().solverState);
-				return new Maybe(newConf as CSPSharedUnit(sz));
+				val newConf =  new State( sz, -1n, c, geta().place, geta().solverState);
+				return new Maybe(newConf as State(sz));
 		  }else
 				return null;
 		  
@@ -379,7 +379,7 @@ public class CommManager(sz:Long) {
 	  * get a mutated vector using Path-Relinking based approach
 	  * 
 	  */
-	 public def getPR1() : Maybe[CSPSharedUnit(sz)] { 
+	 public def getPR1() : Maybe[State(sz)] { 
 		  Logger.debug(()=> "CommManager: getPR: entering.");
 		  
 		  // PATH RELINKING-based approach
@@ -428,8 +428,8 @@ public class CommManager(sz:Long) {
 				
 				// return parameters of one of the LM pool (I selected send "a" params, todo: try "b" or random)
 				//Maybe[CSPSharedUnit(sz)]
-				val mutConf =  new CSPSharedUnit( sz, geta().cost, c, geta().place, geta().solverState);
-				return new Maybe(mutConf as CSPSharedUnit(sz));//true;
+				val mutConf =  new State( sz, geta().cost, c, geta().place, geta().solverState);
+				return new Maybe(mutConf as State(sz));//true;
 		  }else
 				return null;//false;
 	 }
@@ -439,7 +439,7 @@ public class CommManager(sz:Long) {
 	  * "A template for scatter search and path relinking" 1998
 	  * 
 	  */
-	 public def getPR2() : Maybe[CSPSharedUnit(sz)] { 
+	 public def getPR2() : Maybe[State(sz)] { 
 		  Logger.debug(()=> "CommManager: getPR2: entering.");
 		  
 		  //val seedConf = new Rail[Int](sz, 0n);
@@ -462,8 +462,8 @@ public class CommManager(sz:Long) {
 				//Rail.copy( finalConf, vector );
 				//Utils.show("final conf=",finalConf);
 				//return true;
-				val newConf = new CSPSharedUnit( sz, getSeedC().cost, finalConf, getSeedC().place, getSeedC().solverState);
-				return new Maybe(newConf as CSPSharedUnit(sz)); //true;
+				val newConf = new State( sz, getSeedC().cost, finalConf, getSeedC().place, getSeedC().solverState);
+				return new Maybe(newConf as State(sz)); //true;
 		  }else
 				return null; //Snew CSPSharedUnit( sz, -1n, null, -1n, -1.0, -1n); //return false;
 	 }

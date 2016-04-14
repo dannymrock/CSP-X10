@@ -252,13 +252,13 @@ public class RandomSearch(sz:Long){
 		  if( this.reportI != 0n && this.nIter % this.reportI == 0n){
 				if(!bestSent){ 
 					 val solverState = createSolverState();
-					 solver.communicate(new CSPSharedUnit(sz,this.bestCost, this.bestConf as Valuation(sz), here.id as Int, solverState ));
+					 solver.communicate(new State(sz,this.bestCost, this.bestConf as Valuation(sz), here.id as Int, solverState ));
 					 bestSent = true;
 				}
 				else{
 					 if (random.nextInt(reportI) == 0n){
 						  val solverState = createSolverState();
-						  solver.communicate(new CSPSharedUnit(sz,this.currentCost, cop_.getVariables() as Valuation(sz), here.id as Int, solverState));
+						  solver.communicate(new State(sz,this.currentCost, cop_.getVariables() as Valuation(sz), here.id as Int, solverState));
 					 }		  
 				}
 		  }
@@ -364,7 +364,7 @@ public class RandomSearch(sz:Long){
 	 /**
 	  * 	Report statistics from the solving process
 	  */
-	 public def reportStats( c : CSPStats){
+	 public def reportStats( c : GlobalStats){
 		  c.iters = this.nIterTot;
 		  c.swaps = this.nSwapTot;
 		  c.vectorSize = this.sz;

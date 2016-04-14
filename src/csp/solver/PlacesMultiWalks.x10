@@ -21,7 +21,7 @@ import x10.util.StringUtil;
 import x10.io.File;
 import x10.io.Printer;
 import x10.util.RailUtils;
-import csp.solver.CSPSharedUnit;
+import csp.solver.State;
 import csp.model.ParamManager;
 import csp.util.Logger;
 import csp.util.Utils;
@@ -50,9 +50,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 var time:Long;	
 	 
 	 var bcost : Long;
-	 val stats = new CSPStats();
-	 val sampleAccStats = new CSPStats();
-	 val genAccStats = new CSPStats();
+	 val stats = new GlobalStats();
+	 val sampleAccStats = new GlobalStats();
+	 val genAccStats = new GlobalStats();
 	 
 	 
 	 /** Comunication Variables */
@@ -91,7 +91,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 val compAVG:Int;
 	 val opts:ParamManager;
 	 
-	 val confArray:Rail[CSPSharedUnit];
+	 val confArray:Rail[State];
 	 
 	 val debug:Boolean;
 	 val altTty:File;
@@ -120,7 +120,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  this.nTeams = Place.MAX_PLACES as Int / expPerTeam ;
 		  this.bestSolHere = new Rail[Int](vectorSize, 0n);	 
 		  
-		  this.confArray = new Rail[CSPSharedUnit](nTeams, CSPSharedUnit(sz,-1n,null,-1n,null)); 
+		  this.confArray = new Rail[State](nTeams, State(sz,-1n,null,-1n,null)); 
 		  
 		  val ttyName = opts("-dbg", "none");
 		  if (ttyName.equals("none")){
@@ -282,14 +282,14 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 = commM.getIPVector(csp_, myCost);
 	 
 	 //@Inline 
-	 public def getLM(): Maybe[CSPSharedUnit(sz)] 
+	 public def getLM(): Maybe[State(sz)] 
 	 = commM.getLM();
 	 
 	 //@Inline 
-	 public def getPR(): Maybe[CSPSharedUnit(sz)]
+	 public def getPR(): Maybe[State(sz)]
 	 = commM.getPR();
 	
-	 public def communicate( info : CSPSharedUnit(sz) )
+	 public def communicate( info : State(sz) )
 	 {
 		  commM.communicate( info );
 	 }
@@ -297,7 +297,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 @Inline public def inTeamReportI():Int = commM.inTeamReportI;
 	 @Inline public def inTeamUpdateI():Int = commM.inTeamUpdateI;
 	 
-	 public def communicateLM( info:CSPSharedUnit(sz) )
+	 public def communicateLM( info:State(sz) )
 	 {
 		  // If diversification mechanism is activated, then send info 
 		  if (outTeamTime > 0 && nTeams > 1n ){
@@ -368,7 +368,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  // val fr = solver.nbForceRestart;
 		  // val target = solver.targetSucc;
 		  // val cost = solver.bestCost;
-		  val c = new CSPStats();
+		  val c = new GlobalStats();
 		  solver.reportStats(c);
 		  
 		  val head = here.id % nTeams;
@@ -397,7 +397,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  accStats(stats);
 	 }
 	 
-	 public def setStats(c:CSPStats)
+	 public def setStats(c : GlobalStats)
 	 {
 		  stats.setStats(c);
 		  accStats(stats);
@@ -419,21 +419,21 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  genAccStats.printAVG(count,oF, problem);
 	 }
 	 
-	 public def tryInsertConf( info : CSPSharedUnit(sz) ) 
+	 public def tryInsertConf( info : State(sz) ) 
 	 {
 		  commM.ep.tryInsertConf(  info );
 	 }
 	 
-	 public def tryInsertLM( info : CSPSharedUnit(sz) ) 
+	 public def tryInsertLM( info : State(sz) ) 
 	 {
 		  commM.lmp.tryInsertConf( info ); 
 	 }
 	 
-	 public def getConf():Maybe[CSPSharedUnit(sz)] = commM.ep.getPConf();
-	 public def getLMConf():Maybe[CSPSharedUnit(sz)] = commM.lmp.getPConf();
+	 public def getConf():Maybe[State(sz)] = commM.ep.getPConf();
+	 public def getLMConf():Maybe[State(sz)] = commM.lmp.getPConf();
 	 
 	 
-	 public def getBestConf():Maybe[CSPSharedUnit(sz)] = commM.ep.getBestConf();
+	 public def getBestConf():Maybe[State(sz)] = commM.ep.getBestConf();
 	 
 	 public def clear()
 	 {
@@ -453,7 +453,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  sampleAccStats.clear();
 	 }
 	 
-	 public def accStats(c:CSPStats):void 
+	 public def accStats( c : GlobalStats ):void 
 	 {
 		  genAccStats.accStats(c);
 		  sampleAccStats.accStats(c);
@@ -550,7 +550,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 
-	 private val cmp : (CSPSharedUnit,CSPSharedUnit) => Int = (a:CSPSharedUnit, b:CSPSharedUnit) => {
+	 private val cmp : (State,State) => Int = (a:State, b:State) => {
 		  return(a.cost - b.cost) as Int;
 	 };
 	 
@@ -562,9 +562,9 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 				val h = head;
 				val conf = at( Place(h) ) ss().getBestConf();
 				if (conf == null) {
-					 confArray(h) = CSPSharedUnit(sz, -1, null, h as Int,null);
+					 confArray(h) = State(sz, -1, null, h as Int,null);
 			   } else {
-			   	 confArray(h) = CSPSharedUnit(sz, conf().cost, conf().vector, h as Int, conf().solverState);
+			   	 confArray(h) = State(sz, conf().cost, conf().vector, h as Int, conf().solverState);
 			   }
 		  }
 		  

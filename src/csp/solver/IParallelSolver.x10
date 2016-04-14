@@ -1,6 +1,6 @@
 package csp.solver;
 import csp.model.GenericModel;
-import csp.solver.CSPSharedUnit;
+import csp.solver.State;
 /**
  * A PARALLEL solver runs a local solver in every place, within the frame of a
  * IParallelSolver instance. All communication by a solver with other solvers
@@ -31,29 +31,29 @@ public interface IParallelSolver {
      */
     def getIPVector(csp_:GenericModel(sz), myCost:Long):Boolean;
     
-    def getLM(): Maybe[CSPSharedUnit(sz)];
+    def getLM(): Maybe[State(sz)];
     
-    def getPR(): Maybe[CSPSharedUnit(sz)];
+    def getPR(): Maybe[State(sz)];
     
     /**
      * Send this configuration (cost, current assignment of values to variables) to
      * communication partner(s).
      */
-    def communicate( info : CSPSharedUnit(sz) ):void;
+    def communicate( info : State(sz) ):void;
     
     /**
      * Send Local Minimum configuration (cost, assignment of values to variables) to
      * communication partner(s).
      */
-    def communicateLM( info : CSPSharedUnit(sz) ):void;
+    def communicateLM( info : State(sz) ):void;
     
-    def tryInsertLM( info : CSPSharedUnit(sz) ):void;
+    def tryInsertLM( info : State(sz) ):void;
   
     /**
      * Insert this configuration (sent from place) into the pool P at the current place,
      * if the cost is lower than the best cost in P.
      */
-    def tryInsertConf( info : CSPSharedUnit(sz) ):void;
+    def tryInsertConf( info : State(sz) ):void;
 
     /** Return the value of the parameter used to control communication within the team
      * (intraTeamInterval).
@@ -83,14 +83,14 @@ public interface IParallelSolver {
 
     def setStats(co : Int, p : Int, e : Int, t:Double, it:Int, loc:Int, sw:Int, re:Int, sa:Int, rs:Int, ch:Int,
             fr : Int, gr:Int, target:Boolean, fft:Int,ss:Rail[Int]{self.size==3}):void;
-    def setStats(c:CSPStats):void;
+    def setStats(c : GlobalStats):void;
 
-    def getConf():Maybe[CSPSharedUnit(sz)];
-    def getLMConf():Maybe[CSPSharedUnit(sz)];
+    def getConf():Maybe[State(sz)];
+    def getLMConf():Maybe[State(sz)];
     
-    def getBestConf():Maybe[CSPSharedUnit(sz)];
+    def getBestConf():Maybe[State(sz)];
 
-    def accStats(CSPStats):void;
+    def accStats(GlobalStats):void;
     
     def verifyWinner(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     

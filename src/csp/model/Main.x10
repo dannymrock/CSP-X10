@@ -19,7 +19,6 @@ import csp.solver.AdaptiveSearch;
 import csp.solver.IParallelSolver;
 import csp.solver.PlacesMultiWalks;
 import csp.util.Logger;
-import csp.solver.CSPSharedUnit;
 import csp.solver.RoTSearch;
 
 public class Main {
