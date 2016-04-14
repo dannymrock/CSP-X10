@@ -14,7 +14,7 @@ import csp.solver.Valuation;
 
 import x10.util.Random;
 import x10.array.Array_2;
-public class MagicSquareAS extends ModelAS{   
+public class MagicSquareAS extends GenericModel{   
 	 val squareLength:Long;
 	 val squareLengthm1:Long;
 	 val squareLengthP1:Long;

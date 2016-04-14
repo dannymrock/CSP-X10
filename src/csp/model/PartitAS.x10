@@ -1,7 +1,7 @@
 package csp.model;
 import csp.solver.Valuation;
 
-public class PartitAS extends ModelAS{
+public class PartitAS extends GenericModel{
 	
 	val size2 : Int;
 	val sumMidX : Int;

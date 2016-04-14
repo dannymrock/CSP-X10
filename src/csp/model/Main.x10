@@ -28,7 +28,7 @@ public class Main {
 	 {
 		  public def make( size : Long, seed : Long, opts:ParamManager, 
 					 mPrefs : Rail[Rail[Int]], wPrefs : Rail[Rail[Int]], mapTable : Rail[Int]) 
-		  : ModelAS(size) 
+		  : GenericModel(size) 
 		  {
 				if (kind == MAGIC_SQUARE_PROBLEM) 
 					 return new MagicSquareAS(size, seed, opts);
@@ -337,7 +337,7 @@ public class Main {
 					 val prob = problemParam;
 					 
 					 // Closure for the problem model
-					 val cspGen = ():ModelAS(valSize)=>CSPProblem(prob).make (valSize, 
+					 val cspGen = ():GenericModel(valSize)=>CSPProblem(prob).make (valSize, 
 								modelSeed, opts, matrix1, matrix2, mapTable);
 					 
 					 /**

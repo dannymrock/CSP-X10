@@ -1,6 +1,6 @@
 package csp.solver; 
 import csp.util.Logger;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import csp.util.Utils;
 import csp.model.ParamManager;
 import x10.io.File;
@@ -249,7 +249,7 @@ public class CommManager(sz:Long) {
 	  * If the return value is -1n (fail), csp_ will not be changed.
 	  * 
 	  */
-	 public def getIPVector(csp_ : ModelAS(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
+	 public def getIPVector(csp_ : GenericModel(sz), myCost : Long):Boolean { // csp renamed csp_ to avoid issue with codegen in managed backend
 		  // if (commOption == NO_COMM) return false;
 		  Logger.debug(()=> "CommManager: getIPVector: entering.");
 		  

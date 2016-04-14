@@ -11,7 +11,7 @@ import x10.util.StringBuilder;
 
 import x10.util.RailUtils;
 
-public class SMTIAS extends ModelAS{
+public class SMTIAS extends GenericModel{
 	/** menPref:Matrix with the men preferences **/
 	val menPref : Rail[Rail[Int]];
 	/** womenPref:Matrix with the women preferences **/

@@ -1,5 +1,5 @@
 package csp.solver;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import x10.util.Random;
 import csp.util.Logger;
 import csp.model.ParamManager;
@@ -112,7 +112,7 @@ public class RandomSearch(sz:Long){
 	 /**
 	  * Solves the problem, which is specified by cop.
 	  */
-	 public def solve( cop : ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Long {
+	 public def solve( cop : GenericModel{self.sz==this.sz}, tCost : Long, sLow: Boolean) : Long {
 		  // Initialize all variables of the search process
 		  initVar(cop, tCost, sLow);
 		  // Initialize Cost
@@ -174,10 +174,9 @@ public class RandomSearch(sz:Long){
 				/**
 				 *  Report 
 				 */
-				
-				if(nIter % 10n == 0n)
-					 Console.OUT.println("iter "+nIter+" Current_Cost "+ currentCost + 
-								" Best_Cost " + bestCost);
+				// if(nIter % 10n == 0n)
+				// 	 Console.OUT.println("iter\t"+nIter+"\tCurrent_Cost\t"+ currentCost + 
+				// 				"\tBest_Cost\t" + bestCost);
 		  }
 		  
 		  updateTotStats();
@@ -189,7 +188,7 @@ public class RandomSearch(sz:Long){
 	  *  Initialize variables of the solver
 	  *  Executed once before the main solving loop
 	  */
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 protected def initVar( cop_:GenericModel{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  // Set Target
 		  this.target = tCost;
 		  this.strictLow = sLow;
@@ -220,7 +219,7 @@ public class RandomSearch(sz:Long){
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : GenericModel{self.sz==this.sz}) : Long{
 		  // Swap two random variables
 		  //Console.OUT.println("HS");
 		  move.setFirst(random.nextLong(sz));
@@ -247,7 +246,7 @@ public class RandomSearch(sz:Long){
 	 /**
 	  *  Interact with other entities
 	  */
-	 protected def interact( cop_:ModelAS{self.sz==this.sz}){
+	 protected def interact( cop_:GenericModel{self.sz==this.sz}){
 		  
 		  // Interaction with other places
 		  if( this.reportI != 0n && this.nIter % this.reportI == 0n){
@@ -385,7 +384,7 @@ public class RandomSearch(sz:Long){
 		  bestSent = false;
 	 }
 	 
-	 protected def updateCosts(cop : ModelAS){
+	 protected def updateCosts(cop : GenericModel){
 		  if(this.currentCost < this.bestCost){ //(totalCost <= bestCost)
 				Rail.copy(cop.getVariables() as Valuation(sz), this.bestConf as Valuation(sz));
 				this.bestCost = this.currentCost;

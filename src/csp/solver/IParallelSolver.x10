@@ -1,5 +1,5 @@
 package csp.solver;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import csp.solver.CSPSharedUnit;
 /**
  * A PARALLEL solver runs a local solver in every place, within the frame of a
@@ -29,7 +29,7 @@ public interface IParallelSolver {
      * cost is less than myCost, update csp_ in place, and return true,
      * else return false.
      */
-    def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean;
+    def getIPVector(csp_:GenericModel(sz), myCost:Long):Boolean;
     
     def getLM(): Maybe[CSPSharedUnit(sz)];
     
@@ -97,7 +97,7 @@ public interface IParallelSolver {
     public def getCost():Long;
     def setStats_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;
     
-    def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), 
+    def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>GenericModel(sz), 
    			seed :Long, targetCost : Long, strictLow: Boolean ):void;
         
     def verify_(ss:PlaceLocalHandle[IParallelSolver(sz)]):void;

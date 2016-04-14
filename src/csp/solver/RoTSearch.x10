@@ -1,7 +1,7 @@
 package csp.solver;
 import csp.model.ParamManager;
 import x10.array.Array_2;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import csp.util.Utils;
 import csp.model.Main;
 
@@ -65,7 +65,7 @@ public class RoTSearch extends RandomSearch {
 	  *  Initialize variables of the solver
 	  *  Executed once before the main solving loop
 	  */
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 protected def initVar( cop_ : GenericModel{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  if (this.tabuDurationFactorUS < 0){
@@ -89,7 +89,7 @@ public class RoTSearch extends RandomSearch {
 
 	 }
 	 
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : GenericModel{self.sz==this.sz}) : Long{
 		  var i : Long;
 		  var j : Long;
 		  
@@ -242,7 +242,7 @@ public class RoTSearch extends RandomSearch {
 	 /**
 	  *  Interact when Loc min is reached
 	  */
-	 private def onLocMin(cop : ModelAS){
+	 private def onLocMin(cop : GenericModel){
 		  // communicate Local Minimum
 		  // solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 		  val solverState = this.createSolverState();

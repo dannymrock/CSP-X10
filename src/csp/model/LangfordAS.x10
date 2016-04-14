@@ -39,7 +39,7 @@ import csp.util.Utils;
  *  (i.e. the distance between indices are != x + 2  and x + 1 for Skolem)     
  */
 
-public class LangfordAS extends ModelAS{ 
+public class LangfordAS extends GenericModel{ 
 	
 	val paramK:Long; // Should be an input parameter
 	val err:Rail[Int];

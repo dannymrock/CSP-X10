@@ -1,5 +1,5 @@
 package csp.solver;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import x10.util.StringUtil;
 import x10.util.RailUtils;
 import csp.util.Logger;
@@ -87,8 +87,8 @@ public class EOSearch extends RandomSearch {
 		  this.fit = new Rail[Long](sizeP, 0);
 		  
 		  // Parameters (Random by default)
-		  //this.tauUserSel = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
-		  this.tauUserSel = opts("--EO_tau", -1.0);
+		  this.tauUserSel = opts("--EO_tau", (1.0 + 1.0 / Math.log(sz)));
+		  //this.tauUserSel = opts("--EO_tau", -1.0);
 		  this.pdfUserSel = opts("--EO_pdf", -1n);
 		  this.selSecond = opts("--EO_selSec", 1n);
 		  
@@ -119,7 +119,7 @@ public class EOSearch extends RandomSearch {
 	  *  Initialize variables of the solver
 	  *  Executed once before the main solving loop
 	  */
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 protected def initVar( cop_ : GenericModel{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  Logger.debug(()=>{"EOSolver - iniVar"});
 		  if ( this.pdfUserSel == -1n ) { // Select a random PDF
@@ -165,7 +165,7 @@ public class EOSearch extends RandomSearch {
 	 /**
 	  *  Extremal Search process (in loop functionality)
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : GenericModel{self.sz==this.sz}) : Long{
 		  //Console.OUT.println("EO");
 		  this.selFirstVar( cop_, this.move );
 		  if (this.selSecond == 0n)
@@ -192,7 +192,7 @@ public class EOSearch extends RandomSearch {
 		  return x - 1n ;
 	 }
 	 
-	 private def selFirstVar( cop_ : ModelAS, move:MovePermutation){
+	 private def selFirstVar( cop_ : GenericModel, move:MovePermutation){
 		  var i: Long =-1n;
 		  var cost: Long;
 		  var selIndex:Long = 0; 
@@ -246,7 +246,7 @@ public class EOSearch extends RandomSearch {
 	  *   @param move object
 	  * 	@return the cost of the best move
 	  */
-	 private def selSecondMinConf( csp : ModelAS, move:MovePermutation) : Long {
+	 private def selSecondMinConf( csp : GenericModel, move:MovePermutation) : Long {
 		  var j: Long;
 		  var cost: Long;
 		  var second : Long = 0;
@@ -283,7 +283,7 @@ public class EOSearch extends RandomSearch {
 	 
 	 
 	 
-	 private def selSecondRandom( cop : ModelAS, move:MovePermutation) : Long {
+	 private def selSecondRandom( cop : GenericModel, move:MovePermutation) : Long {
 		  val randomJ = random.nextLong(this.sz);
 		  val newCost = cop.costIfSwap(this.currentCost, randomJ, this.move.getFirst());	 
 		  this.move.setSecond(randomJ);
@@ -293,7 +293,7 @@ public class EOSearch extends RandomSearch {
 	 /**
 	  *  Interact when Loc min is reached
 	  */
-	 private def onLocMin(cop : ModelAS){
+	 private def onLocMin(cop : GenericModel){
 		  // communicate Local Minimum
 		  // solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 		  val solverState = this.createSolverState();

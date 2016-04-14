@@ -19,7 +19,7 @@ import csp.solver.MovePermutation;
  * 	@author Danny Munera
  *  @version 0.1 April 9, 2013
  */
-public class ModelAS(sz:Long) {
+public class GenericModel(sz:Long) {
 	protected val size = sz;
 	//protected val variables = new Rail[Int]( sz, (i:Long) => i as Int);
 	public val variables = new Rail[Int]( sz, (i:Long) => i as Int);
@@ -243,4 +243,4 @@ public class ModelAS(sz:Long) {
 		return dis;
 	}
 }
-public type ModelAS(s:Long)=ModelAS{self.sz==s};
+public type GenericModel(s:Long) = GenericModel{self.sz==s};

@@ -1,6 +1,6 @@
 package csp.solver;
 import x10.util.StringUtil;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import csp.util.Logger;
 import csp.model.ParamManager;
 import csp.util.Utils;
@@ -75,7 +75,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 }
 	 
 	 
-	 protected def initVar( cop_:ModelAS{self.sz==this.sz}, tCost : Long, sLow: Boolean){
+	 protected def initVar( cop_:GenericModel{self.sz==this.sz}, tCost : Long, sLow: Boolean){
 		  super.initVar(cop_, tCost, sLow);
 		  
 		  Logger.debug(()=>{"ASSolver"});
@@ -108,7 +108,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  Search process (in loop functionality)
 	  *  To be overwrited for each child class (solver) 
 	  */
-	 protected def search( cop_ : ModelAS{self.sz==this.sz}) : Long{
+	 protected def search( cop_ : GenericModel{self.sz==this.sz}) : Long{
 		  var newCost:Long = -1;
 		  
 		  
@@ -164,7 +164,7 @@ public class AdaptiveSearch extends RandomSearch {
 		  mark.clear();
 	 }
 	 
-	 private def doReset(n:Long, cop_ : ModelAS ) {
+	 private def doReset(n:Long, cop_ : GenericModel ) {
 		  var cost : Long = -1;		//reset(n, csp);
 		  cost = cop_.reset( n, currentCost );
 		  mark.clear();
@@ -183,7 +183,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  *   @param csp problem model
 	  * 	@param move object (permutation)
 	  */
-	 private def selectVarHighCost( cop_ : ModelAS , move:MovePermutation){
+	 private def selectVarHighCost( cop_ : GenericModel , move:MovePermutation){
 		  var i: Long =-1;
 		  var maxCost: Long = 0;
 		  var maxVar:Long = -1;
@@ -231,7 +231,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  * 	@param move object (permutation)
 	  * 	@return new cost of the possible move
 	  */
-	 private def selectVarMinConflict( cop : ModelAS, move:MovePermutation ) : Long {
+	 private def selectVarMinConflict( cop : GenericModel, move:MovePermutation ) : Long {
 		  var j: Long;
 		  var cost: Long;
 		  var flagOut:Boolean = false; 
@@ -303,7 +303,7 @@ public class AdaptiveSearch extends RandomSearch {
 	  *  @param move object (permutation)
 	  *  @return new cost of the possible move
 	  */
-	 private def selectVarsToSwap(cop : ModelAS, move:MovePermutation):Long {
+	 private def selectVarsToSwap(cop : GenericModel, move:MovePermutation):Long {
 		  var first : Long;
 		  var second : Long;
 		  //var x : Int;
@@ -436,7 +436,7 @@ public class AdaptiveSearch extends RandomSearch {
 	 /**
 	  *  Interact when Loc min is reached
 	  */
-	 private def onLocMin(cop : ModelAS){
+	 private def onLocMin(cop : GenericModel){
 		  // communicate Local Minimum
 		  //solver.communicateLM( this.currentCost, cop.getVariables() as Valuation(sz));
 		  val solverState = createSolverState();

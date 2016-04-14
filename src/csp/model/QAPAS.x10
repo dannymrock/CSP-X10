@@ -5,7 +5,7 @@ import x10.array.Array_2;
 import csp.util.Logger;
 import csp.solver.Valuation;
 
-public class QAPAS extends ModelAS 
+public class QAPAS extends GenericModel 
 {
 	 // /** flow matrix */
 	 // val f : Array_2[Long];

@@ -25,7 +25,7 @@ import csp.solver.CSPSharedUnit;
 import csp.model.ParamManager;
 import csp.util.Logger;
 import csp.util.Utils;
-import csp.model.ModelAS;
+import csp.model.GenericModel;
 import csp.model.Main;
 
 /**
@@ -44,7 +44,7 @@ import csp.model.Main;
 public class PlacesMultiWalks(sz:Long) implements IParallelSolver {  
 	 property sz()=sz;
 	 // Shared state, accessible from any place, via at(
-	 var csp_:ModelAS(sz);
+	 var csp_:GenericModel(sz);
 	 var solver:RandomSearch(sz);
 	 
 	 var time:Long;	
@@ -134,6 +134,10 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 		  }
 	 }
 	 
+	 /**
+	  *  Install the main data structures needed to perform search
+	  */
+	 
 	 public def installSolver(st:PlaceLocalHandle[IParallelSolver(sz)], solGen:(Int)=>RandomSearch(sz), solverType:Int ) : void {
 		  
 		 if ( solverType == Main.Hybrid_SOL){
@@ -167,7 +171,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	  * 	@return cost of the solution
 	  */
 	 var tcost:Int;
-	 public def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>ModelAS(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
+	 public def solve(st:PlaceLocalHandle[IParallelSolver(sz)], cspGen:()=>GenericModel(sz), seed_ :Long, targetCost : Long, strictLow: Boolean ):void
 	 { 
 		  tcost = targetCost as Int;
 		  stats.setTarget(tcost);
@@ -274,7 +278,7 @@ public class PlacesMultiWalks(sz:Long) implements IParallelSolver {
 	 }
 	 
 	 //@Inline 
-	 public def getIPVector(csp_:ModelAS(sz), myCost:Long):Boolean 
+	 public def getIPVector(csp_:GenericModel(sz), myCost:Long):Boolean 
 	 = commM.getIPVector(csp_, myCost);
 	 
 	 //@Inline 
