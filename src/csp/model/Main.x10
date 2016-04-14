@@ -31,20 +31,20 @@ public class Main {
 		  : GenericModel(size) 
 		  {
 				if (kind == MAGIC_SQUARE_PROBLEM) 
-					 return new MagicSquareAS(size, seed, opts);
+					 return new MSPModel(size, seed, opts);
 				if (kind == COSTAS_PROBLEM) 
-					 return new CostasAS(size, seed, opts);
+					 return new CAPModel(size, seed, opts);
 				if (kind == ALL_INTERVAL_PROBLEM) 
-					 return new AllIntervalAS(size, seed, opts);
+					 return new AIPModel(size, seed, opts);
 				if (kind == LANGFORD_PROBLEM) 
-					 return new LangfordAS(size, seed, opts);
+					 return new LNPModel(size, seed, opts);
 				if (kind == STABLE_MARRIAGE_PROBLEM) 
-					 return new SMTIAS(size, seed, opts, false, mPrefs, wPrefs, mapTable);
+					 return new SMTIModel(size, seed, opts, false, mPrefs, wPrefs, mapTable);
 				if (kind == HOSPITAL_RESIDENT_PROBLEM) 
-					 return new SMTIAS(size, seed, opts, true, mPrefs, wPrefs, mapTable);
+					 return new SMTIModel(size, seed, opts, true, mPrefs, wPrefs, mapTable);
 				if (kind == QA_PROBLEM) 
-					 return new QAPAS(size, seed, opts, mPrefs, wPrefs );
-				return new PartitAS(size, seed, opts);
+					 return new QAPModel(size, seed, opts, mPrefs, wPrefs );
+				return new PNPModel(size, seed, opts);
 		  }
 	 }
 	 
@@ -215,7 +215,7 @@ public class Main {
 		  
 		  val nPath = new StringBuilder();
 		  if ( fileMode ){ // Load Files enable double loop
-				iList = SMTIAS.loadDir(filePath,nPath);
+				iList = SMTIModel.loadDir(filePath,nPath);
 				Logger.debug(()=>{"nPath "+nPath});
 		  }else{           // Disable double loop
 				iList = ["noFile" as String];
@@ -245,7 +245,7 @@ public class Main {
 				 * 3 -> filemode==false
 				 */
 				val mode = (fileMode) ? 
-						  (SMTIAS.tryReadParameters(nPath+"/"+instance, problemParams)?1:2):3;
+						  (SMTIModel.tryReadParameters(nPath+"/"+instance, problemParams)?1:2):3;
 				
 				// if filemode == true and "path" is a directory -> skip
 				if ( mode == 2 ) continue; 
@@ -277,18 +277,18 @@ public class Main {
 				var loadTime:Long = -System.nanoTime();
 				if ( problemParam == STABLE_MARRIAGE_PROBLEM){	
 					 // load men and women preferences for the SMTI problem or
-					 SMTIAS.loadData( nPath+"/"+instance, n1, n2, matrix1, matrix2);
+					 SMTIModel.loadData( nPath+"/"+instance, n1, n2, matrix1, matrix2);
 					 opt = problemParams(2);
 					 bks = problemParams(3);
 				} else if (problemParam == HOSPITAL_RESIDENT_PROBLEM){
 					 // load residents hospitals preference lists for HRTP - size is n1
-					 SMTIAS.loadData(nPath+"/"+instance, n1, n2, matrix1, matrix2, mapTable);
+					 SMTIModel.loadData(nPath+"/"+instance, n1, n2, matrix1, matrix2, mapTable);
 					 opt = problemParams(2);
 					 bks = problemParams(3);
 				} else if (problemParam == QA_PROBLEM){
 					 //Console.OUT.println("n1 " + n1 + " n2 "+n2);				
 					 // load flow and distance matrices for QAP 
-					 SMTIAS.loadData(nPath+"/"+instance, n1, n1, matrix1, matrix2);
+					 SMTIModel.loadData(nPath+"/"+instance, n1, n1, matrix1, matrix2);
 					 opt = problemParams(1);
 					 bks = problemParams(2);
 					 Console.OUT.println(((opt < 0)?"bound ":"opt ")+Math.abs(opt)+" bks "+ bks);
