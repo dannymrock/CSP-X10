@@ -1,9 +1,4 @@
 Example:
 
-Solving Costas Array Problem (-p costas) Size 20 (-s 20) using the cooperative multi-walks 
-implementation (-m 1) composed by 4 teams (X10_NPLACES=4) each one  with 8 explorer 
-nodes (-n 8), the intra team communication interval is 100 iterations (-i 100), the size of the 
-pool is 2 spaces (-k 2), and running 50 samples (-b 50)
-
-
-X10_NPLACES=4 X10_NTHREADS=16 ./MainSo -p costas -s 20 -m 1 -n 8 -i 100 -k 2 -b 50
+mpirun -x LM=0 -x X10_NTHREADS=2 -n 32 Main -p CAP -s 18 -pf paramFiles/CAP.param -N 2 -R 1000 -U 2000 
+mpirun -x LM=0 -x X10_NTHREADS=2 -H node1,node2 -n 32 Main -p CAP -s 18 -pf paramFiles/CAP.param -N 2 -R 1000 -U 2000 
