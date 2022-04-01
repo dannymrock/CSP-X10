@@ -16,7 +16,7 @@ and [[2]](https://www.researchgate.net/profile/Danny-Munera/publication/33789153
 
 This project was developed as part of my Doctoral Thesis at the Centre de Recherche en Informatique (CRI), Université Paris 1 Panthéon-Sorbonne, France.
 
-##Examples of use:
+## Examples of use:
 - mpirun -x LM=0 -x X10_NTHREADS=2 -n 32 Main -p CAP -s 18 -pf paramFiles/CAP.param -N 2 -R 1000 -U 2000 
 - mpirun -x LM=0 -x X10_NTHREADS=2 -H node1,node2 -n 32 Main -p CAP -s 18 -pf paramFiles/CAP.param -N 2 -R 1000 -U 2000 
 
